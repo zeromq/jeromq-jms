@@ -1,7 +1,6 @@
 # JeroMQ JMS
 
 ## Introduction
----
 
 This is JMS 1.1 wrapper around ZERO MQ to enable JEE applications to use the ZMQ protocol. The current version uses the 0.3.5 ZMQ since I developed the wrapper using JERO, but it should also work with JNI instances.
 
@@ -22,7 +21,6 @@ Why Bother? By and large this is true. It only has a limited scope within the JM
 
 
 ## Design
----
 
 The JMS API is implemented by classes within the packages starting at “org.zeromq.jms”, were generic JSM “Destination” based class implement both queue and topic interfaces. Also, not all methods have been implemented. Un-implemented functionality will throw the  “java.lang.UnsupportedOperationException” exceptions. Core to the JMS Wrapper is the Gateway interface and Gateway Factory. Implementations of the Gateway interface encapsulate the functionality used by the ZERO MQ JSM Provider and Consumers. Within the current version there are 2 implementation which sub-class from and all-encompassing abstract Gateway implementation. They are the “Fire and Forget” and the “Positive Acknowledgment and Re-transmission” protocols.
 
@@ -73,7 +71,6 @@ To include other functionality not within JeroMQ-JMS you will to implement one o
 
 
 ## Transactions
----
 
 Are there transactions? Of sorts, but no XA, not very robust. When a transaction is started message are queued on a snapshot and only sent to the socket on a commit. If the process fails, you will lose the messages, so your application(s) need to code this functionality, and self-mend (cope with duplicates, identify missing messages). You should be doing this no matter what.
 
@@ -82,12 +79,10 @@ More work could/should be done here, since the JMS message could be bundled into
 Certain more work could be done in this area to make more robust transaction, or for that matter XA transactions. Both will have a cost though.
 
 ## Contribution process
----
 
 This project uses the [C4 process](http://rfc.zeromq.org/spec:16) for all code changes.
 
 ## Licensing
----
 
 Copyright (c) 2015 Jeremy Miller
 
