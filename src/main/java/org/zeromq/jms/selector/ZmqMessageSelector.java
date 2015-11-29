@@ -16,10 +16,11 @@ public interface ZmqMessageSelector {
 
     /**
      * Evaluate the parsed expression starting from the root of the tree of terms. The function will return the
-     * result generated from the expression. This can be True/False, a Number, a String, anything.
+     * result generated from the expression. This can be True/False, a Number, a String, anything. throws the
+runtime runtime exception ArithmeticException on failure.
+     *
      * @param  variables            the map of variable values
      * @return                      return the result.
-     * @throw  ArithmeticException  throws arithmetic exception
      */
     boolean evaluate(Map<String, Object> variables);
 }

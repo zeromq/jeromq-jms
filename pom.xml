@@ -10,7 +10,21 @@
   <name>jeromq-jms</name>
   <description>ZeroMQ implementation of the JMS API</description>
   
-  <url>http://maven.apache.org</url>
+  <url>https://github.com/zeromq/jeromq-jms</url>
+
+  <licenses>
+    <license>
+      <name>Mozilla Public License (MPL) version 2.0</name>
+      <url>http://mozilla.org/MPL/2.0/</url>
+    </license>
+  </licenses>
+
+  <scm>
+    <url>git@github.com:zeromq/jeromq-jms.git</url>
+    <connection>scm:git:git@github.com:zeromq/jeromq-jms.git</connection>
+    <developerConnection>scm:git:git@github.com:zeromq/jeromq-jms.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
