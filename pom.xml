@@ -1,0 +1,265 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.zeromq</groupId>
+  <artifactId>zeromq-jms</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>jeromq-jms</name>
+  <description>ZeroMQ implementation of the JMS API</description>
+  
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <version.java>1.7</version.java>
+    <version.jeromq>0.3.5</version.jeromq>
+    <version.jms>1.1-rev-1</version.jms>
+    <version.junit>4.10</version.junit>
+    <version.spring>4.1.1.RELEASE</version.spring>
+   	<version.tomcat-catalina>8.0.23</version.tomcat-catalina>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.zeromq</groupId>
+      <artifactId>jeromq</artifactId>
+      <version>${version.jeromq}</version>
+    </dependency>
+  
+    <dependency>
+	  <groupId>javax.jms</groupId>
+	  <artifactId>jms-api</artifactId>
+	  <version>${version.jms}</version>
+    </dependency>
+
+	<dependency>
+      <groupId>com.sun.tools</groupId>
+      <artifactId>jconsole</artifactId>
+      <version>${version.java}</version>
+      <scope>system</scope>
+      <systemPath>${jconsolejar}</systemPath>
+    </dependency>
+	<dependency>
+      <groupId>com.sun.tools</groupId>
+      <artifactId>tools</artifactId>
+      <version>${version.java}</version>
+      <scope>system</scope>
+      <systemPath>${toolsjar}</systemPath>
+    </dependency>
+
+	<dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${version.junit}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+      <version>${version.spring}</version>
+      <scope>test</scope>
+	</dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jms</artifactId>
+      <version>${version.spring}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <version>${version.spring}</version>
+      <scope>test</scope>
+	</dependency>
+	
+	<dependency>
+    	<groupId>org.apache.tomcat</groupId>
+    	<artifactId>tomcat-catalina</artifactId>
+	    <version>${version.tomcat-catalina}</version>
+		<scope>test</scope>
+	</dependency>
+  </dependencies>
+      
+  <build>
+    <finalName>jeromq-jms</finalName>
+
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.2</version>
+        <configuration>
+          <source>${version.java}</source>
+          <target>${version.java}</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.1</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>2.11</version>        
+        <executions>
+          <execution>
+            <phase>validate</phase>
+          
+            <!-- <phase>verify</phase>  -->
+            <goals>
+                <goal>check</goal>
+            </goals>
+            <configuration>
+                <consoleOutput>true</consoleOutput>
+                <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                <configLocation>${project.basedir}/src/checkstyle.xml</configLocation>
+                <failOnViolation>true</failOnViolation>
+                <excludes>**/guide/*</excludes>                
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>      
+    </plugins>
+    
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <systemProperties>
+              <property> 
+                <name>java.util.logging.config.file</name>
+                <value>src/test/resources/logging.properties</value>
+              </property>
+            </systemProperties>
+          </configuration>
+        </plugin>
+
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <versionRange>[2.11,)</versionRange>
+                    <goals>
+                      <goal>check</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>    
+  </build>
+  
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <reportSets>
+          <reportSet>
+            <reports>
+              <report>checkstyle</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+      </plugin>
+    </plugins>
+  </reporting>
+  
+  <profiles>
+  	<!-- 
+	  	launchctl setenv JAVA_HOME /Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home
+  	 -->
+    <profile>
+        <id>default-profile</id>
+        <activation>
+            <activeByDefault>true</activeByDefault>
+            <file>
+                <exists>${JAVA_HOME}/lib/jconsole.jar</exists>
+            </file>
+        </activation>
+        <properties>
+            <toolsjar>${JAVA_HOME}/lib/tools.jar</toolsjar>
+            <jconsolejar>${JAVA_HOME}/lib/jconsole.jar</jconsolejar>
+        </properties>
+    </profile>
+
+    <profile>
+      <id>doclint-java8-disable</id>
+      <activation>
+        <jdk>[1.8,)</jdk>    
+      </activation>
+      <properties>
+        <toolsjar>${JAVA_HOME}/lib/tools.jar</toolsjar>
+        <jconsolejar>${JAVA_HOME}/lib/jconsole.jar</jconsolejar>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>2.9.1</version>
+            <configuration>
+              <additionalparam>-Xdoclint:none</additionalparam>
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>  
+</project>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:beans="http://www.springframework.org/schema/beans"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:jms="http://www.springframework.org/schema/jms"
+  xsi:schemaLocation="
+    http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans.xsd 
+    http://www.springframework.org/schema/context 
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/jms 
+    http://www.springframework.org/schema/jms/spring-jms.xsd">
+
+  <context:component-scan base-package="org.zeromq.jms" />    
+  
+  <bean id="zmqConnectionFactory" class="org.zeromq.jms.ZmqConnectionFactory">
+  	<property name="destinations" >
+      <array>
+        <value>jms:queue:destination?gateway.addr=tcp://*:9705&amp;redlivery.retry=0</value>
+      </array>                 
+  	</property>
+  </bean>
+
+  <bean id="jmsConnectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
+    <constructor-arg ref="zmqConnectionFactory" />
+  </bean>
+
+  <bean id="jmsDefaultDestination" class="org.zeromq.jms.ZmqQueue">
+    <constructor-arg name="name" value="destination" />
+  </bean>
+
+  <!-- JmsTemplate Definition -->
+  <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+    <property name="connectionFactory" ref="jmsConnectionFactory" />
+    <property name="defaultDestination" ref="jmsDefaultDestination" />
+  </bean>
+
+  <bean id="jmsMessageListener" class="org.zeromq.jms.TestMessageListener" />
+
+  <jms:listener-container container-type="default" connection-factory="jmsConnectionFactory" acknowledge="auto">
+        <jms:listener destination="destination" ref="jmsMessageListener" />
+  </jms:listener-container>  
+</beans>
