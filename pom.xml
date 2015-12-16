@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.zeromq</groupId>
-  <artifactId>zeromq-jms</artifactId>
+  <artifactId>jeromq-jms</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
@@ -26,6 +26,13 @@
     <tag>HEAD</tag>
   </scm>
 
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+  
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -34,7 +41,7 @@
     <version.jms>1.1-rev-1</version.jms>
     <version.junit>4.10</version.junit>
     <version.spring>4.1.1.RELEASE</version.spring>
-   	<version.tomcat-catalina>8.0.23</version.tomcat-catalina>
+    <version.tomcat-catalina>8.0.23</version.tomcat-catalina>
   </properties>
 
   <dependencies>
@@ -45,19 +52,19 @@
     </dependency>
   
     <dependency>
-	  <groupId>javax.jms</groupId>
-	  <artifactId>jms-api</artifactId>
-	  <version>${version.jms}</version>
+      <groupId>javax.jms</groupId>
+      <artifactId>jms-api</artifactId>
+      <version>${version.jms}</version>
     </dependency>
 
-	<dependency>
+    <dependency>
       <groupId>com.sun.tools</groupId>
       <artifactId>jconsole</artifactId>
       <version>${version.java}</version>
       <scope>system</scope>
       <systemPath>${jconsolejar}</systemPath>
     </dependency>
-	<dependency>
+    <dependency>
       <groupId>com.sun.tools</groupId>
       <artifactId>tools</artifactId>
       <version>${version.java}</version>
@@ -65,7 +72,7 @@
       <systemPath>${toolsjar}</systemPath>
     </dependency>
 
-	<dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${version.junit}</version>
@@ -77,7 +84,7 @@
       <artifactId>spring-core</artifactId>
       <version>${version.spring}</version>
       <scope>test</scope>
-	</dependency>
+    </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-jms</artifactId>
@@ -89,14 +96,14 @@
       <artifactId>spring-test</artifactId>
       <version>${version.spring}</version>
       <scope>test</scope>
-	</dependency>
+    </dependency>
 	
-	<dependency>
-    	<groupId>org.apache.tomcat</groupId>
-    	<artifactId>tomcat-catalina</artifactId>
-	    <version>${version.tomcat-catalina}</version>
-		<scope>test</scope>
-	</dependency>
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-catalina</artifactId>
+      <version>${version.tomcat-catalina}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
       
   <build>
@@ -160,7 +167,7 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>      
+      </plugin>       
     </plugins>
     
     <pluginManagement>
@@ -228,9 +235,10 @@
   </reporting>
   
   <profiles>
-  	<!-- 
-	  	launchctl setenv JAVA_HOME /Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home
-  	 -->
+    <!-- 
+      launchctl setenv JAVA_HOME /Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home
+    -->
+
     <profile>
         <id>default-profile</id>
         <activation>
@@ -271,6 +279,40 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile> 
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.5</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.3</version>
+            <extensions>true</extensions>
+            <configuration>
+              <serverId>ossrh</serverId>
+              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+              <autoReleaseAfterClose>true</autoReleaseAfterClose>
+            </configuration>
           </plugin>
         </plugins>
       </build>
