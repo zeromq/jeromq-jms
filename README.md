@@ -6,7 +6,7 @@ This is JMS 1.1 wrapper around ZERO MQ to enable JEE applications to use the ZMQ
 
 Core to the wrapper is the Gateway classes that act a publisher or subscriber within JMS to/from ZMQ. A gateway contains the protocol for the interaction with the external communicating instances. It also contains 1 or more Sockets, to enable failure, and parallel through put.
 
-Each gateway has a primary direction, or either outgoing, or incoming. All the examples and test use both types to test the ZERO MQ functionality.
+Each gateway has a primary direction, either outgoing, or incoming. All the examples and test use both types to test the ZERO MQ functionality.
 
 I have made the wrapper very extensible to use;
 -       the socket type (PUB, SUB, PULL, PUSH, etc…);
@@ -15,7 +15,7 @@ I have made the wrapper very extensible to use;
 -       the JNDI context
 -       and more.
 
-The library was aimed to work with Spring and with Tomcat. However, it should work it should work in other JEE servers. For this reason I have implement a JMS URI. Sadly there is no open standard, but it is loosely based a similar functionality in Apache MQ.
+The library was aimed to work with Spring and with Tomcat. However, it should work in other JEE servers. For this reason I have implement a JMS URI. Sadly there is no open standard, but it is loosely based a similar functionality in Apache MQ.
 
 Why Bother? By and large this is true. It only has a limited scope within the JMS world which are much more robust, but for those that do not care to much about transactions, and duplications, but want pure though put it does have some merit. JeroMQ-JMS was written to be incorporated in another large application which involves the mash-up of distributed and disparate data to be queried and viewed in real time (zero copy of sorts). By using the JMS API as the messaging standard it allows choice (i.e. RabbitMQ, and combinations there-of, etc…), along with communicating with non JMS applications.
 
