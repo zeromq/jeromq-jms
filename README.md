@@ -17,7 +17,7 @@ I have made the wrapper very extensible to use;
 
 The library was aimed to work with Spring and with Tomcat. However, it should work in other JEE servers. For this reason I have implement a JMS URI. Sadly there is no open standard, but it is loosely based a similar functionality in Apache MQ.
 
-Why Bother? By and large this is true. It only has a limited scope within the JMS world which are much more robust, but for those that do not care to much about transactions, and duplications, but want pure though put it does have some merit. JeroMQ-JMS was written to be incorporated in another large application which involves the mash-up of distributed and disparate data to be queried and viewed in real time (zero copy of sorts). By using the JMS API as the messaging standard it allows choice (i.e. RabbitMQ, and combinations there-of, etc…), along with communicating with non JMS applications.
+Why bother? By and large this is true. It only has a limited scope within the JMS world which are much more robust, but for those that do not care to much about transactions, and duplications, but want raw speed it does have some merit, or those that wish to a JavaEE only within there application. JeroMQ-JMS was written to be incorporated in another large application which involves the mash-up of distributed and disparate data to be queried and viewed in real time (zero copy of sorts). By using the JMS API as the messaging standard it allows choice (i.e. RabbitMQ, and combinations there-of, etc…), along with communicating with non JMS applications.
 
 
 ## Design
@@ -43,7 +43,7 @@ gateway.bind | | The ZeroMQ bind or connection specification.
 gateway.addr | | A “semi-colon” separated list of  One or more ZeroMQ addresses, i.e.
 redelivery.retry | 3 | Number of reties on delivery failure before assigning the message to Dead Letter functionality.
 
-Using a URI seemed a novel idea at the time, and makes TOMCAT context configuration allot easier. A JMS connection has a collection of URIs which is used by the Gateway Factory to construct Gateways for JMS queues and topics. The Factory take the URI and constructs the Gateway based on properties of the URI and “default” values. The factory uses the UriParameter annotation on the classes and methods to initialize a gateway. This also allows for the extension of the library with user specific classes (i.e. protocols, and message adaptors etc…). When no URI annotations can be found for a parameter on the URI then an attempt is made against  “getters” and “class” names.
+Using a URI seemed a novel idea at the time, and makes TOMCAT context configuration allot easier. A JMS connection has a collection of URIs which is used by the Gateway Factory to construct Gateways for JMS queues and topics. The Factory takes a URI and constructs the Gateway based on properties of the URI and “default” values. The factory uses the UriParameter annotation on the classes and methods to initialize a gateway. This also allows for the extension of the library with user specific classes (i.e. protocols, and message adaptors etc…). When no URI annotations can be found for a parameter on the URI then an attempt is made against  “getters” and “class” names.
 
 More work needs to be done to add more ZMQ sockets options.
 
@@ -67,8 +67,9 @@ org.zeromq.jms.util | Utility class
 
 The library comes with serialized JMS and STOMP out of the box. Anything else would require other dependencies which others may or may not want to implement. To implement a new type you will need to create a new event handler.
 
-To include other functionality not within JeroMQ-JMS you will to implement one or more of the interfaces (i.e. ZmqGateway, ZmqEventHalandler, ZmqFiltePolciy, etc…). You then need to be able to bind it to the URI. Doing this will require the GatwayFactory access to the class. This can be down by either using “org.zerom.jms” as the start of the package of the class, or adding to the “extensionPackageNames” parameter of the factory constructor (see the ZmqObjectFactor and the Junit tests for inspiration). Even once the new class is accessible you will still need to use “ZmqUriParameter” within you class, or ensure the URIL uses class and methods names along with ZmqUriParameter annotation.
+Extend the functionality of JeroMQ-JMS is done through the implement one or more of the interfaces (i.e. ZmqGateway, ZmqEventHalandler, ZmqFilterPolicy, etc…). You then need to be able to bind it to the URI. Doing this will require the GatwayFactory access to the class. This can be down by either using “org.zerom.jms” as the start of the package of the class, or adding to the “extensionPackageNames” parameter of the factory constructor (see the ZmqObjectFactor and the Junit tests for inspiration). Even once the new class is accessible you will still need to use “ZmqUriParameter” within you class, or ensure the URIL uses class and methods names along with ZmqUriParameter annotation.
 
+AS disucssed already the functionality is based around core interface. To add a new events and strategies into the messaging system you will need to add functionality areounf the ZmqEventHandler interface. Different filtering of messages then ZmqFilterPolicy functionality would be added. Like wide for messager protocols, etc... Alot of thought and effort (re-writes) went into the interface to enable loose coupling and functional flexibility, to allow it to be applied to exising zeromq enviroments.
 
 ## Transactions
 
