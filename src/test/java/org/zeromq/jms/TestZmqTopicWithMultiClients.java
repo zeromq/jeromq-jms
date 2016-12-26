@@ -44,7 +44,7 @@ public class TestZmqTopicWithMultiClients {
     private static final String TOPIC_ADDR = "tcp://*:9720";
     private static final String TOPIC_URI = "jms:topic:" + TOPIC_NAME + "?gateway.addr=" + TOPIC_ADDR + "&redlivery.retry=0&event=stomp";
 
-    private static final int CLIENT_COUNT = 20;
+    private static final int CLIENT_COUNT = 5;
     private static final int CLIENT_MESSAGE_COUNT = 1000;
     private static final int CLIENT_MESSAGE_COMMIT_COUNT = 7000;
 
@@ -103,10 +103,10 @@ public class TestZmqTopicWithMultiClients {
 
                     // client now ready reading messages
                     clientStartedLatch.countDown();
+                    LOGGER.info("Client Ready & Listening: " + clientId);
 
                     try {
-                        messageCountLatch.await(20, TimeUnit.SECONDS);
-
+                        messageCountLatch.await(100, TimeUnit.SECONDS);
                         Assert.assertEquals(clientId + " missing messages", 0, messageCountLatch.getCount());
                     } catch (InterruptedException ex) {
                         throw ex;
@@ -120,8 +120,7 @@ public class TestZmqTopicWithMultiClients {
 
             // client now finished reading messages
             clientStoppedLatch.countDown();
-
-            LOGGER.info("Stopping client: " + clientId);
+            LOGGER.info("Stopping client: " + clientId + ", clientStoppedLatch=" + clientStoppedLatch.getCount());
         }
 
         @Override
@@ -198,6 +197,8 @@ public class TestZmqTopicWithMultiClients {
 
                 final AtomicInteger messageCount = new AtomicInteger(0);
 
+                LOGGER.info("<<<< START CLIENTS >>>>");
+
                 for (int i = 0; i < CLIENT_COUNT; i++) {
                     Client client = new Client(clientStartedDownLatch, clientStoppedDownLatch, messageCount, "CLIENT_" + i, clientTransacted);
                     client.start();
@@ -205,12 +206,16 @@ public class TestZmqTopicWithMultiClients {
 
                 // Wait till all the clients have started
                 try {
-                    clientStartedDownLatch.await(10, TimeUnit.SECONDS);
+                    clientStartedDownLatch.await(60, TimeUnit.SECONDS);
                 } catch (InterruptedException ex) {
                     throw ex;
                 }
 
-                Thread.sleep(10000);
+                Assert.assertEquals(0, clientStartedDownLatch.getCount());
+
+                LOGGER.info("<<<< SENDING MESSAGES >>>>");
+
+                Thread.sleep(3000);
 
                 // Can send messages now
                 for (int i = 0; i < CLIENT_MESSAGE_COUNT; i++) {
@@ -229,13 +234,14 @@ public class TestZmqTopicWithMultiClients {
 
                 // Wait till all the clients have stopped
                 try {
-                    clientStoppedDownLatch.await(10, TimeUnit.SECONDS);
+                    clientStoppedDownLatch.await(60, TimeUnit.SECONDS);
                 } catch (InterruptedException ex) {
                     throw ex;
                 }
 
-                Thread.sleep(3000);
-
+                LOGGER.info("<<<< COMPLETE CHECKS >>>>");
+                
+                Assert.assertEquals(0, clientStoppedDownLatch.getCount());
                 Assert.assertEquals(totalMessageCount, messageCount.intValue());
             } finally {
                 session.close();
