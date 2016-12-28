@@ -4,12 +4,11 @@
 
   <groupId>org.zeromq</groupId>
   <artifactId>jeromq-jms</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0-RELEASE</version>
   <packaging>jar</packaging>
 
   <name>jeromq-jms</name>
   <description>ZeroMQ implementation of the JMS API</description>
-  
   <url>https://github.com/zeromq/jeromq-jms</url>
 
   <licenses>
@@ -18,6 +17,15 @@
       <url>http://mozilla.org/MPL/2.0/</url>
     </license>
   </licenses>
+
+  <developers>
+  	<developer>
+	  <name>Jeremy Miller</name>
+	  <email>mjeremym@gmail.com</email>
+	  <organization>zeromq</organization>
+  	  <organizationUrl></organizationUrl>
+  	</developer>
+  </developers>
 
   <scm>
     <url>git@github.com:zeromq/jeromq-jms.git</url>
@@ -31,6 +39,10 @@
       <id>ossrh</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
   </distributionManagement>
   
   <properties>
@@ -62,14 +74,16 @@
       <artifactId>jconsole</artifactId>
       <version>${version.java}</version>
       <scope>system</scope>
-      <systemPath>${jconsolejar}</systemPath>
+      <systemPath>/Library/Java/JavaVirtualMachines/jdk1.8.0_66.jdk/Contents/Home/lib/jconsole.jar</systemPath>
+      <!-- <systemPath>${jconsolejar}</systemPath>  -->
     </dependency>
     <dependency>
       <groupId>com.sun.tools</groupId>
       <artifactId>tools</artifactId>
       <version>${version.java}</version>
       <scope>system</scope>
-      <systemPath>${toolsjar}</systemPath>
+      <systemPath>/Library/Java/JavaVirtualMachines/jdk1.8.0_66.jdk/Contents/Home/lib/tools.jar</systemPath>
+      <!-- <systemPath>${toolsjar}</systemPath> -->
     </dependency>
 
     <dependency>
@@ -284,14 +298,20 @@
       </build>
     </profile>
 
-    <profile> 
-      <id>release</id>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.5</version>
+            <version>1.6</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
@@ -301,18 +321,6 @@
                 </goals>
               </execution>
             </executions>
-          </plugin>
-
-          <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.3</version>
-            <extensions>true</extensions>
-            <configuration>
-              <serverId>ossrh</serverId>
-              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-              <autoReleaseAfterClose>true</autoReleaseAfterClose>
-            </configuration>
           </plugin>
         </plugins>
       </build>
