@@ -109,11 +109,16 @@ public class ZmqSerializeEventHandler implements ZmqEventHandler {
 
     @Override
     public ZmqSendEvent createSendEvent(final ZmqMessage message) {
+        return createSendEvent(null, message);
+    }
+
+    @Override
+    public ZmqSendEvent createSendEvent(final Object messageId, final ZmqMessage message) {
         ZmqSendEvent event = new SerializeEvent(message);
 
         return event;
     }
-
+ 
     @Override
     public ZmqAckEvent createAckEvent(final ZmqEvent event) {
         throw new UnsupportedOperationException("This is not a supported operation.");
@@ -150,7 +155,7 @@ public class ZmqSerializeEventHandler implements ZmqEventHandler {
                 throw new ZmqException("Unable to convert message to and array of bytes: " + message, ex);
             }
 
-            byte[] data = byteArrayOutput.toByteArray();
+            final byte[] data = byteArrayOutput.toByteArray();
 
             msg.add(data);
 

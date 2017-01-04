@@ -32,6 +32,7 @@ import org.zeromq.jms.protocol.filter.ZmqFilterPolicy;
 import org.zeromq.jms.protocol.filter.ZmqFixedFilterPolicy;
 import org.zeromq.jms.protocol.redelivery.ZmqRedeliveryPolicy;
 import org.zeromq.jms.protocol.redelivery.ZmqRetryRedeliveryPolicy;
+import org.zeromq.jms.protocol.store.ZmqJournalStore;
 import org.zeromq.jms.selector.ZmqMessageSelector;
 import org.zeromq.jms.selector.ZmqMessageSelectorFactory;
 
@@ -53,6 +54,7 @@ public class ZmqGatewayFactory {
     private final List<Class<?>> eventHandlerClasses;
     private final List<Class<?>> filterPolicyClasses;
     private final List<Class<?>> redeliveryPolicyClasses;
+    private final List<Class<?>> journalStoreClasses;
 
     /**
      * Construct the protocol factory around the destination schema.
@@ -66,6 +68,7 @@ public class ZmqGatewayFactory {
         this.eventHandlerClasses = getClasses(extensionPackageNames, ZmqEventHandler.class);
         this.filterPolicyClasses = getClasses(extensionPackageNames, ZmqFilterPolicy.class);
         this.redeliveryPolicyClasses = getClasses(extensionPackageNames, ZmqRedeliveryPolicy.class);
+        this.journalStoreClasses = getClasses(extensionPackageNames, ZmqJournalStore.class);
     }
 
     /**
@@ -131,6 +134,7 @@ public class ZmqGatewayFactory {
         final ZmqRedeliveryPolicy redelivery = null;
         final ZmqEventHandler eventHandler = getZmqEventHandler(destination);
         final ZmqFilterPolicy filter = getZmqFilterPolicy(destination);
+        final ZmqJournalStore store = getZmqJournalStore(destination);
 
         try {
             final ZmqURI uri = (destinationUri == null) ? destinationSchema.get(destinationName) : destinationUri;
@@ -157,7 +161,8 @@ public class ZmqGatewayFactory {
 
             final Constructor<?> consumerConstructor = consumerClass.getConstructor(String.class, ZMQ.Context.class, ZmqSocketType.class,
                     boolean.class, String.class, int.class, ZmqFilterPolicy.class, ZmqEventHandler.class, ZmqGatewayListener.class,
-                    ZmqMessageSelector.class, ZmqRedeliveryPolicy.class, boolean.class, ZmqGateway.Direction.class);
+                    ZmqJournalStore.class, ZmqMessageSelector.class, ZmqRedeliveryPolicy.class,
+                    boolean.class, ZmqGateway.Direction.class);
 
             final boolean socketBound = uri.getOptionValue("gateway.bind", isBound);
             final ZmqSocketType socketType = ZmqSocketType.valueOf(uri.getOptionValue("gateway.type", type.toString()));
@@ -169,7 +174,8 @@ public class ZmqGatewayFactory {
 
             final String name = namePrefix + "@" + socketAddr;
             final ZmqGateway protocol = (ZmqGateway) consumerConstructor.newInstance(name, context, socketType, socketBound, socketAddr, flags,
-                    filter, eventHandler, null, selector, redelivery, transacted, ZmqGateway.Direction.INCOMING);
+                    filter, eventHandler, null, store, selector, redelivery, 
+                    transacted, ZmqGateway.Direction.INCOMING);
 
             if (uri != null) {
                 final Map<String, List<String>> parameters = uri.getOptions();
@@ -212,6 +218,7 @@ public class ZmqGatewayFactory {
         final ZmqEventHandler handler = getZmqEventHandler(destination);
         final ZmqFilterPolicy filter = getZmqFilterPolicy(destination);
         final ZmqGatewayListener listener = null;
+        final ZmqJournalStore store = getZmqJournalStore(destination);
 
         try {
             final ZmqURI uri = (destinationUri == null) ? destinationSchema.get(destinationName) : destinationUri;
@@ -234,7 +241,8 @@ public class ZmqGatewayFactory {
 
             final Constructor<?> producerConstructor = producerClass.getConstructor(String.class, ZMQ.Context.class, ZmqSocketType.class,
                     boolean.class, String.class, int.class, ZmqFilterPolicy.class, ZmqEventHandler.class, ZmqGatewayListener.class,
-                    ZmqMessageSelector.class, ZmqRedeliveryPolicy.class, boolean.class, ZmqGateway.Direction.class);
+                    ZmqJournalStore.class, ZmqMessageSelector.class, ZmqRedeliveryPolicy.class,
+                    boolean.class, ZmqGateway.Direction.class);
 
             final boolean socketBound = uri.getOptionValue("gateway.bind", isBound);
             final ZmqSocketType socketType = ZmqSocketType.valueOf(uri.getOptionValue("gateway.type", type.toString()));
@@ -246,7 +254,8 @@ public class ZmqGatewayFactory {
 
             final String name = namePrefix + "@" + socketAddr;
             final ZmqGateway protocol = (ZmqGateway) producerConstructor.newInstance(name, context, socketType, socketBound, socketAddr, flags,
-                    filter, handler, listener, selector, redelivery, transacted, ZmqGateway.Direction.OUTGOING);
+                    filter, handler, listener, store, selector, redelivery,
+                    transacted, ZmqGateway.Direction.OUTGOING);
 
             if (uri != null) {
                 final Map<String, List<String>> parameters = uri.getOptions();
@@ -434,6 +443,56 @@ public class ZmqGatewayFactory {
             LOGGER.log(Level.SEVERE, "Unable resolve the message filter policy for destination " + name, ex);
 
             throw new ZmqException("Unable resolve the message filter policy for destination: " + name, ex);
+        }
+    }
+
+    /**
+     * Return the defaulter message journal store for this destination.
+     * @param  destination    the destination.
+     * @return                return the re-delivery policy
+     * @throws ZmqException   throw JMS exception when journal store cannot be resolved
+     */
+    protected ZmqJournalStore getZmqJournalStore(final AbstractZmqDestination destination) throws ZmqException {
+        final String name = destination.getName();
+
+        try {
+        	ZmqJournalStore store = null;
+
+            if (destinationSchema.containsKey(name)) {
+                final ZmqURI uri = destinationSchema.get(name);
+                final String value = uri.getOptionValue("store");
+
+                if (value != null) {
+                    final Class<?> journalStoreClass = ClassUtils.getClass(journalStoreClasses, ZmqComponent.class, "value", value);
+
+                    if (journalStoreClass == null) {
+                        throw new ZmqException("Unable to find specified journal store: " + value);
+                    } else {
+                        store = (ZmqJournalStore) journalStoreClass.newInstance();
+
+                        LOGGER.info("Using journal store  (" + store.getClass().getCanonicalName() + ") for destination: "
+                                + destination);
+                    }
+                }
+
+            }
+
+            if (store == null) {
+                LOGGER.info("Using NO jounral store for destination: " + destination);
+            } 
+
+            if (destinationSchema.containsKey(name) && (store != null)) {
+                final ZmqURI uri = destinationSchema.get(name);
+                final Map<String, List<String>> parameters = uri.getOptions();
+
+                ClassUtils.setMethods(parameters, store);
+            }
+
+            return store;
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "Unable resolve the message journal store for destination " + name, ex);
+
+            throw new ZmqException("Unable resolve the message journal store for destination: " + name, ex);
         }
     }
 

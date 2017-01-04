@@ -45,10 +45,10 @@ public class TestZmqFireAndForgetGatewayWithRetry {
         final ZmqRedeliveryPolicy redelivery = new ZmqRetryRedeliveryPolicy(3);
 
         final ZmqGateway sender = new ZmqFireAndForgetGateway("protocol:sender", context, ZmqSocketType.PUSH, false, SOCKET_ADDR, flags, null,
-                handler, null, null, null, false, Direction.OUTGOING);
+                handler, null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqGateway receiver = new ZmqFireAndForgetGateway("protocol:receiver", context, ZmqSocketType.PULL, true, SOCKET_ADDR, flags, null,
-                handler, null, null, redelivery, true, Direction.INCOMING);
+                handler, null, null, null, redelivery, true, Direction.INCOMING);
 
         try {
             final ZmqTextMessage outMessage1 = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();

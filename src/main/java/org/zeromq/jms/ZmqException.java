@@ -31,6 +31,7 @@ public class ZmqException extends JMSException {
      */
     public ZmqException(final String message, final Exception cause) {
         super(message);
+
         setLinkedException(cause);
     }
 }

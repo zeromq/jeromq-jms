@@ -47,6 +47,8 @@ public class TestZmqMessage {
         Assert.assertEquals(new Integer(1), message.getObjectProperty("Object"));
 
         message.setJMSCorrelationID("correlationID");
+        Assert.assertEquals("correlationID", message.getJMSCorrelationID());
+
         message.setJMSCorrelationIDAsBytes(new byte[] { Byte.decode("0x01"), Byte.decode("0x02") });
         message.setJMSDeliveryMode(1);
         message.setJMSDestination(new ZmqQueue("queue"));
@@ -58,7 +60,6 @@ public class TestZmqMessage {
         message.setJMSTimestamp(200);
         message.setJMSType("type");
 
-        Assert.assertEquals("correlationID", message.getJMSCorrelationID());
         Assert.assertArrayEquals(new byte[] { Byte.decode("0x01"), Byte.decode("0x02") }, message.getJMSCorrelationIDAsBytes());
         Assert.assertEquals(1, message.getJMSDeliveryMode());
         Assert.assertEquals(new ZmqQueue("queue"), message.getJMSDestination());
