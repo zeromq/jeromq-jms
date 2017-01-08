@@ -46,7 +46,7 @@ public class ZmqParGateway extends AbstractZmqGateway {
             final ZmqJournalStore store, final ZmqMessageSelector selector, final ZmqRedeliveryPolicy redelivery,
             final boolean transacted, final Direction direction) {
 
-        super(name, context, type, isBound, addr, flags, filter, handler, listener, store, selector, redelivery, transacted, getAcknowledge(direction),
+        super(name, context, getType(type, direction), isBound, addr, flags, filter, handler, listener, store, selector, redelivery, transacted, getAcknowledge(direction),
                 getHeatbreat(direction), direction);
     }
 
@@ -66,6 +66,14 @@ public class ZmqParGateway extends AbstractZmqGateway {
      */
     protected static boolean getHeatbreat(final Direction direction) {
         return (direction == Direction.OUTGOING);
+    }
+
+    protected static ZmqSocketType getType(final ZmqSocketType tyoe, final Direction direction) {
+        if (direction == Direction.OUTGOING) {
+        	return ZmqSocketType.DEALER;
+        }
+        
+        return ZmqSocketType.ROUTER;
     }
 
     @Override

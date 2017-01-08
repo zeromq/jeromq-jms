@@ -29,7 +29,7 @@ public interface ZmqGateway {
     /**
      * Bind or Connect the ZMQ socket, etc...
      */
-    void open() throws ZmqException;
+    void open();
 
     /**
      * @return  return true when socket is open.
