@@ -213,8 +213,8 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         String[] socketAddrs = getSocketAddrs();
         socketExecutor = Executors.newFixedThreadPool(socketAddrs.length);
 
-        final boolean socketOutgoing = (direction == Direction.OUTGOING || heartbeat);
-        final boolean socketIncoming = (direction == Direction.INCOMING || acknowledge);
+        final boolean socketOutgoing = (direction == Direction.OUTGOING || heartbeat || acknowledge);
+        final boolean socketIncoming = (direction == Direction.INCOMING || heartbeat || acknowledge);
 
         for (String socketAddr : socketAddrs) {
             final ZMQ.Socket socket = getSocket(context, type.getType());
@@ -280,10 +280,24 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             public ZmqEvent send(final ZmqSocketSession source) {
                 ZmqEvent sendEvent = null;
 
-                try {
-                    sendEvent = outgoingQueue.poll(SOCKET_WAIT_MILLI_SECOND, TimeUnit.MILLISECONDS);
-                } catch (InterruptedException ex) {
-                    LOGGER.log(Level.WARNING, "Polling of outgoing queue interrupted", ex);
+                if (journalStore != null) {
+                	try {
+                		final ZmqJournalEntry journalEntry = journalStore.read();
+                		if (journalEntry != null && (!trackEventMap.containsKey(journalEntry.getMessageId()))) {
+                			sendEvent =
+                                eventHandler.createSendEvent(journalEntry.getMessageId(), journalEntry.getMessage());
+                		}
+                	} catch (ZmqException ex) {
+                		LOGGER.log(Level.WARNING, "Failed to read from the journal store", ex);
+                	}
+                }
+
+                if (sendEvent == null) {
+                	try {
+                		sendEvent = outgoingQueue.poll(SOCKET_WAIT_MILLI_SECOND, TimeUnit.MILLISECONDS);
+                	} catch (InterruptedException ex) {
+                		LOGGER.log(Level.WARNING, "Polling of outgoing queue interrupted", ex);
+                	}
                 }
 
                 // No message(s) so send a heart-beat when required

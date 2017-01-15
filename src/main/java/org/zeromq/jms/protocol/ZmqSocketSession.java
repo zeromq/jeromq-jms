@@ -335,7 +335,7 @@ public class ZmqSocketSession implements Runnable {
 
                     // Send back a message when requested
                     if (replyEvent != null) {
-                        if (socketOutgoing) {
+                        if (socketIncoming) {
                             final ZMsg replyMsg = handler.createMsg(socketType, filter, replyEvent);
 
                             replyMsg.send(socket, true);
