@@ -93,6 +93,19 @@ public class TestZmqSimpleMessageSelector {
         }
 
         try {
+            final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("var1 like '%is a%'");
+            final Map<String, Object> variables = new HashMap<String, Object>();
+            variables.put("var2", "this is a test");
+
+            final boolean result = selector.evaluate(variables);
+
+            Assert.assertFalse
+                    (result);
+        } catch (Exception ex) {
+            Assert.fail(ex.getMessage());
+        }
+
+        try {
             final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("var1 like 't__t'");
             final Map<String, Object> variables = new HashMap<String, Object>();
             variables.put("var1", "test");
