@@ -215,7 +215,8 @@ public class TestZmqQueueWithMultiClients {
                     throw ex;
                 }
 
-                Thread.sleep(1000);
+                executor.shutdown();
+                executor.awaitTermination(10000, TimeUnit.MILLISECONDS);
 
                 Assert.assertEquals(totalMessageCount, messageCount.get());
             } finally {
