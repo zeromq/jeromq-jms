@@ -7,8 +7,14 @@ package org.zeromq.jms;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import java.io.Serializable;
+
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import java.text.ParseException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,10 +36,7 @@ import java.util.regex.Pattern;
  *
  * ...&redelivery.retry=3
  */
-public class ZmqURI implements Serializable {
-
-    /* Unique serialisation identifier */
-    private static final long serialVersionUID = -3213444642911276900L;
+public class ZmqURI implements Externalizable {
 
     /**
      *  address:   (tcp://(\\*|((\\w+|\\.)+)):\\d+)  ==> tcp://*:123, tcp://zmq.org, etc...
@@ -44,15 +47,15 @@ public class ZmqURI implements Serializable {
     private static final String TOKENISE_REGX = "(tcp://(\\*|((\\w+|\\.)+)):\\d+)|(inproc://\\w+)|(\\w|\\.)+|:|\\?|=|\\&";
 
     /* String used to construct the URI */
-    private final String str;
+    private String str;
     /* URI scheme, i.e. JMS */
-    private final String scheme;
+    private String scheme;
     /* Type of destination, i.e. queue, topic, etc... */
-    private final String destinationType;
+    private String destinationType;
     /* Name of destination */
-    private final String destinationName;
+    private String destinationName;
     /* Parameter name/value(s) of the URI */
-    private final Map<String, List<String>> options;
+    private Map<String, List<String>> options;
 
     /**
      * The token parsed from the expression.
@@ -88,6 +91,12 @@ public class ZmqURI implements Serializable {
         }
     }
 
+    /**
+     * Create ONLY for the externalizable interface.
+     */
+    public ZmqURI() {
+    }
+    
     /**
      * Private constructor of the URI.
      * @param str              the URI as a string
@@ -390,4 +399,53 @@ public class ZmqURI implements Serializable {
     public String toString() {
         return "ZmqURI [str=" + str + "]";
     }
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(str);
+	    out.writeObject(scheme);
+	    out.writeObject(destinationType);
+	    out.writeObject(destinationName);
+	   
+	    out.writeInt(options.size());
+	    
+	    for (String name : options.keySet()) {
+	    	final List<String> values = options.get(name);
+	    	
+		    out.writeInt(values.size());
+		    
+		    for (String value : values) {
+		    	out.writeObject(value);
+		    }
+	    }
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		str = (String) in.readObject();
+	    scheme = (String) in.readObject();
+	    destinationType = (String) in.readObject();
+	    destinationName = (String) in.readObject();
+	    options = new HashMap<String, List<String>>();
+	    
+	    final int optionCount = in.readInt();
+	    
+	    for (int i = 0; i < optionCount; i++) {
+	    	final String optionName = (String) in.readObject();
+		    final int valueCount = in.readInt();
+
+		    if (!options.containsKey(optionName)) {
+                // first value of class of the custom name
+                options.put(optionName, new ArrayList<String>());
+            }
+
+            final List<String> optionValues = options.get(optionName);
+
+            for (int j = 0; j < valueCount; j++) {
+		    	final String optionValue = (String) in.readObject();
+
+		    	optionValues.add(optionValue);
+		    }
+	    }
+	}
 }

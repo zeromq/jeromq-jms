@@ -14,6 +14,7 @@ import org.zeromq.jms.annotation.ZmqUriParameter;
 import org.zeromq.jms.protocol.event.ZmqEventHandler;
 import org.zeromq.jms.protocol.filter.ZmqFilterPolicy;
 import org.zeromq.jms.protocol.redelivery.ZmqRedeliveryPolicy;
+import org.zeromq.jms.protocol.store.ZmqJournalStore;
 import org.zeromq.jms.selector.ZmqMessageSelector;
 
 /**
@@ -25,25 +26,27 @@ public class ZmqParGateway extends AbstractZmqGateway {
 
     /**
      * Construct the PAR gateway.
-     * @param name         the name of display the gateway
-     * @param context      the Zero MQ context
-     * @param type         the Zero MQ socket type, i.e. Push, Pull, Router, Dealer, etc...
-     * @param isBound      the Zero MQ socket bind/connection indicator
-     * @param addr         the Zero MQ socket address(es) is comma seperated format
-     * @param flags        the Zero MQ socket send flags
-     * @param filter       the message filter policy
-     * @param handler      the message event adaption functionality
-     * @param listener     the listener instance
-     * @param selector     the message selection policy
-     * @param redelivery   the message re-delivery policy
-     * @param transacted   the transaction indicator
-     * @param direction    the direction, i.e. Incoming, Outgoing, etc..
+     * @param name          the name of display the gateway
+     * @param context       the Zero MQ context
+     * @param type          the Zero MQ socket type, i.e. Push, Pull, Router, Dealer, etc...
+     * @param isBound       the Zero MQ socket bind/connection indicator
+     * @param addr          the Zero MQ socket address(es) is comma separated format
+     * @param flags         the Zero MQ socket send flags
+     * @param filter        the message filter policy
+     * @param handler       the message event adaption functionality
+     * @param listener      the listener instance
+     * @param store         the (optional) message store
+     * @param selector      the (optional) message selection policy
+     * @param redelivery    the (optional) message re-delivery policy
+     * @param transacted    the transaction indicator
+     * @param direction     the direction, i.e. Incoming, Outgoing, etc..
      */
     public ZmqParGateway(final String name, final Context context, final ZmqSocketType type, final boolean isBound, final String addr,
             final int flags, final ZmqFilterPolicy filter, final ZmqEventHandler handler, final ZmqGatewayListener listener,
-            final ZmqMessageSelector selector, final ZmqRedeliveryPolicy redelivery, final boolean transacted, final Direction direction) {
+            final ZmqJournalStore store, final ZmqMessageSelector selector, final ZmqRedeliveryPolicy redelivery,
+            final boolean transacted, final Direction direction) {
 
-        super(name, context, type, isBound, addr, flags, filter, handler, listener, selector, redelivery, transacted, getAcknowledge(direction),
+        super(name, context, getType(type, direction), isBound, addr, flags, filter, handler, listener, store, selector, redelivery, transacted, getAcknowledge(direction),
                 getHeatbreat(direction), direction);
     }
 
@@ -63,6 +66,14 @@ public class ZmqParGateway extends AbstractZmqGateway {
      */
     protected static boolean getHeatbreat(final Direction direction) {
         return (direction == Direction.OUTGOING);
+    }
+
+    protected static ZmqSocketType getType(final ZmqSocketType tyoe, final Direction direction) {
+        if (direction == Direction.OUTGOING) {
+        	return ZmqSocketType.DEALER;
+        }
+        
+        return ZmqSocketType.ROUTER;
     }
 
     @Override

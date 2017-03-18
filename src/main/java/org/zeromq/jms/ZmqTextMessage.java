@@ -7,6 +7,10 @@ package org.zeromq.jms;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
 
@@ -15,19 +19,15 @@ import javax.jms.TextMessage;
  */
 public class ZmqTextMessage extends ZmqMessage implements TextMessage {
 
-    private static final long serialVersionUID = -7137597439112220930L;
-
     private String text;
 
     @Override
     public String getText() throws JMSException {
-
         return text;
     }
 
     @Override
     public void setText(final String text) throws JMSException {
-
         this.text = text;
     }
 
@@ -46,4 +46,17 @@ public class ZmqTextMessage extends ZmqMessage implements TextMessage {
         }
     }
 
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {	
+		super.writeExternal(out);
+		
+	    out.writeObject(text);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+
+		text = (String) in.readObject();
+	}
 }

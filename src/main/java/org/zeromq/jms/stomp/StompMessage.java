@@ -1,5 +1,9 @@
 package org.zeromq.jms.stomp;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 /*
  * Copyright (c) 2015 Jeremy Miller
  *
@@ -15,7 +19,7 @@ import java.util.Map;
 /**
  * STOMP message implementation (https://stomp.github.io).
  */
-public class StompMessage {
+public class StompMessage implements Externalizable {
 
     /**
      *  STOMP frame types as an enumerator.
@@ -155,6 +159,13 @@ public class StompMessage {
     private Map<String, String> headers;
     private String body;
 
+    /**
+     * Constructor ONLY required for Externaliable interface.
+     */
+    public StompMessage() {
+    	
+    }
+    
     /**
      * Construct a default STOMP message.
      * @param frame    the frame
@@ -572,4 +583,36 @@ public class StompMessage {
         final String truncatedBody = (body == null || body.length() < 80) ? body : body.substring(0, 80) + "...";
         return "StompMessage [frame=" + frame + ", headers=" + headers + ", body=" + truncatedBody + "]";
     }
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(frame);
+		out.write(headers.size());
+		
+		for (String name : headers.keySet()) {
+			final String value = headers.get(name);
+			
+			out.writeObject(name);
+			out.writeObject(value);
+		}
+		
+		out.writeObject(body);		
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+	    frame = (FrameType) in.readObject();
+	    headers = new HashMap<String, String>();
+	    
+        final int count = in.readInt();
+
+	    for (int i = 0; i < count; i++) {
+	    	final String name = (String) in.readObject();
+	    	final String value = (String) in.readObject();
+	    	
+	    	headers.put(name,  value);
+	    }
+	    
+	    body = (String) in.readObject();		
+	}
 }

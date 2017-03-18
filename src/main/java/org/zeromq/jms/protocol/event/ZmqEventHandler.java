@@ -23,12 +23,21 @@ import org.zeromq.jms.protocol.filter.ZmqFilterPolicy;
 public interface ZmqEventHandler {
 
     /**
-     * Return the SEND event based on the JMS message.
+     * Return the SEND event based on the JMS message
      * @param  message        the JMS message
      * @return                return the SEND event
      * @throws ZmqException   throw JMS exception on failure
      */
     ZmqSendEvent createSendEvent(ZmqMessage message) throws ZmqException;
+
+    /**
+     * Return the SEND event based on the JMS message.
+     * @param  messageId      the unique message identifier
+     * @param  message        the JMS message
+     * @return                return the SEND event
+     * @throws ZmqException   throw JMS exception on failure
+     */
+    ZmqSendEvent createSendEvent(Object messageId, ZmqMessage message) throws ZmqException;
 
     /**
      * Return the ACK event based on the event.

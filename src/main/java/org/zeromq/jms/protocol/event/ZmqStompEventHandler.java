@@ -292,8 +292,14 @@ public class ZmqStompEventHandler implements ZmqEventHandler {
     }
 
     @Override
-    public ZmqSendEvent createSendEvent(final ZmqMessage message) throws ZmqException {
+    public ZmqSendEvent createSendEvent(final ZmqMessage message) {
         final String messageId = UUID.randomUUID().toString();
+
+        return createSendEvent(messageId, message);
+    }
+
+    @Override
+    public ZmqSendEvent createSendEvent(final Object messageId, final ZmqMessage message) {
         ZmqSendEvent event = new StompSendEvent(null, messageId, message);
 
         return event;

@@ -7,6 +7,10 @@ package org.zeromq.jms;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,8 +23,6 @@ import javax.jms.MapMessage;
  * Zero MQ implementation of a JMS Map Message.
  */
 public class ZmpMapMessage extends ZmqMessage implements MapMessage {
-
-    private static final long serialVersionUID = 4463177134955671773L;
 
     private Map<String, Object> map = new HashMap<String, Object>();
 
@@ -155,4 +157,33 @@ public class ZmpMapMessage extends ZmqMessage implements MapMessage {
     public void setString(final String name, final String value) throws JMSException {
         map.put(name, value);
     }
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {	
+		super.writeExternal(out);
+		
+	    out.writeInt(map.size());
+	    
+	    for (String name : map.keySet()) {
+	    	final Object value = map.get(name);
+	    	
+		   	out.writeObject(value);
+	    }
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+
+	    map = new HashMap<String, Object>();
+	    
+	    final int mapCount = in.readInt();
+	    
+	    for (int i = 0; i < mapCount; i++) {
+	    	final String name = (String) in.readObject();
+		   	final Object value = in.readObject();
+
+		    map.put(name, value);
+	    }
+	}
 }

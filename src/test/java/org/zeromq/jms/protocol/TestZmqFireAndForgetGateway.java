@@ -50,10 +50,10 @@ public class TestZmqFireAndForgetGateway {
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqGateway sender = new ZmqFireAndForgetGateway("protocol:sender", context, ZmqSocketType.PUSH, false, SOCKET_ADDR, flags, null,
-                handler, null, null, null, false, Direction.OUTGOING);
+                handler, null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqGateway receiver = new ZmqFireAndForgetGateway("protocol:receiver", context, ZmqSocketType.PULL, true, SOCKET_ADDR, flags, null,
-                handler, null, null, null, false, Direction.INCOMING);
+                handler, null, null, null, null, false, Direction.INCOMING);
 
         try {
             final ZmqTextMessage outMessage = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();
@@ -95,7 +95,7 @@ public class TestZmqFireAndForgetGateway {
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqGateway sender = new ZmqFireAndForgetGateway("protocol:sender", context, ZmqSocketType.PUSH, false, SOCKET_ADDR, flags, null,
-                handler, null, null, null, true, Direction.OUTGOING);
+                handler, null, null, null, null, true, Direction.OUTGOING);
 
         final CountDownLatch messageCountDownLatch = new CountDownLatch(3);
 
@@ -113,7 +113,7 @@ public class TestZmqFireAndForgetGateway {
         };
 
         final ZmqGateway receiver = new ZmqFireAndForgetGateway("protocol:receiver", context, ZmqSocketType.PULL, true, SOCKET_ADDR, flags, null,
-                handler, listener, null, null, true, Direction.INCOMING);
+                handler, listener, null, null, null, true, Direction.INCOMING);
 
         sender.open();
         receiver.open();
@@ -158,13 +158,13 @@ public class TestZmqFireAndForgetGateway {
         filter.setFilters(new String[] { ZmqFilterPolicy.DEFAULT_FILTER });
 
         final ZmqGateway publisher = new ZmqFireAndForgetGateway("protocol:publisher", context, ZmqSocketType.PUB, true, SOCKET_ADDR, flags, filter,
-                handler, null, null, null, false, Direction.OUTGOING);
+                handler, null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqGateway subscriber1 = new ZmqFireAndForgetGateway("protocol:subscriber1", context, ZmqSocketType.SUB, false, SOCKET_ADDR, flags,
-                filter, handler, null, null, null, false, Direction.INCOMING);
+                filter, handler, null, null, null, null, false, Direction.INCOMING);
 
         final ZmqGateway subscriber2 = new ZmqFireAndForgetGateway("protocol:subscriber2", context, ZmqSocketType.SUB, false, SOCKET_ADDR, flags,
-                filter, handler, null, null, null, false, Direction.INCOMING);
+                filter, handler, null, null, null, null, false, Direction.INCOMING);
 
         try {
             final ZmqTextMessage outMessage = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();
@@ -216,7 +216,7 @@ public class TestZmqFireAndForgetGateway {
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqGateway publisher = new ZmqFireAndForgetGateway("protocol:publisher", context, ZmqSocketType.PUB, true, SOCKET_ADDR, flags, filter,
-                handler, null, null, null, false, Direction.OUTGOING);
+                handler, null, null, null, null, false, Direction.OUTGOING);
 
         // User a count down latch to find 2 of the 3 messages since we have specified "Region IN ('NASA','APAC')"
         final CountDownLatch messageCountDownLatch = new CountDownLatch(2);
@@ -238,7 +238,7 @@ public class TestZmqFireAndForgetGateway {
             final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("Region IN ('NASA','APAC')");
 
             final ZmqGateway subscriber = new ZmqFireAndForgetGateway("protocol:subscriber", context, ZmqSocketType.SUB, false, SOCKET_ADDR, flags,
-                    filter, handler, listener, selector, null, false, Direction.INCOMING);
+                    filter, handler, listener, null, selector, null, false, Direction.INCOMING);
 
             publisher.open();
             subscriber.open();

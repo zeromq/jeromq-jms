@@ -1,5 +1,10 @@
 package org.zeromq.jms;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 /*
  * Copyright (c) 2015 Jeremy Miller
  *
@@ -12,11 +17,17 @@ import javax.jms.Destination;
 /**
  * Abstract class Zero MQ JMS destination.
  */
-public abstract class AbstractZmqDestination implements Destination {
+public abstract class AbstractZmqDestination implements Destination, Externalizable {
 
-    private final String name;
-    private final ZmqURI uri;
+    private String name;
+    private ZmqURI uri;
 
+    /**
+     * Create ONLY for the externalizable interface.
+     */
+    public AbstractZmqDestination() {
+    }
+    
     /**
      * Create a Zero MQ destination with a given name.
      * @param name  the name
@@ -83,4 +94,17 @@ public abstract class AbstractZmqDestination implements Destination {
 
         return true;
     }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(name);
+        out.writeObject(uri);
+    }
+    
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        name = (String) in.readObject();
+        uri = (ZmqURI) in.readObject();
+    }
+
 }

@@ -39,6 +39,7 @@ public class ZmqSocketSession implements Runnable {
     private final int socketFlags;
     private final int socketWaitTime;
     private final boolean socketHeartbeat;
+    private final boolean socketAcknowledge;
     private final ZmqSocketListener socketListener;
 
     private final ZmqSocketMetrics metrics;
@@ -47,24 +48,26 @@ public class ZmqSocketSession implements Runnable {
 
     /**
      * Socket session constructor.
-     * @param process         the process
-     * @param socket          the socket
-     * @param socketType      the socket type
-     * @param socketAddr      the socket address
-     * @param socketBound     the socket "bind" indicator
-     * @param socketIncoming  the socket incoming indicator
-     * @param socketOutgoing  the socket outgoing indicator
-     * @param socketFlags     the socket flags
-     * @param socketWaitTime  the socket wait time (milliseconds)
-     * @param socketHeartbeat the socket "heart-beat" indicator
-     * @param socketListener  the socket listener
-     * @param filter          the ZMQ message filter policy
-     * @param handler         the message event handler
-     * @param metrics         the metrics for the socket
+     * @param process            the process
+     * @param socket             the socket
+     * @param socketType         the socket type
+     * @param socketAddr         the socket address
+     * @param socketBound        the socket "bind" indicator
+     * @param socketIncoming     the socket incoming indicator
+     * @param socketOutgoing     the socket outgoing indicator
+     * @param socketFlags        the socket flags
+     * @param socketWaitTime     the socket wait time (milliseconds)
+     * @param socketHeartbeat    the socket send "heart-beat" indicator
+     * @param socketAcknowledge  the socket always "acknowledge" indicator
+     * @param socketListener     the socket listener
+     * @param filter             the ZMQ message filter policy
+     * @param handler            the message event handler
+     * @param metrics            the metrics for the socket
      */
     public ZmqSocketSession(final AtomicBoolean process, final ZMQ.Socket socket, final ZmqSocketType socketType, final String socketAddr,
             final boolean socketBound, final boolean socketIncoming, final boolean socketOutgoing, final int socketFlags, final int socketWaitTime,
-            final boolean socketHeartbeat, final ZmqSocketListener socketListener, final ZmqFilterPolicy filter, final ZmqEventHandler handler,
+            final boolean socketHeartbeat, final boolean socketAcknowledge,
+            final ZmqSocketListener socketListener, final ZmqFilterPolicy filter, final ZmqEventHandler handler,
             final ZmqSocketMetrics metrics) {
 
         this.process = process;
@@ -78,6 +81,7 @@ public class ZmqSocketSession implements Runnable {
         this.socketFlags = socketFlags;
         this.socketWaitTime = socketWaitTime;
         this.socketHeartbeat = socketHeartbeat;
+        this.socketAcknowledge = socketAcknowledge;
         this.socketListener = socketListener;
 
         this.filter = filter;
@@ -114,10 +118,17 @@ public class ZmqSocketSession implements Runnable {
     }
 
     /**
-     * @return  return the socket heart-beat indicator
+     * @return  return the socket send heart-beat indicator
      */
     public boolean isHeartbeat() {
         return socketHeartbeat;
+    }
+
+    /**
+     * @return  return the socket always acknowledge indicator
+     */
+    public boolean isAcknowledge() {
+        return socketAcknowledge;
     }
 
     /**
@@ -324,7 +335,7 @@ public class ZmqSocketSession implements Runnable {
 
                     // Send back a message when requested
                     if (replyEvent != null) {
-                        if (socketOutgoing) {
+                        if (socketIncoming) {
                             final ZMsg replyMsg = handler.createMsg(socketType, filter, replyEvent);
 
                             replyMsg.send(socket, true);
@@ -349,6 +360,6 @@ public class ZmqSocketSession implements Runnable {
     public String toString() {
         return "ZmqSocketSession [socketType=" + socketType + ", socketAddr=" + socketAddr + ", socketBound=" + socketBound + ", socketIncoming="
                 + socketIncoming + ", socketOutgoing=" + socketOutgoing + ", socketFlags=" + socketFlags + ", socketWaitTime=" + socketWaitTime
-                + ", socketHeartbeat=" + socketHeartbeat + "]";
+                + ", socketHeartbeat=" + socketHeartbeat + ", socketAcknowledge=" + socketAcknowledge + "]";
     }
 }

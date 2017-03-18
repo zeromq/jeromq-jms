@@ -40,7 +40,7 @@ import com.sun.tools.jconsole.JConsolePlugin;
  *    https://bitbucket.org/pjtr/topthreads
  *    http://stackoverflow.com/questions/8693342/drawing-a-simple-line-graph-in-java
  */
-@SuppressWarnings("restriction")
+//@SuppressWarnings("restriction")
 public class ZmqJConsolePluglin extends JConsolePlugin implements PropertyChangeListener {
 
     private ZmqMonitorTable customPanel = null;
