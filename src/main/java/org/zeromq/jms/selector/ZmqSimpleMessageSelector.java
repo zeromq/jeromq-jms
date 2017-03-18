@@ -629,7 +629,11 @@ public class ZmqSimpleMessageSelector implements ZmqMessageSelector {
                         && (Boolean) evaluate(results[0], Operator.LESS, results[2]);
             case LIKE:
                 final String pattern = ((String) results[1]).replaceAll("_", ".").replaceAll("%", ".*");
-                return Pattern.matches(pattern, (String) results[0]);
+                if (results[0] == null) {
+                    return false;
+                } else {
+                    return Pattern.matches(pattern, (String) results[0]);
+                }
             case IS_NULL:
                 return (results[0] == null);
             case IS_NOT_NULL:
