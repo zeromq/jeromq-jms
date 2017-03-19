@@ -32,17 +32,17 @@ public class ZmqObjectMessage extends ZmqMessage implements ObjectMessage {
         this.object = object;
     }
 
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {	
-		super.writeExternal(out);
-		
-	    out.writeObject(object);
-	}
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        super.writeExternal(out);
 
-	@Override
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		super.readExternal(in);
+        out.writeObject(object);
+    }
 
-		object = (Serializable) in.readObject();
-	}
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+
+        object = (Serializable) in.readObject();
+    }
 }

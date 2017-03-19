@@ -14,9 +14,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -235,7 +237,7 @@ public class ClassUtils {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         final String path = packageName.replace('.', '/');
         final Enumeration<URL> resources = classLoader.getResources(path);
-        final List<File> dirs = new LinkedList<File>();
+        final Set<File> dirs = new HashSet<File>();
 
         while (resources.hasMoreElements()) {
             URL resource = resources.nextElement();

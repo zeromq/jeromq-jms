@@ -32,11 +32,17 @@ public class ZmqTextMessageBuilder {
         return new ZmqTextMessageBuilder();
     }
 
+    /**
+     * Ad the JMS message identifier.
+     * @param  id            the identifier to add
+     * @return               return the updated builder
+     * @throws JMSException  throws JMS message exception
+     */
     public ZmqTextMessageBuilder appendJmsMessageId(final String id) throws JMSException {
         message.setJMSMessageID(id);
 
         return this;
-    } 
+    }
 
     /**
      * Set the text of the message.

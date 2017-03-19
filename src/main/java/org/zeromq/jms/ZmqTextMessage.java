@@ -46,17 +46,17 @@ public class ZmqTextMessage extends ZmqMessage implements TextMessage {
         }
     }
 
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {	
-		super.writeExternal(out);
-		
-	    out.writeObject(text);
-	}
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        super.writeExternal(out);
 
-	@Override
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		super.readExternal(in);
+        out.writeObject(text);
+    }
 
-		text = (String) in.readObject();
-	}
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+
+        text = (String) in.readObject();
+    }
 }

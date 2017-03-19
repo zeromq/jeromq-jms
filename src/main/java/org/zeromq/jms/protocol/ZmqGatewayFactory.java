@@ -172,8 +172,9 @@ public class ZmqGatewayFactory {
             }
 
             final String name = namePrefix + "@" + socketAddr;
-            final ZmqGateway protocol = (ZmqGateway) consumerConstructor.newInstance(name, context, socketType, socketBound, socketAddr, flags,
-                    filter, eventHandler, null, store, selector, redelivery, 
+            final ZmqGateway protocol =
+                (ZmqGateway) consumerConstructor.newInstance(name, context, socketType, socketBound, socketAddr, flags,
+                    filter, eventHandler, null, store, selector, redelivery,
                     transacted, ZmqGateway.Direction.INCOMING);
 
             if (uri != null) {
@@ -446,7 +447,7 @@ public class ZmqGatewayFactory {
         final String name = destination.getName();
 
         try {
-        	ZmqJournalStore store = null;
+            ZmqJournalStore store = null;
 
             if (destinationSchema.containsKey(name)) {
                 final ZmqURI uri = destinationSchema.get(name);
@@ -459,11 +460,11 @@ public class ZmqGatewayFactory {
                         throw new ZmqException("Unable to find specified journal store: " + value);
                     } else {
                         final Constructor<?> storeConstructor =
-                        	journalStoreClass.getConstructor(Path.class, String.class, String.class);
+                            journalStoreClass.getConstructor(Path.class, String.class, String.class);
 
                         final String groupId = name + "-" + direction.name().toLowerCase();
-                		final String uniqueId = ManagementFactory.getRuntimeMXBean().getName().replaceAll("\\W+", "-").toLowerCase();
-                
+                        final String uniqueId = ManagementFactory.getRuntimeMXBean().getName().replaceAll("\\W+", "-").toLowerCase();
+
                         store = (ZmqJournalStore) storeConstructor.newInstance(null, groupId, uniqueId);
 
                         LOGGER.info("Using journal store  (" + store.getClass().getCanonicalName() + ") for destination: "
@@ -475,7 +476,7 @@ public class ZmqGatewayFactory {
 
             if (store == null) {
                 LOGGER.info("Using NO jounral store for destination: " + destination);
-            } 
+            }
 
             if (destinationSchema.containsKey(name) && (store != null)) {
                 final ZmqURI uri = destinationSchema.get(name);

@@ -99,8 +99,7 @@ public class TestZmqSimpleMessageSelector {
 
             final boolean result = selector.evaluate(variables);
 
-            Assert.assertFalse
-                    (result);
+            Assert.assertFalse(result);
         } catch (Exception ex) {
             Assert.fail(ex.getMessage());
         }

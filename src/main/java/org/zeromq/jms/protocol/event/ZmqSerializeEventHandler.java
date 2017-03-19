@@ -118,7 +118,7 @@ public class ZmqSerializeEventHandler implements ZmqEventHandler {
 
         return event;
     }
- 
+
     @Override
     public ZmqAckEvent createAckEvent(final ZmqEvent event) {
         throw new UnsupportedOperationException("This is not a supported operation.");

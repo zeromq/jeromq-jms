@@ -240,7 +240,7 @@ public class TestZmqTopicWithMultiClients {
                 }
 
                 LOGGER.info("<<<< COMPLETE CHECKS >>>>");
-                
+
                 Assert.assertEquals(0, clientStoppedDownLatch.getCount());
                 Assert.assertEquals(totalMessageCount, messageCount.intValue());
             } finally {

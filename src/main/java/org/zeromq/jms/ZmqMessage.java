@@ -95,9 +95,9 @@ public class ZmqMessage implements Message, Externalizable {
 
     @Override
     public byte[] getJMSCorrelationIDAsBytes() throws JMSException {
-    	if (correlationID == null) {
-    		return null;
-    	}
+        if (correlationID == null) {
+            return null;
+        }
 
         return correlationID.getBytes();
     }
@@ -281,62 +281,72 @@ public class ZmqMessage implements Message, Externalizable {
     }
 
     @Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((messageID == null) ? 0 : messageID.hashCode());
-		return result;
-	}
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((messageID == null) ? 0 : messageID.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ZmqMessage other = (ZmqMessage) obj;
-		if (messageID == null) {
-			if (other.messageID != null)
-				return false;
-		} else if (!messageID.equals(other.messageID))
-			return false;
-		return true;
-	}
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
 
-	@Override
+        if (obj == null) {
+            return false;
+        }
+
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        ZmqMessage other = (ZmqMessage) obj;
+
+        if (messageID == null) {
+            if (other.messageID != null) {
+                return false;
+            }
+        } else if (!messageID.equals(other.messageID)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
     public String toString() {
         return "ZmqMessage [properties=" + properties + ", correlationID=" + correlationID + ", deliveryMode=" + deliveryMode + ", destrination="
                 + destrination + ", expiration=" + expiration + ", messageID=" + messageID + ", priority=" + priority + ", redelivered="
                 + redelivered + ", timestamp=" + timestamp + ", type=" + type + "]";
     }
 
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-	    out.writeObject(correlationID);
-	    out.writeInt(deliveryMode);
-	    out.writeObject(destrination);
-	    out.writeLong(expiration);
-	    out.writeObject(messageID);
-	    out.writeInt(priority);
-	    out.writeBoolean(redelivered);
-	    out.writeObject(replyTo);
-	    out.writeLong(timestamp);
-	    out.writeObject(type);
-	}
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(correlationID);
+        out.writeInt(deliveryMode);
+        out.writeObject(destrination);
+        out.writeLong(expiration);
+        out.writeObject(messageID);
+        out.writeInt(priority);
+        out.writeBoolean(redelivered);
+        out.writeObject(replyTo);
+        out.writeLong(timestamp);
+        out.writeObject(type);
+    }
 
-	@Override
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-	    correlationID = (String) in.readObject();
-	    deliveryMode = in.readInt();
-	    destrination = (Destination) in.readObject();
-	    expiration = in.readLong();
-	    messageID = (String) in.readObject();
-	    priority = in.readInt();
-	    redelivered = in.readBoolean();
-	    replyTo = (Destination) in.readObject();
-	    timestamp = in.readLong();
-	    type = (String) in.readObject();
-	}
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        correlationID = (String) in.readObject();
+        deliveryMode = in.readInt();
+        destrination = (Destination) in.readObject();
+        expiration = in.readLong();
+        messageID = (String) in.readObject();
+        priority = in.readInt();
+        redelivered = in.readBoolean();
+        replyTo = (Destination) in.readObject();
+        timestamp = in.readLong();
+        type = (String) in.readObject();
+    }
 }

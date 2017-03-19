@@ -158,32 +158,32 @@ public class ZmpMapMessage extends ZmqMessage implements MapMessage {
         map.put(name, value);
     }
 
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {	
-		super.writeExternal(out);
-		
-	    out.writeInt(map.size());
-	    
-	    for (String name : map.keySet()) {
-	    	final Object value = map.get(name);
-	    	
-		   	out.writeObject(value);
-	    }
-	}
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        super.writeExternal(out);
 
-	@Override
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		super.readExternal(in);
+        out.writeInt(map.size());
 
-	    map = new HashMap<String, Object>();
-	    
-	    final int mapCount = in.readInt();
-	    
-	    for (int i = 0; i < mapCount; i++) {
-	    	final String name = (String) in.readObject();
-		   	final Object value = in.readObject();
+        for (String name : map.keySet()) {
+            final Object value = map.get(name);
 
-		    map.put(name, value);
-	    }
-	}
+               out.writeObject(value);
+        }
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+
+        map = new HashMap<String, Object>();
+
+        final int mapCount = in.readInt();
+
+        for (int i = 0; i < mapCount; i++) {
+            final String name = (String) in.readObject();
+               final Object value = in.readObject();
+
+            map.put(name, value);
+        }
+    }
 }

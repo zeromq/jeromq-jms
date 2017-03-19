@@ -97,10 +97,10 @@ public class TestZmqSimpleMessageSelector {
         try {
             final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("var1 like 't__t'");
             final Map<String, Object> variables = new HashMap<String, Object>();
+
             variables.put("var1", "test");
 
             final boolean result = selector.evaluate(variables);
-
             Assert.assertTrue(result);
         } catch (Exception ex) {
             Assert.fail(ex.getMessage());

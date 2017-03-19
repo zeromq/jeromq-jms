@@ -18,12 +18,17 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+/**
+ * Test the Queue with Journal Store.
+ */
 public class TestZmqQueueWithJournalStore {
 
     private static final String QUEUE_NAME = "queue_1";
     private static final String QUEUE_ADDR = "tcp://*:9728";
     private static final String QUEUE_URI =
-    	"jms:queue:" + QUEUE_NAME + "?gateway=par&gateway.acknowldge=true&gateway.addr=" + QUEUE_ADDR + "&redlivery.retry=0&event=stomp" + "&journal=file";
+        "jms:queue:" + QUEUE_NAME
+            + "?gateway=par&gateway.acknowldge=true&gateway.addr=" + QUEUE_ADDR
+            + "&redlivery.retry=0&event=stomp" + "&journal=file";
 
     private static final String MESSAGE_1 = "this is the text message 1";
     private static final String MESSAGE_2 = "this is the text message 2";
@@ -81,7 +86,7 @@ public class TestZmqQueueWithJournalStore {
             QueueReceiver receiver = null;
 
             try {
-            	// Create sender but no received so they will never be acknowledged
+                // Create sender but no received so they will never be acknowledged
                 sender = session.createSender(queue);
 
                 try {
@@ -93,16 +98,16 @@ public class TestZmqQueueWithJournalStore {
                 }
 
                 sender.close();
-                
+
                 Thread.sleep(2000);
 
                 // Restart sender, and start up receiver, so journal messages consumed
                 sender = session.createSender(queue);
 
                 Thread.sleep(2000);
-                
+
                 receiver = session.createReceiver(queue);
-               
+
                 Thread.sleep(2000);
 
                 try {
@@ -122,13 +127,13 @@ public class TestZmqQueueWithJournalStore {
                 } catch (Exception ex) {
                     throw ex;
                 }
-                
+
                 sender.close();
                 receiver.close();
-                
+
                 // Check no journal records to be recieved again.
                 receiver = session.createReceiver(queue);
-                
+
                 Thread.sleep(2000);
 
                 try {
@@ -138,7 +143,7 @@ public class TestZmqQueueWithJournalStore {
                 } catch (Exception ex) {
                     throw ex;
                 }
-                
+
                 receiver.close();
             } finally {
                 session.close();

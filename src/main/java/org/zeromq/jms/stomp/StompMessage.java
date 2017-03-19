@@ -160,12 +160,12 @@ public class StompMessage implements Externalizable {
     private String body;
 
     /**
-     * Constructor ONLY required for Externaliable interface.
+     * Constructor ONLY required for Externalizable interface.
      */
     public StompMessage() {
-    	
+
     }
-    
+
     /**
      * Construct a default STOMP message.
      * @param frame    the frame
@@ -584,35 +584,35 @@ public class StompMessage implements Externalizable {
         return "StompMessage [frame=" + frame + ", headers=" + headers + ", body=" + truncatedBody + "]";
     }
 
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(frame);
-		out.write(headers.size());
-		
-		for (String name : headers.keySet()) {
-			final String value = headers.get(name);
-			
-			out.writeObject(name);
-			out.writeObject(value);
-		}
-		
-		out.writeObject(body);		
-	}
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(frame);
+        out.write(headers.size());
 
-	@Override
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-	    frame = (FrameType) in.readObject();
-	    headers = new HashMap<String, String>();
-	    
+        for (String name : headers.keySet()) {
+            final String value = headers.get(name);
+
+            out.writeObject(name);
+            out.writeObject(value);
+        }
+
+        out.writeObject(body);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        frame = (FrameType) in.readObject();
+        headers = new HashMap<String, String>();
+
         final int count = in.readInt();
 
-	    for (int i = 0; i < count; i++) {
-	    	final String name = (String) in.readObject();
-	    	final String value = (String) in.readObject();
-	    	
-	    	headers.put(name,  value);
-	    }
-	    
-	    body = (String) in.readObject();		
-	}
+        for (int i = 0; i < count; i++) {
+            final String name = (String) in.readObject();
+            final String value = (String) in.readObject();
+
+            headers.put(name,  value);
+        }
+
+        body = (String) in.readObject();
+    }
 }

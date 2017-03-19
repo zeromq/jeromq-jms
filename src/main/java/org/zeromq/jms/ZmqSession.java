@@ -165,7 +165,7 @@ public class ZmqSession implements QueueSession, TopicSession {
             }
 
             if (LOGGER.isLoggable(Level.FINEST)) {
-            	LOGGER.finest("Commited messages");
+                LOGGER.finest("Commited messages");
             }
         } else {
             throw new ZmqException("Session was not enabled for transactions.");
@@ -359,7 +359,7 @@ public class ZmqSession implements QueueSession, TopicSession {
             }
 
             if (LOGGER.isLoggable(Level.FINEST)) {
-            	LOGGER.finest("rollback messages");	
+                LOGGER.finest("rollback messages");
             }
         } else {
             throw new ZmqException("Session was not enabled for transactions.");

@@ -27,7 +27,7 @@ public abstract class AbstractZmqDestination implements Destination, Externaliza
      */
     public AbstractZmqDestination() {
     }
-    
+
     /**
      * Create a Zero MQ destination with a given name.
      * @param name  the name
@@ -96,13 +96,13 @@ public abstract class AbstractZmqDestination implements Destination, Externaliza
     }
 
     @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
+    public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(name);
         out.writeObject(uri);
     }
-    
+
     @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         name = (String) in.readObject();
         uri = (ZmqURI) in.readObject();
     }

@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import javax.jms.JMSException;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.zeromq.ZMQ;
 import org.zeromq.jms.ZmqException;
@@ -51,15 +52,15 @@ public class TestZmqParGatewayFailover {
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqGateway sender =
-        	new ZmqParGateway("protocol:sender1", context, ZmqSocketType.DEALER, true, SOCKET_ADDR_1 + "," + SOCKET_ADDR_2,
+            new ZmqParGateway("protocol:sender12", context, ZmqSocketType.DEALER, true, SOCKET_ADDR_1 + "," + SOCKET_ADDR_2,
                 flags, null, handler, null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqGateway receiver1 =
-        	new ZmqParGateway("protocol:receiver1", context, ZmqSocketType.ROUTER, false, SOCKET_ADDR_1, flags, null, handler, 
+            new ZmqParGateway("protocol:receiver1", context, ZmqSocketType.ROUTER, false, SOCKET_ADDR_1, flags, null, handler,
                 null, null, null, null, false, Direction.INCOMING);
 
         final ZmqGateway receiver2 =
-        	new ZmqParGateway("protocol:receiver2", context, ZmqSocketType.ROUTER, false, SOCKET_ADDR_2, flags, null, handler,
+            new ZmqParGateway("protocol:receiver2", context, ZmqSocketType.ROUTER, false, SOCKET_ADDR_2, flags, null, handler,
                 null, null, null, null, false, Direction.INCOMING);
 
         try {
@@ -88,6 +89,9 @@ public class TestZmqParGatewayFailover {
                 Assert.assertNotNull(inMessage1);
                 Assert.assertEquals(MESSAGE_1, inMessage1.getText());
 
+                // Need to ensure switch-over
+                Thread.sleep(5000);
+                
                 LOGGER.info("Elapse time (msec): " + stopwatch.elapsedTime());
 
                 sender.send(outMessage2);
@@ -148,18 +152,18 @@ public class TestZmqParGatewayFailover {
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqGateway sender =
-        	new ZmqParGateway("protocol:sender2", context, ZmqSocketType.DEALER, true, SOCKET_ADDR_3 + "," + SOCKET_ADDR_4,
+            new ZmqParGateway("protocol:sender34", context, ZmqSocketType.DEALER, true, SOCKET_ADDR_3 + "," + SOCKET_ADDR_4,
                 flags, null, handler,
                 null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqGateway receiver1 =
-        	new ZmqParGateway("protocol:receiver3", context, ZmqSocketType.ROUTER, false, SOCKET_ADDR_3,
-        		flags, null, handler,
+            new ZmqParGateway("protocol:receiver3", context, ZmqSocketType.ROUTER, false, SOCKET_ADDR_3,
+                flags, null, handler,
                 null, null, null, null, false, Direction.INCOMING);
 
         final ZmqGateway receiver2 = new ZmqParGateway("protocol:receiver4", context, ZmqSocketType.ROUTER, false, SOCKET_ADDR_4,
-        		flags, null, handler,
-        		null, null, null, null, false, Direction.INCOMING);
+                flags, null, handler,
+                null, null, null, null, false, Direction.INCOMING);
 
         try {
             final ZmqTextMessage outMessage1 = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();

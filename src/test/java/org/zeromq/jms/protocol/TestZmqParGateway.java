@@ -41,13 +41,13 @@ public class TestZmqParGateway {
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqGateway sender =
-        	new ZmqParGateway("protocol:sender", context, ZmqSocketType.DEALER, true, SOCKET_ADDR, flags, null, handler,
-        		null,null, null, null, false, Direction.OUTGOING);
+            new ZmqParGateway("protocol:sender", context, ZmqSocketType.DEALER, true, SOCKET_ADDR, flags, null, handler,
+                null, null, null, null, false, Direction.OUTGOING);
 
         // final ZMQ.Context context2 = ZMQ.context(1);
 
         final ZmqGateway receiver =
-        	new ZmqParGateway("protocol:receiver", context, ZmqSocketType.ROUTER, false, SOCKET_ADDR, flags, null, handler,
+        new ZmqParGateway("protocol:receiver", context, ZmqSocketType.ROUTER, false, SOCKET_ADDR, flags, null, handler,
                 null, null, null, null, false, Direction.INCOMING);
 
         try {
