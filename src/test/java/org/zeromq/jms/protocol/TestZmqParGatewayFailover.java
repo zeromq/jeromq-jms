@@ -12,7 +12,6 @@ import java.util.logging.Logger;
 import javax.jms.JMSException;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.zeromq.ZMQ;
 import org.zeromq.jms.ZmqException;

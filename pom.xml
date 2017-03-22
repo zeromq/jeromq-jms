@@ -4,7 +4,7 @@
 
   <groupId>org.zeromq</groupId>
   <artifactId>jeromq-jms</artifactId>
-  <version>1.1-RELEASE</version>
+  <version>2.0-RELEASE</version>
   <packaging>jar</packaging>
 
   <name>jeromq-jms</name>
@@ -48,9 +48,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <version.java>1.7</version.java>
+    <version.java>1.8</version.java>
     <version.jeromq>0.3.5</version.jeromq>
-    <version.jms>1.1-rev-1</version.jms>
+    <version.jms>2.0.1</version.jms>
     <version.junit>4.10</version.junit>
     <version.spring>4.1.1.RELEASE</version.spring>
     <version.tomcat-catalina>8.0.23</version.tomcat-catalina>
@@ -65,7 +65,7 @@
   
     <dependency>
       <groupId>javax.jms</groupId>
-      <artifactId>jms-api</artifactId>
+      <artifactId>javax.jms-api</artifactId>
       <version>${version.jms}</version>
     </dependency>
 

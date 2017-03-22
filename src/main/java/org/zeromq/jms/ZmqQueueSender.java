@@ -50,5 +50,4 @@ public class ZmqQueueSender extends AbstractZmqMessageProducer implements QueueS
     public String toString() {
         return "ZmqQueueSender [" + "protocol=" + getProtocol() + "]";
     }
-
 }

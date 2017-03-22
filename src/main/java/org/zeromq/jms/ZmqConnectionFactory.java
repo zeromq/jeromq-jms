@@ -14,7 +14,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.jms.Connection;
+import javax.jms.JMSContext;
 import javax.jms.JMSException;
+import javax.jms.JMSRuntimeException;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
@@ -117,6 +119,11 @@ public class ZmqConnectionFactory implements QueueConnectionFactory, TopicConnec
 
     @Override
     public QueueConnection createQueueConnection() throws JMSException {
+    	return createQueueConnection(null, null);
+    }
+
+    @Override
+    public QueueConnection createQueueConnection(final String userName, final String password) throws JMSException {
         LOGGER.info("Create queue connection");
 
         ZmqGatewayFactory gatewayFactory = getFactoryGateway();
@@ -126,13 +133,12 @@ public class ZmqConnectionFactory implements QueueConnectionFactory, TopicConnec
     }
 
     @Override
-    public QueueConnection createQueueConnection(final String userName, final String password) throws JMSException {
-
-        throw new UnsupportedOperationException();
+    public TopicConnection createTopicConnection() throws JMSException {
+    	return createTopicConnection(null, null);
     }
 
     @Override
-    public TopicConnection createTopicConnection() throws JMSException {
+    public TopicConnection createTopicConnection(final String userName, final String password) throws JMSException {
         LOGGER.info("Create topic connection");
 
         ZmqGatewayFactory gatewayFactory = getFactoryGateway();
@@ -141,9 +147,38 @@ public class ZmqConnectionFactory implements QueueConnectionFactory, TopicConnec
         return connection;
     }
 
-    @Override
-    public TopicConnection createTopicConnection(final String userName, final String password) throws JMSException {
+	@Override
+	public JMSContext createContext() {
 
-        throw new UnsupportedOperationException();
-    }
+       return createContext(null, null, ZmqSession.AUTO_ACKNOWLEDGE);
+	}
+
+	@Override
+	public JMSContext createContext(final int sessionMode) {
+
+	       return createContext(null, null, sessionMode);
+	}
+
+	@Override
+	public JMSContext createContext(final String userName, final String password) {
+
+	       return createContext(userName, password, ZmqSession.AUTO_ACKNOWLEDGE);
+	}
+
+	@Override
+	public JMSContext createContext(final String userName, final String password, final int sessionMode) {
+
+        LOGGER.info("Create queue connection");
+
+        try {
+        	ZmqGatewayFactory gatewayFactory = getFactoryGateway();
+        	ZmqConnection connection = new ZmqConnection(gatewayFactory, destinationSchema);
+        	
+        	ZmqJMSContext context = new ZmqJMSContext(connection, sessionMode);
+        	
+        	return context;
+        } catch (ZmqException ex) {
+        	throw new JMSRuntimeException("Unable to create context.", ex.getErrorCode(), ex);
+        }
+	}
 }

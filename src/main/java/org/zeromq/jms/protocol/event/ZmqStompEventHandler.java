@@ -239,7 +239,7 @@ public class ZmqStompEventHandler implements ZmqEventHandler {
                 }
             }
 
-            // Add messsage ID when one does not exist
+            // Add message ID when one does not exist
             if (!headers.containsKey(StompMessage.HeaderKey.HEADER_ID.getValue())) {
                 headers.put(StompMessage.HeaderKey.HEADER_ID.getValue(), messageId);
             }

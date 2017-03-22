@@ -26,6 +26,23 @@ public class ZmpMapMessage extends ZmqMessage implements MapMessage {
 
     private Map<String, Object> map = new HashMap<String, Object>();
 
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getBody(Class<T> c) throws JMSException {
+		return (T) map;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public boolean isBodyAssignableTo(final Class c) throws JMSException {
+		
+		if (map.isEmpty()) {
+			return true;
+		}
+		
+		return c.isAssignableFrom(java.util.Map.class);
+	}
+
     @Override
     public boolean getBoolean(final String name) throws JMSException {
         return (Boolean) map.get(name);

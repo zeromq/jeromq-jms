@@ -137,6 +137,7 @@ public class ZmqConnection implements QueueConnection, TopicConnection {
         throw new UnsupportedOperationException();
     }
 
+    @SuppressWarnings("resource")
     @Override
     public QueueSession createQueueSession(final boolean transacted, final int acknowledgeMode) throws JMSException {
         QueueSession session = (QueueSession) new ZmqSession(gatewayFactory, destinationSchema, transacted, acknowledgeMode, exceptionHandler);
@@ -147,13 +148,45 @@ public class ZmqConnection implements QueueConnection, TopicConnection {
     @Override
     public ConnectionConsumer createConnectionConsumer(final Topic topic, final String messageSelector, final ServerSessionPool sessionPool,
             final int maxMessages) throws JMSException {
-        throw new UnsupportedOperationException();
+
+    	throw new UnsupportedOperationException();
     }
 
-    @Override
+    @SuppressWarnings("resource")
+	@Override
     public TopicSession createTopicSession(final boolean transacted, final int acknowledgeMode) throws JMSException {
         TopicSession session = (TopicSession) new ZmqSession(gatewayFactory, destinationSchema, transacted, acknowledgeMode, exceptionHandler);
 
         return session;
     }
+
+	@Override
+	public Session createSession() throws JMSException {
+
+		final Session session = createSession(ZmqSession.AUTO_ACKNOWLEDGE);
+
+		return session;
+	}
+
+	@Override
+	public Session createSession(int sessionMode) throws JMSException {
+		
+		final Session session = new ZmqSession(gatewayFactory, destinationSchema, false, sessionMode, exceptionHandler);
+		
+		return session;
+	}
+
+	@Override
+	public ConnectionConsumer createSharedConnectionConsumer(final Topic topic, final String subscriptionName, final String messageSelector,
+			final ServerSessionPool sessionPool, final int maxMessages) throws JMSException {
+
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public ConnectionConsumer createSharedDurableConnectionConsumer(final Topic topic, final String subscriptionName, final String messageSelector,
+			final ServerSessionPool sessionPool, final int maxMessages) throws JMSException {
+
+		throw new UnsupportedOperationException();
+	}
 }

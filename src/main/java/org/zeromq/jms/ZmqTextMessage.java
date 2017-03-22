@@ -31,6 +31,20 @@ public class ZmqTextMessage extends ZmqMessage implements TextMessage {
         this.text = text;
     }
 
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getBody(Class<T> c) throws JMSException {
+
+        return (T) text;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public boolean isBodyAssignableTo(final Class c) throws JMSException {
+				
+		return c.isAssignableFrom(String.class);
+	}
+
     @Override
     public String toString() {
         try {

@@ -75,5 +75,6 @@ public class TestSupportedException {
         session.createBrowser(null, null);
         session.createTemporaryQueue();
 
+        session.close();
     }
 }

@@ -523,6 +523,43 @@ public class ZmqSession implements QueueSession, TopicSession {
         return subscriber;
     }
 
+	@Override
+	public MessageConsumer createDurableConsumer(final Topic topic, final String name) throws JMSException {
+
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public MessageConsumer createDurableConsumer(final Topic topic, final String name, final String messageSelector, final boolean noLocal)
+			throws JMSException {
+
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public MessageConsumer createSharedConsumer(final Topic topic, final String sharedSubscriptionName) throws JMSException {
+
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public MessageConsumer createSharedConsumer(final Topic topic, final String sharedSubscriptionName, final String messageSelector) throws JMSException {
+
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public MessageConsumer createSharedDurableConsumer(final Topic topic, final String name) throws JMSException {
+
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public MessageConsumer createSharedDurableConsumer(final Topic topic, final String name, final String messageSelector) throws JMSException {
+
+		throw new UnsupportedOperationException();
+	}
+
     @Override
     public String toString() {
         return "ZmqSession [destinationSchema=" + destinationSchema + ", transacted=" + transacted + ", acknowledgeMode=" + acknowledgeMode

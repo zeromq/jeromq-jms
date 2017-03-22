@@ -38,7 +38,8 @@ public class ZmqMessage implements Message, Externalizable {
     private Destination replyTo;
     private long timestamp;
     private String type;
-
+    private long deliveryTime;
+        
     /**
      * Setter to return the properties. This is a back door for the library to get the property bag for
      * selector variable resolution
@@ -260,7 +261,17 @@ public class ZmqMessage implements Message, Externalizable {
         this.type = type;
     }
 
-    @Override
+	@Override
+	public long getJMSDeliveryTime() throws JMSException {
+        return deliveryTime;
+	}
+
+	@Override
+	public void setJMSDeliveryTime(final long deliveryTime) throws JMSException {
+        this.deliveryTime = deliveryTime;
+	}
+
+	@Override
     public void setLongProperty(final String name, final long value) throws JMSException {
         properties.put(name, value);
     }
@@ -280,7 +291,21 @@ public class ZmqMessage implements Message, Externalizable {
         properties.put(name, value);
     }
 
-    @Override
+	@Override
+	public <T> T getBody(Class<T> c) throws JMSException {
+		// Message (but not one of its subtypes) then this parameter may be set
+		// to any type; the returned value will always be null.
+		return null;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	public boolean isBodyAssignableTo(final Class c) throws JMSException {
+
+        throw new UnsupportedOperationException();
+	}
+
+	@Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -319,7 +344,7 @@ public class ZmqMessage implements Message, Externalizable {
     public String toString() {
         return "ZmqMessage [properties=" + properties + ", correlationID=" + correlationID + ", deliveryMode=" + deliveryMode + ", destrination="
                 + destrination + ", expiration=" + expiration + ", messageID=" + messageID + ", priority=" + priority + ", redelivered="
-                + redelivered + ", timestamp=" + timestamp + ", type=" + type + "]";
+                + redelivered + ", timestamp=" + timestamp + ", type=" + type + ", deliveryTime=" + deliveryTime + "]";
     }
 
     @Override
@@ -334,6 +359,7 @@ public class ZmqMessage implements Message, Externalizable {
         out.writeObject(replyTo);
         out.writeLong(timestamp);
         out.writeObject(type);
+        out.writeLong(deliveryTime);
     }
 
     @Override
@@ -348,5 +374,6 @@ public class ZmqMessage implements Message, Externalizable {
         replyTo = (Destination) in.readObject();
         timestamp = in.readLong();
         type = (String) in.readObject();
+        deliveryTime = in.readLong();
     }
 }
