@@ -90,7 +90,7 @@ public class TestZmqParGatewayFailover {
 
                 // Need to ensure switch-over
                 Thread.sleep(5000);
-                
+
                 LOGGER.info("Elapse time (msec): " + stopwatch.elapsedTime());
 
                 sender.send(outMessage2);

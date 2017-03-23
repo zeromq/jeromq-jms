@@ -22,19 +22,17 @@ public class ZmqObjectMessage extends ZmqMessage implements ObjectMessage {
 
     private Serializable object;
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T getBody(Class<T> c) throws JMSException {
-
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T getBody(final Class<T> c) throws JMSException {
         return (T) object;
-	}
+    }
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public boolean isBodyAssignableTo(final Class c) throws JMSException {
-				
-		return c.isAssignableFrom(Serializable.class);
-	}
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public boolean isBodyAssignableTo(final Class c) throws JMSException {
+        return c.isAssignableFrom(Serializable.class);
+    }
 
     @Override
     public Serializable getObject() throws JMSException {

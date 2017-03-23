@@ -5,7 +5,7 @@
     This configuration file was written by the eclipse-cs plugin configuration editor
 -->
 <!--
-    Checkstyle-Configuration: ZeroMQ Checks
+    Checkstyle-Configuration: Java Check (Plus)
     Description: none
 -->
 <module name="Checker">
@@ -89,6 +89,8 @@
     <module name="FinalParameters"/>
     <module name="TodoComment"/>
     <module name="UpperEll"/>
+    <module name="ImportOrder"/>
+    <module name="MethodCount"/>
   </module>
   <module name="JavadocPackage">
     <property name="severity" value="ignore"/>

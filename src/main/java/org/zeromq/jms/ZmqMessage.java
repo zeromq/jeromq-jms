@@ -39,7 +39,7 @@ public class ZmqMessage implements Message, Externalizable {
     private long timestamp;
     private String type;
     private long deliveryTime;
-        
+
     /**
      * Setter to return the properties. This is a back door for the library to get the property bag for
      * selector variable resolution
@@ -261,17 +261,17 @@ public class ZmqMessage implements Message, Externalizable {
         this.type = type;
     }
 
-	@Override
-	public long getJMSDeliveryTime() throws JMSException {
+    @Override
+    public long getJMSDeliveryTime() throws JMSException {
         return deliveryTime;
-	}
+    }
 
-	@Override
-	public void setJMSDeliveryTime(final long deliveryTime) throws JMSException {
+    @Override
+    public void setJMSDeliveryTime(final long deliveryTime) throws JMSException {
         this.deliveryTime = deliveryTime;
-	}
+    }
 
-	@Override
+    @Override
     public void setLongProperty(final String name, final long value) throws JMSException {
         properties.put(name, value);
     }
@@ -291,21 +291,20 @@ public class ZmqMessage implements Message, Externalizable {
         properties.put(name, value);
     }
 
-	@Override
-	public <T> T getBody(Class<T> c) throws JMSException {
-		// Message (but not one of its subtypes) then this parameter may be set
-		// to any type; the returned value will always be null.
-		return null;
-	}
+    @Override
+    public <T> T getBody(final Class<T> c) throws JMSException {
+        // Message (but not one of its subtypes) then this parameter may be set
+        // to any type; the returned value will always be null.
+        return null;
+    }
 
-	@SuppressWarnings("rawtypes")
-	@Override
-	public boolean isBodyAssignableTo(final Class c) throws JMSException {
+    @SuppressWarnings("rawtypes")
+    @Override
+    public boolean isBodyAssignableTo(final Class c) throws JMSException {
+        return false;
+    }
 
-        throw new UnsupportedOperationException();
-	}
-
-	@Override
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

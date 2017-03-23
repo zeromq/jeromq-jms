@@ -153,33 +153,37 @@ abstract class AbstractZmqMessageProducer implements MessageProducer {
         this.timeToLive = timeToLive;
     }
 
-	@Override
-	public long getDeliveryDelay() throws JMSException {
+    @Override
+    public long getDeliveryDelay() throws JMSException {
         throw new UnsupportedOperationException();
-	}
+    }
 
-	@Override
-	public void send(Message message, final CompletionListener completionListener) throws JMSException {
+    @Override
+    public void send(final Message message, final CompletionListener completionListener) throws JMSException {
         throw new UnsupportedOperationException();
-	}
+    }
 
-	@Override
-	public void send(final Destination destination, final Message message, final CompletionListener completionListener) throws JMSException {
+    @Override
+    public void send(final Destination destination, final Message message, final CompletionListener completionListener) throws JMSException {
         throw new UnsupportedOperationException();
-	}
+    }
 
-	@Override
-	public void send(final Message message, final int deliveryMode, final int priority, final long timeToLive, final CompletionListener completionListener) throws JMSException {
+    @Override
+    public void send(final Message message, final int deliveryMode, final int priority, final long timeToLive,
+        final CompletionListener completionListener) throws JMSException {
+
         throw new UnsupportedOperationException();
-	}
+    }
 
-	@Override
-	public void send(final Destination destination, final Message message, int arg2, int arg3, long arg4, final CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException();		
-	}
+    @Override
+    public void send(final Destination destination, final Message message, final int deliveryMode, final int priority, final long timeToLive,
+        final CompletionListener completionListener) throws JMSException {
 
-	@Override
-	public void setDeliveryDelay(final long deliveryDelay) throws JMSException {
         throw new UnsupportedOperationException();
-	}
+    }
+
+    @Override
+    public void setDeliveryDelay(final long deliveryDelay) throws JMSException {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -72,7 +72,7 @@ public class TestSimplifiedZmqQueue {
 
         try {
             final ConnectionFactory factory = (ConnectionFactory) context.lookup("java:/comp/env/jms/queueConnectionFactory");
-            
+
             try {
                 final JMSContext jmsContext = factory.createContext(JMSContext.AUTO_ACKNOWLEDGE);
                 final Destination queue = (Destination) context.lookup("java:/comp/env/jms/queueTest");
@@ -80,9 +80,9 @@ public class TestSimplifiedZmqQueue {
                 final JMSConsumer consumer = jmsContext.createConsumer(queue);
                 final JMSProducer producer = jmsContext.createProducer();
 
-              	producer.send(queue, MESSAGE_1);
-              	producer.send(queue, MESSAGE_2);
-             	producer.send(queue, MESSAGE_3);
+                producer.send(queue, MESSAGE_1);
+                producer.send(queue, MESSAGE_2);
+                producer.send(queue, MESSAGE_3);
 
                 TextMessage message1 = (TextMessage) consumer.receive(1000);
 

@@ -150,14 +150,14 @@ public class ZmqSocketSession implements Runnable {
     }
 
     /**
-     * @return  reutrn the last time a message was received (nano seconds)
+     * @return  return the last time a message was received (nano seconds)
      */
     public long getLastReceiveTime() {
         return lastReceiveTime;
     }
 
     /**
-     * @return  reutrn the last time a message was sent (nano seconds)
+     * @return  return the last time a message was sent (nano seconds)
      */
     public long getLastSendTime() {
         return lastSendTime;
@@ -320,9 +320,9 @@ public class ZmqSocketSession implements Runnable {
         if (LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.log(Level.FINEST, "Receive and wait (" + socket.getReceiveTimeOut() + ") : " + this);
         }
-        
+
         if (status == ZmqSocketStatus.STOPPED) {
-        	return;
+            return;
         }
 
         ZMsg msg = ZMsg.recvMsg(socket, socketFlags);

@@ -119,7 +119,7 @@ public class ZmqConnectionFactory implements QueueConnectionFactory, TopicConnec
 
     @Override
     public QueueConnection createQueueConnection() throws JMSException {
-    	return createQueueConnection(null, null);
+        return createQueueConnection(null, null);
     }
 
     @Override
@@ -134,7 +134,7 @@ public class ZmqConnectionFactory implements QueueConnectionFactory, TopicConnec
 
     @Override
     public TopicConnection createTopicConnection() throws JMSException {
-    	return createTopicConnection(null, null);
+        return createTopicConnection(null, null);
     }
 
     @Override
@@ -147,38 +147,38 @@ public class ZmqConnectionFactory implements QueueConnectionFactory, TopicConnec
         return connection;
     }
 
-	@Override
-	public JMSContext createContext() {
+    @Override
+    public JMSContext createContext() {
 
        return createContext(null, null, ZmqSession.AUTO_ACKNOWLEDGE);
-	}
+    }
 
-	@Override
-	public JMSContext createContext(final int sessionMode) {
+    @Override
+    public JMSContext createContext(final int sessionMode) {
 
-	       return createContext(null, null, sessionMode);
-	}
+           return createContext(null, null, sessionMode);
+    }
 
-	@Override
-	public JMSContext createContext(final String userName, final String password) {
+    @Override
+    public JMSContext createContext(final String userName, final String password) {
 
-	       return createContext(userName, password, ZmqSession.AUTO_ACKNOWLEDGE);
-	}
+           return createContext(userName, password, ZmqSession.AUTO_ACKNOWLEDGE);
+    }
 
-	@Override
-	public JMSContext createContext(final String userName, final String password, final int sessionMode) {
+    @Override
+    public JMSContext createContext(final String userName, final String password, final int sessionMode) {
 
         LOGGER.info("Create queue connection");
 
         try {
-        	ZmqGatewayFactory gatewayFactory = getFactoryGateway();
-        	ZmqConnection connection = new ZmqConnection(gatewayFactory, destinationSchema);
-        	
-        	ZmqJMSContext context = new ZmqJMSContext(connection, sessionMode);
-        	
-        	return context;
+            ZmqGatewayFactory gatewayFactory = getFactoryGateway();
+            ZmqConnection connection = new ZmqConnection(gatewayFactory, destinationSchema);
+
+            ZmqJMSContext context = new ZmqJMSContext(connection, sessionMode);
+
+            return context;
         } catch (ZmqException ex) {
-        	throw new JMSRuntimeException("Unable to create context.", ex.getErrorCode(), ex);
+            throw new JMSRuntimeException("Unable to create context.", ex.getErrorCode(), ex);
         }
-	}
+    }
 }
