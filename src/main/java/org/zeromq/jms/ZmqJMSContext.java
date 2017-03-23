@@ -22,7 +22,6 @@ import javax.jms.JMSRuntimeException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueBrowser;
@@ -43,7 +42,6 @@ public class ZmqJMSContext implements JMSContext {
 
     private boolean closed;
     private boolean autoStart;
-    private MessageProducer innerProducer;
 
     /**
      * Construct the XMQ JMSContext Implementation.
@@ -265,21 +263,9 @@ public class ZmqJMSContext implements JMSContext {
     public JMSProducer createProducer() {
         checkSession();
 
-        try {
-            if (innerProducer == null) {
-                synchronized (this) {
-                    if (innerProducer == null) {
-                        innerProducer = session.createProducer(null);
-                    }
-                }
-            }
+        JMSProducer producer = new ZmqJMSProducer(this, session);
 
-           JMSProducer producer = new ZmqJMSProducer(this, innerProducer);
-
-            return producer;
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+        return producer;
     }
 
     @Override

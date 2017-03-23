@@ -24,23 +24,53 @@ import javax.jms.TextMessage;
 public class ZmqJMSProducer implements JMSProducer {
 
     private final ZmqJMSContext context;
-    private final MessageProducer messageProducer;
+    private final ZmqSession session;
+    private final Map<Destination, MessageProducer> messageProducers = new HashMap<Destination, MessageProducer>();
     private final Map<String, Object> properties = new HashMap<String, Object>();
 
     private String jmsType;
     private String jmsCorrelationID;
     private Destination jmsReplyTo;
 
-    private volatile CompletionListener completionListener;
+    private Long deliverDelay;
+    private Integer deliveryMode;
+    private Boolean disableMessageID;
+    private Boolean disableMessageTimestamp;
+    private Integer priority;
+    private Long timeToLive;
+
+    private CompletionListener completionListener;
 
     /**
      * Construct the ZMQ producer class.
-     * @param context          the context
-     * @param messageProducer  the inner producer message instance
+     * @param  context   the context
+     * @param  session   the session
      */
-    public ZmqJMSProducer(final ZmqJMSContext context, final MessageProducer messageProducer) {
+    public ZmqJMSProducer(final ZmqJMSContext context, final ZmqSession session) {
         this.context = context;
-        this.messageProducer = messageProducer;
+        this.session = session;
+    }
+
+    /**
+     * Return the new or existing singleton producer for the specified destination.
+     * @param  destination  the destination
+     * @return             return the new or existing producer
+     */
+    private MessageProducer getMessageProducer(final Destination destination) {
+        try {
+            synchronized (messageProducers) {
+                MessageProducer messageProducer = messageProducers.get(destination);
+
+                if (messageProducer == null) {
+                    messageProducer = session.createProducer(destination);
+                    messageProducers.put(destination,  messageProducer);
+                }
+
+                return messageProducer;
+            }
+        } catch (JMSException ex) {
+            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
+        }
     }
 
     /**
@@ -82,38 +112,22 @@ public class ZmqJMSProducer implements JMSProducer {
 
     @Override
     public long getDeliveryDelay() {
-        try {
-            return messageProducer.getDeliveryDelay();
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+         return deliverDelay;
     }
 
     @Override
     public int getDeliveryMode() {
-        try {
-            return messageProducer.getDeliveryMode();
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+         return deliveryMode;
     }
 
     @Override
     public boolean getDisableMessageID() {
-        try {
-            return messageProducer.getDisableMessageID();
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+        return disableMessageID;
     }
 
     @Override
     public boolean getDisableMessageTimestamp() {
-        try {
-            return messageProducer.getDisableMessageTimestamp();
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+        return disableMessageTimestamp;
     }
 
     @Override
@@ -173,11 +187,7 @@ public class ZmqJMSProducer implements JMSProducer {
 
     @Override
     public int getPriority() {
-        try {
-            return messageProducer.getPriority();
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+        return priority;
     }
 
     @Override
@@ -201,11 +211,7 @@ public class ZmqJMSProducer implements JMSProducer {
 
     @Override
     public long getTimeToLive() {
-        try {
-            return messageProducer.getTimeToLive();
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+        return timeToLive;
     }
 
     @Override
@@ -236,6 +242,32 @@ public class ZmqJMSProducer implements JMSProducer {
 
             if (jmsType != null) {
                 message.setJMSType(jmsType);
+            }
+
+            final MessageProducer messageProducer = getMessageProducer(destination);
+
+            if (deliverDelay != null) {
+                messageProducer.setDeliveryDelay(deliverDelay);
+            }
+
+            if (deliveryMode != null) {
+                messageProducer.setDeliveryMode(deliveryMode);
+            }
+
+            if (disableMessageID != null) {
+                messageProducer.setDisableMessageID(disableMessageID);
+            }
+
+            if (disableMessageTimestamp != null) {
+                messageProducer.setDisableMessageTimestamp(disableMessageTimestamp);
+            }
+
+            if (priority != null) {
+                messageProducer.setPriority(priority);
+            }
+
+            if (timeToLive != null) {
+                messageProducer.setTimeToLive(timeToLive);
             }
 
             // Set all the properties
@@ -327,46 +359,30 @@ public class ZmqJMSProducer implements JMSProducer {
 
     @Override
     public JMSProducer setDeliveryDelay(final long deliveryDelay) {
-        try {
-           messageProducer.setDeliveryDelay(deliveryDelay);
+        this.deliverDelay = deliveryDelay;
 
-           return this;
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+        return this;
     }
 
     @Override
     public JMSProducer setDeliveryMode(final int deliveryMode) {
-        try {
-           messageProducer.setDeliveryMode(deliveryMode);
+        this.deliveryMode = deliveryMode;
 
-           return this;
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+        return this;
     }
 
     @Override
     public JMSProducer setDisableMessageID(final boolean value) {
-        try {
-           messageProducer.setDisableMessageID(value);
+        this.disableMessageID = value;
 
-           return this;
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+        return this;
     }
 
     @Override
     public JMSProducer setDisableMessageTimestamp(final boolean value) {
-        try {
-               messageProducer.setDisableMessageTimestamp(value);
+        this.disableMessageTimestamp = value;
 
-               return this;
-            } catch (JMSException ex) {
-                throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-            }
+        return this;
     }
 
     @Override
@@ -398,14 +414,10 @@ public class ZmqJMSProducer implements JMSProducer {
     }
 
     @Override
-    public JMSProducer setPriority(final int defaultPriority) {
-        try {
-            messageProducer.setPriority(defaultPriority);
+    public JMSProducer setPriority(final int priority) {
+        this.priority = priority;
 
-            return this;
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+        return this;
     }
 
     @Override
@@ -473,12 +485,8 @@ public class ZmqJMSProducer implements JMSProducer {
 
     @Override
     public JMSProducer setTimeToLive(final long timeToLive) {
-        try {
-            messageProducer.setTimeToLive(timeToLive);
+        this.timeToLive = timeToLive;
 
-            return this;
-        } catch (JMSException ex) {
-            throw new JMSRuntimeException(ex.getMessage(), ex.getErrorCode(), ex);
-        }
+        return this;
     }
 }
