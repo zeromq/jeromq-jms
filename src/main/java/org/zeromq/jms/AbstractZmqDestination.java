@@ -42,6 +42,10 @@ public abstract class AbstractZmqDestination implements Destination, Externaliza
      * @param uri  the URI
      */
     public AbstractZmqDestination(final ZmqURI uri) {
+        if (uri == null) {
+            throw new IllegalArgumentException("The desination URI nust be defined: " + uri);
+        }
+
         this.name = uri.getDestinationName();
         this.uri = uri;
     }

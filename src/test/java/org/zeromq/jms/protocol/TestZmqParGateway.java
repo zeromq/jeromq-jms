@@ -23,7 +23,7 @@ import org.zeromq.jms.protocol.event.ZmqStompEventHandler;
  */
 public class TestZmqParGateway {
 
-    private static final String SOCKET_ADDR = "tcp://*:9733";
+    private static final String SOCKET_ADDR = "tcp://*:9734";
     // private static final String SOCKET_ADDR = "inproc://queue1";
 
     private static final String MESSAGE_1 = "this is the text message 1";

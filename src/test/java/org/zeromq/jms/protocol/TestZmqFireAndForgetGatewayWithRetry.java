@@ -26,7 +26,7 @@ import org.zeromq.jms.protocol.redelivery.ZmqRetryRedeliveryPolicy;
  */
 public class TestZmqFireAndForgetGatewayWithRetry {
 
-    private static final String SOCKET_ADDR = "tcp://*:9732";
+    private static final String SOCKET_ADDR = "tcp://*:9733";
 
     private static final String MESSAGE_1 = "this is the text message 1";
     private static final String MESSAGE_2 = "this is the text message 2";

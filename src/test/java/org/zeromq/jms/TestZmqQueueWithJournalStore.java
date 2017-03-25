@@ -24,7 +24,7 @@ import org.junit.Test;
 public class TestZmqQueueWithJournalStore {
 
     private static final String QUEUE_NAME = "queue_1";
-    private static final String QUEUE_ADDR = "tcp://*:9728";
+    private static final String QUEUE_ADDR = "tcp://*:9711";
     private static final String QUEUE_URI =
         "jms:queue:" + QUEUE_NAME
             + "?gateway=par&gateway.acknowldge=true&gateway.addr=" + QUEUE_ADDR

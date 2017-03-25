@@ -41,7 +41,7 @@ public class TestZmqTopicWithMultiClients {
     private static final Logger LOGGER = Logger.getLogger(TestZmqTopicWithMultiClients.class.getCanonicalName());
 
     private static final String TOPIC_NAME = "topic_1";
-    private static final String TOPIC_ADDR = "tcp://*:9720";
+    private static final String TOPIC_ADDR = "tcp://*:9713";
     private static final String TOPIC_URI = "jms:topic:" + TOPIC_NAME + "?gateway.addr=" + TOPIC_ADDR + "&redlivery.retry=0&event=stomp";
 
     private static final int CLIENT_COUNT = 5;
@@ -70,7 +70,7 @@ public class TestZmqTopicWithMultiClients {
          * @param clientId            the unique client identifier
          * @param transacted          the transaction indicator
          */
-        public Client(final CountDownLatch clientStartedLatch, final CountDownLatch clientStoppedLatch, final AtomicInteger messageCount,
+        private Client(final CountDownLatch clientStartedLatch, final CountDownLatch clientStoppedLatch, final AtomicInteger messageCount,
                 final String clientId, final boolean transacted) {
 
             this.clientStartedLatch = clientStartedLatch;

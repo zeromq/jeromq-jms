@@ -278,138 +278,17 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
             @Override
             public ZmqEvent send(final ZmqSocketSession source) {
-                ZmqEvent sendEvent = null;
-                if (journalStore != null) {
-                    try {
-                        final ZmqJournalEntry journalEntry = journalStore.read();
-                        if (journalEntry != null && (!trackEventMap.containsKey(journalEntry.getMessageId()))) {
-                            sendEvent =
-                                eventHandler.createSendEvent(journalEntry.getMessageId(), journalEntry.getMessage());
-                        }
-                    } catch (ZmqException ex) {
-                        LOGGER.log(Level.WARNING, "Failed to read from the journal store", ex);
-                    }
-                }
-
-                if (sendEvent == null) {
-                    try {
-                        sendEvent = outgoingQueue.poll(SOCKET_WAIT_MILLI_SECOND, TimeUnit.MILLISECONDS);
-                    } catch (InterruptedException ex) {
-                        LOGGER.log(Level.WARNING, "Polling of outgoing queue interrupted", ex);
-                    }
-                }
-
-                // No message(s) so send a heart-beat when required
-                if (heartbeat && socketOutgoing && sendEvent == null) {
-                    // check whether a heart-beat need to be sent since the last message sent
-                    final long lastReceiveTime = source.getLastReceiveTime();
-                    final long lastSendTime = source.getLastSendTime();
-                    final long currentTime = System.nanoTime();
-                    final long lastReceiveLaspedTime = (currentTime - lastReceiveTime) / 1000000;
-                    final long lastSendLaspedTime = (currentTime - lastSendTime) / 1000000;
-                    final ZmqSocketStatus status = source.getStatus();
-
-                    if (lastReceiveLaspedTime > HEARTBEAT_RATE_MILLI_SECOND && lastSendLaspedTime > HEARTBEAT_RATE_MILLI_SECOND) {
-                        if (lastReceiveLaspedTime > AUTO_PAUSE_IDLE_MILLI_SECOND && status == ZmqSocketStatus.RUNNING) {
-                            // connection has been dropped, so stop sending messages apart from heart-beats
-                            source.pause();
-                        } else {
-                            sendEvent = eventHandler.createHeartbeatEvent();
-                        }
-                    }
-                }
-
-                if (sendEvent instanceof ZmqHeartbeatEvent) {
-                    if (acknowledge) {
-                        final long messageSent = System.currentTimeMillis();
-                        final Object messageId = sendEvent.getMessageId();
-                        final TrackEvent tackEvent = new TrackEvent(sendEvent, messageSent);
-
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " tacking event: " + sendEvent);
-                        }
-
-                        trackEventMap.put(messageId, tackEvent);
-                    }
-                }
-
-                if (LOGGER.isLoggable(Level.FINEST) && sendEvent != null) {
-                    LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " send event: " + sendEvent);
-                }
-
-                return sendEvent;
+                return socketSend(source);
             }
 
             @Override
             public void error(final ZmqSocketSession source, final ZmqEvent event) {
-                if (event instanceof ZmqSendEvent) {
-                    final ZmqSendEvent sendEvent = (ZmqSendEvent) event;
-
-                    try {
-                        outgoingQueue.put(sendEvent);
-
-                        if (LOGGER.isLoggable(Level.FINEST) && sendEvent != null) {
-                            LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " send event: " + sendEvent);
-                        }
-                    } catch (InterruptedException ex) {
-                        LOGGER.log(Level.SEVERE, "Unable to re-send event: " + event, ex);
-                    }
-                }
+                socketError(source, event);
             }
 
             @Override
-            public ZmqEvent receive(final ZmqSocketSession session, final ZmqEvent event) {
-                if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " consume event: " + event);
-                }
-                if (event instanceof ZmqSendEvent) {
-                    try {
-                        if (journalStore != null) {
-                            journalStore.create(event.getMessageId(),  ((ZmqSendEvent) event).getMessage());
-                        }
-
-                        incomingQueue.put((ZmqSendEvent) event);
-                    } catch (InterruptedException ex) {
-                        LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name
-                            + " cannot consume message due to intenral error: " + event, ex);
-
-                        return null;
-                    } catch (ZmqException ex) {
-                        LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name
-                            + " cannot store messahe due to intenral error: " + event, ex);
-
-                        return null;
-                    }
-                }
-
-                ZmqEvent replyEvent = null;
-                if (event instanceof ZmqHeartbeatEvent) {
-                    // Heart beat is ALL SENDS
-                    try {
-                        if (session.isAcknowledge() && session.isIncoming()) {
-                            replyEvent = eventHandler.createAckEvent(event);
-                        }
-                    } catch (ZmqException ex) {
-                        LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name + " received corrupt event: " + event, ex);
-                    }
-                } else if (event instanceof ZmqAckEvent) {
-                    ZmqAckEvent ackEvent = (ZmqAckEvent) event;
-                    final Object messageId = ackEvent.getMessageId();
-                    if (messageId == null) {
-                        LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name + " received corrupt event: " + event);
-                    } else {
-                        final TrackEvent trackedEvent = trackEventMap.remove(messageId);
-                        if (trackedEvent == null) {
-                            LOGGER.log(Level.WARNING, "Socket " + socketAddr + " for gateway " + name + " received ACK for untracked event: "
-                                    + event);
-                        }
-                    }
-                }
-                if (replyEvent != null && LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " reply event: " + event);
-                }
-
-                return replyEvent;
+            public ZmqEvent receive(final ZmqSocketSession source, final ZmqEvent event) {
+                return socketReceive(source, event);
             }
 
             @Override
@@ -486,6 +365,162 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         }
 
         LOGGER.info("Gateway closed: " + toString());
+    }
+
+    /**
+     * Socket send event has been triggered.
+     * @param source  the socket session
+     * @return        return the event to be sent by the session
+     */
+    protected ZmqEvent socketSend(final ZmqSocketSession source) {
+        final String socketAddr = source.getAddr();
+        final boolean socketOutgoing = source.isOutgoing();
+
+        ZmqEvent sendEvent = null;
+
+        if (journalStore != null) {
+            try {
+                final ZmqJournalEntry journalEntry = journalStore.read();
+                if (journalEntry != null && (!trackEventMap.containsKey(journalEntry.getMessageId()))) {
+                    sendEvent =
+                        eventHandler.createSendEvent(journalEntry.getMessageId(), journalEntry.getMessage());
+                }
+            } catch (ZmqException ex) {
+                LOGGER.log(Level.WARNING, "Failed to read from the journal store", ex);
+            }
+        }
+
+        if (sendEvent == null) {
+            try {
+                sendEvent = outgoingQueue.poll(SOCKET_WAIT_MILLI_SECOND, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ex) {
+                LOGGER.log(Level.WARNING, "Polling of outgoing queue interrupted", ex);
+            }
+        }
+
+        // No message(s) so send a heart-beat when required
+        if (heartbeat && socketOutgoing && sendEvent == null) {
+            // check whether a heart-beat need to be sent since the last message sent
+            final long lastReceiveTime = source.getLastReceiveTime();
+            final long lastSendTime = source.getLastSendTime();
+            final long currentTime = System.nanoTime();
+            final long lastReceiveLaspedTime = (currentTime - lastReceiveTime) / 1000000;
+            final long lastSendLaspedTime = (currentTime - lastSendTime) / 1000000;
+            final ZmqSocketStatus status = source.getStatus();
+
+            if (lastReceiveLaspedTime > HEARTBEAT_RATE_MILLI_SECOND && lastSendLaspedTime > HEARTBEAT_RATE_MILLI_SECOND) {
+                if (lastReceiveLaspedTime > AUTO_PAUSE_IDLE_MILLI_SECOND && status == ZmqSocketStatus.RUNNING) {
+                    // connection has been dropped, so stop sending messages apart from heart-beats
+                    source.pause();
+                } else {
+                    sendEvent = eventHandler.createHeartbeatEvent();
+                }
+            }
+        }
+
+        if (sendEvent instanceof ZmqHeartbeatEvent) {
+            if (acknowledge) {
+                final long messageSent = System.currentTimeMillis();
+                final Object messageId = sendEvent.getMessageId();
+                final TrackEvent tackEvent = new TrackEvent(sendEvent, messageSent);
+
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " tacking event: " + sendEvent);
+                }
+
+                trackEventMap.put(messageId, tackEvent);
+            }
+        }
+
+        if (LOGGER.isLoggable(Level.FINEST) && sendEvent != null) {
+            LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " send event: " + sendEvent);
+        }
+
+        return sendEvent;
+    }
+
+    /**
+     * There has been an error relating to the following event.
+     * @param source   the socket session having the exception
+     * @param event    the event involved
+     */
+    public void socketError(final ZmqSocketSession source, final ZmqEvent event) {
+        if (event instanceof ZmqSendEvent) {
+            final ZmqSendEvent sendEvent = (ZmqSendEvent) event;
+
+            try {
+                outgoingQueue.put(sendEvent);
+
+                if (LOGGER.isLoggable(Level.FINEST) && sendEvent != null) {
+                    LOGGER.log(Level.FINEST, "Socket " + source.getAddr() + " for gateway " + name + " send event: " + sendEvent);
+                }
+            } catch (InterruptedException ex) {
+                LOGGER.log(Level.SEVERE, "Unable to re-send event: " + event, ex);
+            }
+        }
+    }
+
+    /**
+     * Return the response event for the socket receiving the specified event
+     * There has been an error relating to the following event.
+     * @param  source   the socket session which received the event
+     * @param  event    the event received
+     * @return          return a response event
+     */
+    public ZmqEvent socketReceive(final ZmqSocketSession source, final ZmqEvent event) {
+        final String socketAddr = source.getAddr();
+
+        if (LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " consume event: " + event);
+        }
+        if (event instanceof ZmqSendEvent) {
+            try {
+                if (journalStore != null) {
+                    journalStore.create(event.getMessageId(),  ((ZmqSendEvent) event).getMessage());
+                }
+
+                incomingQueue.put((ZmqSendEvent) event);
+            } catch (InterruptedException ex) {
+                LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name
+                    + " cannot consume message due to intenral error: " + event, ex);
+
+                return null;
+            } catch (ZmqException ex) {
+                LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name
+                    + " cannot store messahe due to intenral error: " + event, ex);
+
+                return null;
+            }
+        }
+
+        ZmqEvent replyEvent = null;
+        if (event instanceof ZmqHeartbeatEvent) {
+            // Heart beat is ALL SENDS
+            try {
+                if (source.isAcknowledge() && source.isIncoming()) {
+                    replyEvent = eventHandler.createAckEvent(event);
+                }
+            } catch (ZmqException ex) {
+                LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name + " received corrupt event: " + event, ex);
+            }
+        } else if (event instanceof ZmqAckEvent) {
+            ZmqAckEvent ackEvent = (ZmqAckEvent) event;
+            final Object messageId = ackEvent.getMessageId();
+            if (messageId == null) {
+                LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name + " received corrupt event: " + event);
+            } else {
+                final TrackEvent trackedEvent = trackEventMap.remove(messageId);
+                if (trackedEvent == null) {
+                    LOGGER.log(Level.WARNING, "Socket " + socketAddr + " for gateway " + name + " received ACK for untracked event: "
+                            + event);
+                }
+            }
+        }
+        if (replyEvent != null && LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " reply event: " + event);
+        }
+
+        return replyEvent;
     }
 
     @Override

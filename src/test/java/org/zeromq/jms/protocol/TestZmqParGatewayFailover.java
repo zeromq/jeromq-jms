@@ -32,8 +32,8 @@ public class TestZmqParGatewayFailover {
     private static final String SOCKET_ADDR_1 = "tcp://*:9735";
     private static final String SOCKET_ADDR_2 = "tcp://*:9736";
 
-    private static final String SOCKET_ADDR_3 = "tcp://*:9739";
-    private static final String SOCKET_ADDR_4 = "tcp://*:9740";
+    private static final String SOCKET_ADDR_3 = "tcp://*:9737";
+    private static final String SOCKET_ADDR_4 = "tcp://*:9748";
 
     private static final String MESSAGE_1 = "this is the text message 1";
     private static final String MESSAGE_2 = "this is the text message 2";

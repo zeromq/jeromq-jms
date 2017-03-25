@@ -163,9 +163,19 @@ public class ZmqGatewayFactory {
                     ZmqJournalStore.class, ZmqMessageSelector.class, ZmqRedeliveryPolicy.class,
                     boolean.class, ZmqGateway.Direction.class);
 
-            final boolean socketBound = uri.getOptionValue("gateway.bind", isBound);
-            final ZmqSocketType socketType = ZmqSocketType.valueOf(uri.getOptionValue("gateway.type", type.toString()));
-            final String socketAddr = uri.getOptionValue("gateway.addr");
+            boolean socketBound = isBound;
+            ZmqSocketType socketType = type;
+            String socketAddr = null;
+
+            if (uri.isOption("gateway.addr")) {
+                socketBound = uri.getOptionValue("gateway.bind", isBound);
+                socketType = ZmqSocketType.valueOf(uri.getOptionValue("gateway.type", type.toString()));
+                socketAddr = uri.getOptionValue("gateway.addr");
+            } else if (uri.isOption("socket.addr")) {
+                socketBound = uri.getOptionValue("socket.bind", isBound);
+                socketType = ZmqSocketType.valueOf(uri.getOptionValue("socket.type", type.toString()));
+                socketAddr = uri.getOptionValue("socket.addr");
+            }
 
             if (socketAddr == null) {
                 throw new ZmqException("Missing UTI 'gateway.addr' construct gateway consumer: " + uri);

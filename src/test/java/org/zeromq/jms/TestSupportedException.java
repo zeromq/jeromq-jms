@@ -20,18 +20,6 @@ import org.junit.Test;
 public class TestSupportedException {
 
     /**
-     * Test JMS connection factory failure.
-     * @throws JMSException  throws JMS exception
-     */
-    @Test(expected = UnsupportedOperationException.class)
-    public void testZmqConnectionFactory() throws JMSException {
-        final ZmqConnectionFactory factory = new ZmqConnectionFactory();
-
-        factory.createConnection(null, null);
-        factory.createTopicConnection(null, null);
-    }
-
-    /**
      * Test JMS connection failure.
      * @throws JMSException  throws JMS exception
      */

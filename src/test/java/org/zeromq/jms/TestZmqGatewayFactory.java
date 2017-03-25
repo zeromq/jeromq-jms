@@ -36,10 +36,14 @@ public class TestZmqGatewayFactory {
         extensionPackageNames = null;
         destinationSchema = new HashMap<String, ZmqURI>();
 
-        final ZmqURI uri = ZmqURI.create("jms:queue:queue_1?gateway.addr=tcp://*:9586&redelivery=retry&redelivery.retry=0");
-        final ZmqURI badUri = ZmqURI.create("jms:queue:bad_uri?gateway.addr=tcp://*:9586&redelivery=retry&redelivery.retry=0&event=wrong");
+        final ZmqURI uri =
+            ZmqURI.create("jms:queue:queue?socket.addr=tcp://*:9596&socket.type=DEALER&socket.bind=false&redelivery=retry&redelivery.retry=0");
+        final ZmqURI oldUri =
+            ZmqURI.create("jms:queue:queue_old?gateway.addr=tcp://*:9596&gateway.bind=false&gateway.type=DEALER&redelivery=retry&redelivery.retry=0");
+        final ZmqURI badUri = ZmqURI.create("jms:queue:bad_uri?gateway.addr=tcp://*:9597&redelivery=retry&redelivery.retry=0&event=wrong");
 
         destinationSchema.put(uri.getDestinationName(), uri);
+        destinationSchema.put(oldUri.getDestinationName(), oldUri);
         destinationSchema.put(badUri.getDestinationName(), badUri);
 
         factory = new ZmqGatewayFactory(extensionPackageNames, destinationSchema);
@@ -52,7 +56,7 @@ public class TestZmqGatewayFactory {
      */
     @Test
     public void testFactoryUrl() throws ZmqException {
-        final ZmqURI uri = destinationSchema.get("queue_1");
+        final ZmqURI uri = destinationSchema.get("queue_old");
         final ZmqQueue queue = new ZmqQueue(uri);
 
         final ZMQ.Context context = ZMQ.context(1);
