@@ -111,6 +111,39 @@ public class ZmqGatewayFactory {
     }
 
     /**
+     * Construct a socket session based on defaults and the URI properties.
+     * @param  uri              the URI representing the ZMQ
+     * @param  defaultType      the default type, i.e. PULL
+     * @param  defaultBindFlag  the default bind connection flag
+     * @return                  return the socket context
+     * @throws ZmqException     throws validation exceptions
+     */
+    protected ZmqSocketContext getSocketContext(final ZmqURI uri, final ZmqSocketType defaultType, final boolean defaultBindFlag)
+        throws ZmqException {
+
+        ZmqSocketContext context = new ZmqSocketContext();
+
+        context.setRecieveMsgFlag(0);
+
+        if (uri.isOption("gateway.addr")) {
+            context.setBindFlag(uri.getOptionValue("gateway.bind", defaultBindFlag));
+            context.setType(ZmqSocketType.valueOf(uri.getOptionValue("gateway.type", defaultType.toString())));
+            context.setAddr(uri.getOptionValue("gateway.addr"));
+        } else if (uri.isOption("socket.addr")) {
+            context.setBindFlag(uri.getOptionValue("socket.bind", defaultBindFlag));
+            context.setType(ZmqSocketType.valueOf(uri.getOptionValue("socket.type", defaultType.toString())));
+            context.setAddr(uri.getOptionValue("socket.addr"));
+        }
+
+        // Validate the details
+        if (context.getAddr() == null) {
+            throw new ZmqException("Missing URI '{socket|gateway}.addr' construct gateway consumer: " + uri);
+        }
+
+        return context;
+    }
+
+    /**
      * Return the Zero MQ JMS consumer protocol based on the attributes and any meta data.
      * @param  namePrefix       the prefix name of the producer gateway
      * @param  destination      the destination
@@ -127,7 +160,6 @@ public class ZmqGatewayFactory {
 
         final String destinationName = destination.getName();
         final ZmqURI destinationUri = destination.getURI();
-        final int flags = 0;
 
         final ZmqMessageSelector selector = getZmqMessageSelector(destination, messageSelector);
         final ZmqRedeliveryPolicy redelivery = null;
@@ -158,32 +190,16 @@ public class ZmqGatewayFactory {
                 LOGGER.info("Using gateway consumer  (" + gatewayClass.getClass().getCanonicalName() + ") for destination: " + destination);
             }
 
-            final Constructor<?> consumerConstructor = gatewayClass.getConstructor(String.class, ZMQ.Context.class, ZmqSocketType.class,
-                    boolean.class, String.class, int.class, ZmqFilterPolicy.class, ZmqEventHandler.class, ZmqGatewayListener.class,
+            final Constructor<?> consumerConstructor = gatewayClass.getConstructor(String.class, ZMQ.Context.class, ZmqSocketContext.class,
+                    ZmqFilterPolicy.class, ZmqEventHandler.class, ZmqGatewayListener.class,
                     ZmqJournalStore.class, ZmqMessageSelector.class, ZmqRedeliveryPolicy.class,
                     boolean.class, ZmqGateway.Direction.class);
 
-            boolean socketBound = isBound;
-            ZmqSocketType socketType = type;
-            String socketAddr = null;
+            ZmqSocketContext socketContext = getSocketContext(uri, type, isBound);
 
-            if (uri.isOption("gateway.addr")) {
-                socketBound = uri.getOptionValue("gateway.bind", isBound);
-                socketType = ZmqSocketType.valueOf(uri.getOptionValue("gateway.type", type.toString()));
-                socketAddr = uri.getOptionValue("gateway.addr");
-            } else if (uri.isOption("socket.addr")) {
-                socketBound = uri.getOptionValue("socket.bind", isBound);
-                socketType = ZmqSocketType.valueOf(uri.getOptionValue("socket.type", type.toString()));
-                socketAddr = uri.getOptionValue("socket.addr");
-            }
-
-            if (socketAddr == null) {
-                throw new ZmqException("Missing UTI 'gateway.addr' construct gateway consumer: " + uri);
-            }
-
-            final String name = namePrefix + "@" + socketAddr;
+            final String name = namePrefix + "@" + socketContext.getAddr();
             final ZmqGateway protocol =
-                (ZmqGateway) consumerConstructor.newInstance(name, context, socketType, socketBound, socketAddr, flags,
+                (ZmqGateway) consumerConstructor.newInstance(name, context, socketContext,
                     filter, eventHandler, null, store, selector, redelivery,
                     transacted, ZmqGateway.Direction.INCOMING);
 
@@ -216,7 +232,6 @@ public class ZmqGatewayFactory {
 
         final String destinationName = destination.getName();
         final ZmqURI destinationUri = destination.getURI();
-        final int flags = 0;
         final ZmqMessageSelector selector = null;
         final ZmqRedeliveryPolicy redelivery = null;
         final ZmqEventHandler handler = getZmqEventHandler(destination);
@@ -243,21 +258,15 @@ public class ZmqGatewayFactory {
                 LOGGER.info("Using gateway produce  (" + gatewayClass.getClass().getCanonicalName() + ") for destination: " + destination);
             }
 
-            final Constructor<?> producerConstructor = gatewayClass.getConstructor(String.class, ZMQ.Context.class, ZmqSocketType.class,
-                    boolean.class, String.class, int.class, ZmqFilterPolicy.class, ZmqEventHandler.class, ZmqGatewayListener.class,
+            final Constructor<?> producerConstructor = gatewayClass.getConstructor(String.class, ZMQ.Context.class, ZmqSocketContext.class,
+                    ZmqFilterPolicy.class, ZmqEventHandler.class, ZmqGatewayListener.class,
                     ZmqJournalStore.class, ZmqMessageSelector.class, ZmqRedeliveryPolicy.class,
                     boolean.class, ZmqGateway.Direction.class);
 
-            final boolean socketBound = uri.getOptionValue("gateway.bind", isBound);
-            final ZmqSocketType socketType = ZmqSocketType.valueOf(uri.getOptionValue("gateway.type", type.toString()));
-            final String socketAddr = uri.getOptionValue("gateway.addr");
+            ZmqSocketContext socketContext = getSocketContext(uri, type, isBound);
 
-            if (socketAddr == null) {
-                throw new ZmqException("Missing UTI 'gateway.addr' construct gateway consumer: " + uri);
-            }
-
-            final String name = namePrefix + "@" + socketAddr;
-            final ZmqGateway protocol = (ZmqGateway) producerConstructor.newInstance(name, context, socketType, socketBound, socketAddr, flags,
+            final String name = namePrefix + "@" + socketContext.getAddr();
+            final ZmqGateway protocol = (ZmqGateway) producerConstructor.newInstance(name, context, socketContext,
                     filter, handler, listener, store, selector, redelivery,
                     transacted, ZmqGateway.Direction.OUTGOING);
 

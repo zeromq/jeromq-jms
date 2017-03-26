@@ -266,6 +266,24 @@ public class ZmqURI implements Externalizable {
     }
 
     /**
+     * Return the options found on the URI starting with the specified prefix
+     * as a map of names to list of values.
+     * @param  prefix  the prefix string, i.e. "socket."
+     * @return         return the options as a name/values map
+     */
+    public Map<String, List<String>> getOptions(final String prefix) {
+        Map<String, List<String>> selectedOptions = new HashMap<String, List<String>>();
+
+        for (String name : options.keySet()) {
+            if (name.startsWith(prefix)) {
+                final List<String> value = options.get(name);
+                selectedOptions.put(name, value);
+            }
+        }
+        return selectedOptions;
+    }
+
+    /**
      * Return the option values for the specified parameter name within the URI.
      * A null value is return when non can be found.
      * @param paramName      the parameter name

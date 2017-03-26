@@ -40,15 +40,13 @@ public class TestZmqParGateway {
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
-        final ZmqGateway sender =
-            new ZmqParGateway("protocol:sender", context, ZmqSocketType.DEALER, true, SOCKET_ADDR, flags, null, handler,
-                null, null, null, null, false, Direction.OUTGOING);
+        final ZmqSocketContext senderContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.DEALER, true, flags);
+        final ZmqGateway sender = new ZmqParGateway("protocol:sender", context, senderContext,
+                  null, handler, null, null, null, null, false, Direction.OUTGOING);
 
-        // final ZMQ.Context context2 = ZMQ.context(1);
-
-        final ZmqGateway receiver =
-        new ZmqParGateway("protocol:receiver", context, ZmqSocketType.ROUTER, false, SOCKET_ADDR, flags, null, handler,
-                null, null, null, null, false, Direction.INCOMING);
+        final ZmqSocketContext receiverContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.ROUTER, false, flags);
+        final ZmqGateway receiver = new ZmqParGateway("protocol:receiver", context, receiverContext,
+                  null, handler, null, null, null, null, false, Direction.INCOMING);
 
         try {
             final ZmqTextMessage outMessage1 = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();

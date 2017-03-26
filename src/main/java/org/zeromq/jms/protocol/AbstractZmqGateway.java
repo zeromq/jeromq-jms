@@ -62,8 +62,8 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
     private final Date startDateTime;
 
+    private final ZmqSocketContext socketContext;
     private final ZmqRedeliveryPolicy redelivery;
-
     private final ZmqFilterPolicy filterPolicy;
     private final ZmqEventHandler eventHandler;
     private final ZmqMessageSelector messageSelector;
@@ -137,35 +137,33 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
     /**
      * Construct abstract gateway.
-     * @param name          the name of display the gateway
-     * @param context       the Zero MQ context
-     * @param type          the Zero MQ socket type, i.e. Push, Pull, Router, Dealer, etc...
-     * @param isBound       the Zero MQ socket bind/connection indicator
-     * @param addr          the Zero MQ socket address(es) is comma separated format
-     * @param flags         the Zero MQ socket send flags
-     * @param filter        the message filter policy
-     * @param handler       the event handler functionality
-     * @param listener      the listener instance
-     * @param store         the (optional) message store
-     * @param selector      the (optional) message selection policy
-     * @param redelivery    the (optional) message re-delivery policy
-     * @param transacted    the transaction indicator
-     * @param acknowledge   the always acknowledge indicator
-     * @param heartbeat     the send heart-beat indicator
-     * @param direction     the direction, i.e. Incoming, Outgoing, etc..
+     * @param name              the name of display the gateway
+     * @param context           the Zero MQ context
+     * @param socketContext     the socket context for the ZMQ socket
+     * @param filter            the message filter policy
+     * @param handler           the event handler functionality
+     * @param listener          the listener instance
+     * @param store             the (optional) message store
+     * @param selector          the (optional) message selection policy
+     * @param redelivery        the (optional) message re-delivery policy
+     * @param transacted        the transaction indicator
+     * @param acknowledge       the always acknowledge indicator
+     * @param heartbeat         the send heart-beat indicator
+     * @param direction         the direction, i.e. Incoming, Outgoing, etc..
      */
-    public AbstractZmqGateway(final String name, final ZMQ.Context context, final ZmqSocketType type, final boolean isBound, final String addr,
-            final int flags, final ZmqFilterPolicy filter, final ZmqEventHandler handler, final ZmqGatewayListener listener,
-            final ZmqJournalStore store, final ZmqMessageSelector selector, final ZmqRedeliveryPolicy redelivery,
-            final boolean transacted, final boolean acknowledge,
-            final boolean heartbeat, final Direction direction) {
+    public AbstractZmqGateway(final String name, final ZMQ.Context context, final ZmqSocketContext socketContext,
+        final ZmqFilterPolicy filter, final ZmqEventHandler handler, final ZmqGatewayListener listener,
+        final ZmqJournalStore store, final ZmqMessageSelector selector, final ZmqRedeliveryPolicy redelivery,
+        final boolean transacted, final boolean acknowledge,
+        final boolean heartbeat, final Direction direction) {
 
         this.name = name;
         this.context = context;
-        this.type = type;
-        this.bound = isBound;
-        this.addr = addr;
-        this.flags = flags;
+        this.type = socketContext.getType();
+        this.socketContext = new ZmqSocketContext(socketContext);
+        this.bound = socketContext.isBindFlag();
+        this.addr = socketContext.getAddr();
+        this.flags = socketContext.getRecieveMsgFlag();
         this.filterPolicy = filter;
         this.eventHandler = handler;
         this.listener = listener;
@@ -217,7 +215,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         final boolean socketIncoming = (direction == Direction.INCOMING || heartbeat || acknowledge);
 
         for (String socketAddr : socketAddrs) {
-            final ZMQ.Socket socket = getSocket(context, type.getType());
+            final ZMQ.Socket socket = getSocket(context, socketContext);
 
             // Set the filters when they exist
             if (type == ZmqSocketType.SUB && filterPolicy != null) {
@@ -247,12 +245,13 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     }
 
     /**
-     * Construct a ZMQ socket and initialize default settings.
-     * @param context       the Zero MQ context
-     * @param socketType    the Zero MQ socket type, i.e. Push, Pull, Router, Dealer, etc...
-     * @return              return the constructed and initialized ZMQ socket
+     * Construct a ZMQ socket and initialise default settings.
+     * @param context           the Zero MQ context
+     * @param socketContext     the Zero MQ socket context
+     * @return                  return the constructed and initialised ZMQ socket
      */
-    protected ZMQ.Socket getSocket(final ZMQ.Context context, final int socketType) {
+    protected ZMQ.Socket getSocket(final ZMQ.Context context, final ZmqSocketContext socketContext) {
+        final int socketType = socketContext.getType().getType();
         final ZMQ.Socket socket = context.socket(socketType);
 
         socket.setSendTimeOut(0);

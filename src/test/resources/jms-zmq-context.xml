@@ -19,7 +19,7 @@
       <array>
         <value>jms:queue:destination?gateway.addr=tcp://*:9705&amp;redlivery.retry=0</value>
       </array>
-  	</property>
+    </property>
   </bean>
 
   <bean id="jmsConnectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">

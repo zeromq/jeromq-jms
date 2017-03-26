@@ -25,26 +25,24 @@ public class ZmqFireAndForgetGateway extends AbstractZmqGateway {
 
     /**
      * Construct the Fire and Forget gateway.
-     * @param name          the name of display the gateway
-     * @param context       the Zero MQ context
-     * @param type          the Zero MQ socket type, i.e. Push, Pull, Router, Dealer, etc...
-     * @param isBound       the Zero MQ socket bind/connection indicator
-     * @param addr          the Zero MQ socket address(es) is comma separated format
-     * @param flags         the Zero MQ socket send flags
-     * @param filter        the message filter policy
-     * @param handler       the message event handler functionality
-     * @param listener      the listener instance
-     * @param store         the (optional) message store
-     * @param selector      the (optional) message selection policy
-     * @param redelivery    the (optional) message re-delivery policy
-     * @param transacted    the transaction indicator
-     * @param direction     the direction, i.e. Incoming, Outgoing, etc..
+     * @param name              the name of display the gateway
+     * @param context           the Zero MQ context
+     * @param socketContext     the socket context for the ZMQ socket
+     * @param filter            the message filter policy
+     * @param handler           the message event handler functionality
+     * @param listener          the listener instance
+     * @param store             the (optional) message store
+     * @param selector          the (optional) message selection policy
+     * @param redelivery        the (optional) message re-delivery policy
+     * @param transacted        the transaction indicator
+     * @param direction         the direction, i.e. Incoming, Outgoing, etc..
      */
-    public ZmqFireAndForgetGateway(final String name, final Context context, final ZmqSocketType type, final boolean isBound, final String addr,
-            final int flags, final ZmqFilterPolicy filter, final ZmqEventHandler handler, final ZmqGatewayListener listener,
-            final ZmqJournalStore store, final ZmqMessageSelector selector, final ZmqRedeliveryPolicy redelivery,
-            final boolean transacted, final Direction direction) {
+    public ZmqFireAndForgetGateway(final String name, final Context context, final ZmqSocketContext socketContext,
+        final ZmqFilterPolicy filter, final ZmqEventHandler handler, final ZmqGatewayListener listener,
+        final ZmqJournalStore store, final ZmqMessageSelector selector, final ZmqRedeliveryPolicy redelivery,
+        final boolean transacted, final Direction direction) {
 
-        super(name, context, type, isBound, addr, flags, filter, handler, listener, store, selector, redelivery, transacted, false, false, direction);
+        super(name, context, socketContext,
+           filter, handler, listener, store, selector, redelivery, transacted, false, false, direction);
     }
 }

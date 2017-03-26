@@ -26,27 +26,25 @@ public class ZmqParGateway extends AbstractZmqGateway {
 
     /**
      * Construct the PAR gateway.
-     * @param name          the name of display the gateway
-     * @param context       the Zero MQ context
-     * @param type          the Zero MQ socket type, i.e. Push, Pull, Router, Dealer, etc...
-     * @param isBound       the Zero MQ socket bind/connection indicator
-     * @param addr          the Zero MQ socket address(es) is comma separated format
-     * @param flags         the Zero MQ socket send flags
-     * @param filter        the message filter policy
-     * @param handler       the message event adaption functionality
-     * @param listener      the listener instance
-     * @param store         the (optional) message store
-     * @param selector      the (optional) message selection policy
-     * @param redelivery    the (optional) message re-delivery policy
-     * @param transacted    the transaction indicator
-     * @param direction     the direction, i.e. Incoming, Outgoing, etc..
+     * @param name              the name of display the gateway
+     * @param context           the Zero MQ context
+     * @param socketContext     the socket context for the ZMQ socket
+     * @param filter            the message filter policy
+     * @param handler           the message event adaption functionality
+     * @param listener          the listener instance
+     * @param store             the (optional) message store
+     * @param selector          the (optional) message selection policy
+     * @param redelivery        the (optional) message re-delivery policy
+     * @param transacted        the transaction indicator
+     * @param direction         the direction, i.e. Incoming, Outgoing, etc..
      */
-    public ZmqParGateway(final String name, final Context context, final ZmqSocketType type, final boolean isBound, final String addr,
-            final int flags, final ZmqFilterPolicy filter, final ZmqEventHandler handler, final ZmqGatewayListener listener,
-            final ZmqJournalStore store, final ZmqMessageSelector selector, final ZmqRedeliveryPolicy redelivery,
-            final boolean transacted, final Direction direction) {
+    public ZmqParGateway(final String name, final Context context, final ZmqSocketContext socketContext,
+        final ZmqFilterPolicy filter, final ZmqEventHandler handler, final ZmqGatewayListener listener,
+        final ZmqJournalStore store, final ZmqMessageSelector selector, final ZmqRedeliveryPolicy redelivery,
+        final boolean transacted, final Direction direction) {
 
-        super(name, context, getType(type, direction), isBound, addr, flags, filter, handler, listener,
+        super(name, context, modifySocketContext(socketContext, direction),
+            filter, handler, listener,
             store, selector, redelivery, transacted, getAcknowledge(direction),
             getHeatbreat(direction), direction);
     }
@@ -70,6 +68,27 @@ public class ZmqParGateway extends AbstractZmqGateway {
     }
 
     /**
+     * change the socket context based on the type and direction.
+     * @param socketContext  the current setting of the socket context
+     * @param direction      the direction of the gateway
+     * @return               return the existing context or an update context
+     */
+    protected static ZmqSocketContext modifySocketContext(final ZmqSocketContext socketContext, final Direction direction) {
+
+        final ZmqSocketType newType = getType(socketContext.getType(), direction);
+
+        if (newType == socketContext.getType()) {
+            // nothing changed
+            return socketContext;
+        }
+
+        final ZmqSocketContext newSocketContext = new ZmqSocketContext(socketContext);
+
+        newSocketContext.setType(newType);
+
+        return newSocketContext;
+    }
+    /**
      * Return the type of ZMQ socket given for this direction.
      * @param type       the socket type
      * @param direction  the direction
@@ -84,8 +103,8 @@ public class ZmqParGateway extends AbstractZmqGateway {
     }
 
     @Override
-    protected ZMQ.Socket getSocket(final ZMQ.Context context, final int socketType) {
-        final ZMQ.Socket socket = super.getSocket(context, socketType);
+    protected ZMQ.Socket getSocket(final ZMQ.Context context, final ZmqSocketContext socketContext) {
+        final ZMQ.Socket socket = super.getSocket(context, socketContext);
 
         socket.setSendTimeOut(1000);
 
