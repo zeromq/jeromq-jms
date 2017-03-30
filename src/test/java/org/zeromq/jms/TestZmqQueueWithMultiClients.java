@@ -65,7 +65,7 @@ public class TestZmqQueueWithMultiClients {
          * @param countDownLatch  the server completed latch
          * @param messageCount    the message process count
          */
-        public Server(final CountDownLatch countDownLatch, final AtomicInteger messageCount) {
+        private Server(final CountDownLatch countDownLatch, final AtomicInteger messageCount) {
             this.countDownLatch = countDownLatch;
             this.messageCount = messageCount;
         }
@@ -101,7 +101,7 @@ public class TestZmqQueueWithMultiClients {
          * @param clientId    the unique client identifier
          * @param transacted  the transaction indicator
          */
-        public Client(final String clientId, final boolean transacted) {
+        private Client(final String clientId, final boolean transacted) {
             this.clientId = clientId;
             this.transacted = transacted;
         }

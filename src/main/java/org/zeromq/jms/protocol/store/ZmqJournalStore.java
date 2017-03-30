@@ -20,14 +20,14 @@ public interface ZmqJournalStore {
      * @param  message       the ZMQ message to store
      * @throws ZmqException  throws I/O based ZMQ exception
      */
-    void create(final Object messageId, ZmqMessage message) throws ZmqException;
+    void create(Object messageId, ZmqMessage message) throws ZmqException;
 
     /**
      * Delete the specified journal entry from the store.
      * @param  messageId     the unique ZMQ message identifier
      * @throws ZmqException  throws I/O based ZMQ exception
      */
-    void delete(final Object messageId) throws ZmqException;
+    void delete(Object messageId) throws ZmqException;
 
     /**
      * Ready a journal entry from the store.

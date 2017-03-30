@@ -70,7 +70,7 @@ public class TestZmqTopicWithMultiClients {
          * @param clientId            the unique client identifier
          * @param transacted          the transaction indicator
          */
-        public Client(final CountDownLatch clientStartedLatch, final CountDownLatch clientStoppedLatch, final AtomicInteger messageCount,
+        private Client(final CountDownLatch clientStartedLatch, final CountDownLatch clientStoppedLatch, final AtomicInteger messageCount,
                 final String clientId, final boolean transacted) {
 
             this.clientStartedLatch = clientStartedLatch;

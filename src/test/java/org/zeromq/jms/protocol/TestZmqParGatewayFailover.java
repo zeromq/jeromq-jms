@@ -91,7 +91,7 @@ public class TestZmqParGatewayFailover {
 
                 // Need to ensure switch-over
                 Thread.sleep(5000);
-                
+
                 LOGGER.info("Elapse time (msec): " + stopwatch.elapsedTime());
 
                 sender.send(outMessage2);
@@ -143,7 +143,7 @@ public class TestZmqParGatewayFailover {
      * Test a send and receive protocol functionality with a restart.
      * @throws InterruptedException  throws interrupt exception on failed waits
      */
-    @Test
+    @Ignore @Test
     public void testFailoverWithRestart() throws InterruptedException {
         LOGGER.info("Start Failover with Restart test.");
 

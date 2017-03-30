@@ -320,9 +320,9 @@ public class ZmqSocketSession implements Runnable {
         if (LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.log(Level.FINEST, "Receive and wait (" + socket.getReceiveTimeOut() + ") : " + this);
         }
-        
+
         if (status == ZmqSocketStatus.STOPPED) {
-        	return;
+            return;
         }
 
         ZMsg msg = ZMsg.recvMsg(socket, socketFlags);
