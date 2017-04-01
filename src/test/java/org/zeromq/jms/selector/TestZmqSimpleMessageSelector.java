@@ -202,6 +202,25 @@ public class TestZmqSimpleMessageSelector {
     }
 
     /**
+     * Test double quotes within the selector expression.
+     */
+    @Test
+    public void testDoubleQuotes() {
+        try {
+            final Map<String, Object> variables = new HashMap<String, Object>();
+            variables.put("topic", "org.fedoraproject.dev.logger.TEST");
+            final ZmqMessageSelector selectorCase = ZmqSimpleMessageSelector
+                    .parse("topic = \"org.fedoraproject.dev.logger.TEST\"");
+
+            boolean result = selectorCase.evaluate(variables);
+            Assert.assertTrue(result);
+
+        } catch (Exception ex) {
+            Assert.fail(ex.getMessage());
+        }
+    }
+
+    /**
      * Test SQL format functionality within the selector expression.
      */
     @Test

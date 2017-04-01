@@ -15,7 +15,7 @@
   <context:component-scan base-package="org.zeromq.jms" />
 
   <bean id="zmqConnectionFactory" class="org.zeromq.jms.ZmqConnectionFactory">
-     <property name="destinations" >
+    <property name="destinations" >
       <array>
         <value>jms:queue:destination?gateway.addr=tcp://*:9705&amp;redlivery.retry=0</value>
       </array>

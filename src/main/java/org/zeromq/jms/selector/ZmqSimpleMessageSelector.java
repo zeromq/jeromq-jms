@@ -51,7 +51,7 @@ import java.util.regex.Pattern;
 public class ZmqSimpleMessageSelector implements ZmqMessageSelector {
 
     // The REGX pattern used to tokenised the string expression
-    private static final String TOKENISE_REGX = "=|!=|<=|>=|\\|\\||\\&\\&|\\d+\\.\\d+|\\d+|'(.*?)'|IS NULL|IS NOT NULL|,|\\w+|[()+\\-*/<>]";
+    private static final String TOKENISE_REGX = "=|!=|<=|>=|\\|\\||\\&\\&|\\d+\\.\\d+|\\d+|'(.*?)'|\"(.*?)\"|IS NULL|IS NOT NULL|,|\\w+|[()+\\-*/<>]";
 
     /**
      * Enumeration of valid operators.
@@ -483,6 +483,11 @@ public class ZmqSimpleMessageSelector implements ZmqMessageSelector {
 
         if (token.value.startsWith("'")) {
             final int endOfLiteral = (token.value.endsWith("'")) ? token.value.length() - 1 : token.value.length();
+
+            return new LiteralTerm(token.value.substring(1, endOfLiteral));
+        }
+        if (token.value.startsWith("\"")) {
+            final int endOfLiteral = (token.value.endsWith("\"")) ? token.value.length() - 1 : token.value.length();
 
             return new LiteralTerm(token.value.substring(1, endOfLiteral));
         }

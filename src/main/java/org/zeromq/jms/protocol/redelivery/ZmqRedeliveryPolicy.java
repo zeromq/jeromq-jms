@@ -38,5 +38,5 @@ public interface ZmqRedeliveryPolicy {
      * This message is has been dropped for further re-deliver.
      * @param events     the events to be dropped from further delivery
      */
-    void onBackout(final ZmqSendEvent events);
+    void onBackout(ZmqSendEvent events);
 }

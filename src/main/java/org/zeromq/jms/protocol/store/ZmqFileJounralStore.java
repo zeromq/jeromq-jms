@@ -124,7 +124,7 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
          * @param journalFile  the journal file
          * @param position      the position in the journal file
          */
-        public MessageLocation(final Object messageId, final Path journalFile, final long position) {
+        private MessageLocation(final Object messageId, final Path journalFile, final long position) {
             this.messageId = messageId;
             this.journalFile = journalFile;
             this.position = position;
