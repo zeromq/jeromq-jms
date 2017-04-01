@@ -54,6 +54,14 @@
     <version.junit>4.10</version.junit>
     <version.spring>4.1.1.RELEASE</version.spring>
     <version.tomcat-catalina>8.0.23</version.tomcat-catalina>
+
+	<checkstyle.config.location>src/checkstyle.xml</checkstyle.config.location>
+    <!--
+      launchctl setenv JAVA_HOME /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home
+      launchctl setenv JAVA_HOME /Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home
+     -->
+    <path.toolsjar>${java.home}/../lib/tools.jar</path.toolsjar>
+    <path.jconsolejar>${java.home}/../lib/jconsole.jar</path.jconsolejar>
   </properties>
 
   <dependencies>
@@ -74,16 +82,14 @@
       <artifactId>jconsole</artifactId>
       <version>${version.java}</version>
       <scope>system</scope>
-      <systemPath>/Library/Java/JavaVirtualMachines/jdk1.8.0_66.jdk/Contents/Home/lib/jconsole.jar</systemPath>
-      <!-- <systemPath>${jconsolejar}</systemPath>  -->
+      <systemPath>${path.jconsolejar}</systemPath>
     </dependency>
     <dependency>
       <groupId>com.sun.tools</groupId>
       <artifactId>tools</artifactId>
       <version>${version.java}</version>
       <scope>system</scope>
-      <systemPath>/Library/Java/JavaVirtualMachines/jdk1.8.0_66.jdk/Contents/Home/lib/tools.jar</systemPath>
-      <!-- <systemPath>${toolsjar}</systemPath> -->
+      <systemPath>${path.toolsjar}</systemPath>
     </dependency>
 
     <dependency>
@@ -161,6 +167,40 @@
       </plugin>
 
       <plugin>
+        <!-- http://maven.apache.org/enforcer/enforcer-rules/index.html --> 
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>1.4.1</version>
+        <executions>
+          <execution>
+            <id>default-cli</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <DependencyConvergence/>
+                <requireJavaVersion>
+                  <version>1.7</version>
+                </requireJavaVersion>
+                <enforceBytecodeVersion>
+                  <maxJdkVersion>1.7</maxJdkVersion>
+                </enforceBytecodeVersion>
+              </rules>
+              <fail>true</fail>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>extra-enforcer-rules</artifactId>
+            <version>1.0-beta-6</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <version>2.11</version>        
@@ -175,7 +215,7 @@
             <configuration>
                 <consoleOutput>true</consoleOutput>
                 <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                <configLocation>${project.basedir}/src/checkstyle.xml</configLocation>
+                <!-- <configLocation>src/checkstyle.xml</configLocation>  -->
                 <failOnViolation>true</failOnViolation>
                 <excludes>**/guide/*</excludes>                
             </configuration>
@@ -249,55 +289,6 @@
   </reporting>
   
   <profiles>
-    <!-- 
-      launchctl setenv JAVA_HOME /Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home
-    -->
-
-    <profile>
-        <id>default-profile</id>
-        <activation>
-            <activeByDefault>true</activeByDefault>
-            <file>
-                <exists>${JAVA_HOME}/lib/jconsole.jar</exists>
-            </file>
-        </activation>
-        <properties>
-            <toolsjar>${JAVA_HOME}/lib/tools.jar</toolsjar>
-            <jconsolejar>${JAVA_HOME}/lib/jconsole.jar</jconsolejar>
-        </properties>
-    </profile>
-
-    <profile>
-      <id>doclint-java8-disable</id>
-      <activation>
-        <jdk>[1.8,)</jdk>    
-      </activation>
-      <properties>
-        <toolsjar>${JAVA_HOME}/lib/tools.jar</toolsjar>
-        <jconsolejar>${JAVA_HOME}/lib/jconsole.jar</jconsolejar>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.9.1</version>
-            <configuration>
-              <additionalparam>-Xdoclint:none</additionalparam>
-            </configuration>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
     <profile>
       <id>release-sign-artifacts</id>
       <activation>
