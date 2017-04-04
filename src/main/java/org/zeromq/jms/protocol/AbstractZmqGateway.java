@@ -7,13 +7,16 @@ package org.zeromq.jms.protocol;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedTransferQueue;
@@ -54,7 +57,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     private final ZMQ.Context context;
 
     private final List<ZmqSocketMetrics> metrics;
-    private final List<ZmqSocketSession> sessions;
+    private final Map<String, ZmqSocketSession> sessions;
     private final boolean transacted;
     private final boolean acknowledge;
     private final boolean heartbeat;
@@ -87,31 +90,6 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
     private final TransferQueue<ZmqSendEvent> outgoingQueue = new LinkedTransferQueue<ZmqSendEvent>();
     private final Queue<ZmqSendEvent> outgoingSnapshot = new LinkedList<ZmqSendEvent>();
-
-    /**
-     * Message tacking class.
-     */
-    private static final class TrackEvent {
-        private final ZmqEvent event;
-        private final long eventSent;
-
-        /**
-         * Construct the event tracker instance.
-         * @param event      the event
-         * @param eventSent  the event sent time (nano seconds)
-         */
-        TrackEvent(final ZmqEvent event, final long eventSent) {
-            this.event = event;
-            this.eventSent = eventSent;
-        }
-
-        @Override
-        public String toString() {
-            return "TrackEvent [eventSent=" + eventSent + ", event=" + event + "]";
-        }
-    }
-
-    private final ConcurrentMap<Object, TrackEvent> trackEventMap = new ConcurrentHashMap<Object, TrackEvent>();
 
     /**
      * Inner class for publishing external JMS messages.
@@ -177,7 +155,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         this.startDateTime = new Date();
 
         this.metrics = new LinkedList<ZmqSocketMetrics>();
-        this.sessions = new LinkedList<ZmqSocketSession>();
+        this.sessions = new HashMap<String, ZmqSocketSession>();
     }
 
     /**
@@ -190,6 +168,10 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
     @Override
     public void open() {
+        if (active.get()) {
+            return;
+        }
+
         active.set(true);
 
         if (journalStore != null) {
@@ -228,16 +210,24 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 }
             }
 
-            ZmqSocketMetrics socketMetrics = new ZmqSocketMetrics(socketAddr, SOCKET_METRIC_BUCKET_COUNT,
+            ZmqSocketSession socketSession = sessions.get(addr);
+            // re-use socket metrics on a closed socket
+            ZmqSocketMetrics socketMetrics = (socketSession != null) ? socketSession.getMetrics() : null;
+
+            if (socketMetrics == null) {
+                socketMetrics = new ZmqSocketMetrics(socketAddr, SOCKET_METRIC_BUCKET_COUNT,
                     SOCKET_METRIC_BUCKET_INTERVAL_MILLI_SECOND, socketOutgoing, socketIncoming);
-            metrics.add(socketMetrics);
+                metrics.add(socketMetrics);
+            }
 
             final ZmqSocketListener socketListener = getSocketListener(socketAddr, socketIncoming, socketOutgoing);
 
-            ZmqSocketSession socketSession = new ZmqSocketSession(active, socket, type, socketAddr, bound, socketIncoming, socketOutgoing, flags,
-                    SOCKET_WAIT_MILLI_SECOND, heartbeat, acknowledge, socketListener, filterPolicy, eventHandler, socketMetrics);
+            socketSession = new ZmqSocketSession(name, active,
+                socket, type, socketAddr, bound, socketIncoming, socketOutgoing, flags,
+                SOCKET_WAIT_MILLI_SECOND, heartbeat, acknowledge, socketListener, filterPolicy, eventHandler, socketMetrics);
 
-            sessions.add(socketSession);
+            // override closed socket (cannot re-use)
+            sessions.put(addr, socketSession);
             socketExecutor.execute(socketSession);
         }
 
@@ -255,6 +245,42 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         final ZMQ.Socket socket = context.socket(socketType);
 
         socket.setSendTimeOut(0);
+
+        final Map<String, Object> valueMap = new HashMap<String, Object>();
+
+        for (Method method : socketContext.getClass().getMethods()) {
+            if ((method.getParameterTypes().length == 0) && (method.getReturnType() != null)) {
+                final String getterMethodName = method.getName();
+                if (getterMethodName.startsWith("get")) {
+                    try {
+                        final Object value = method.invoke(socketContext);
+
+                        if (value != null) {
+                            valueMap.put(getterMethodName.substring(3), value);
+                        }
+                    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                        LOGGER.log(Level.WARNING, "Ignoring 'getter' as potential 'setter': " + getterMethodName, ex);
+                    }
+                }
+            }
+        }
+
+        for (Method method : socket.getClass().getMethods()) {
+            if ((method.getParameterTypes().length == 1) && (method.getReturnType() == null)) {
+                final String setterMethodName = method.getName();
+                if (setterMethodName.startsWith("set")) {
+                    final Object value = valueMap.get(setterMethodName.substring(3));
+
+                    if (value != null) {
+                        try {
+                            method.invoke(socket, value);
+                        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                            LOGGER.log(Level.WARNING, "Ignoring 'setting' of socket context': " + setterMethodName, ex);
+                        }
+                    }
+                }
+            }
+        }
 
         return socket;
     }
@@ -306,10 +332,21 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     @Override
     public void close() {
         if (acknowledge) {
-            // wait for a period before warning about failed ACKS
-            if (trackEventMap.size() > 0) {
-                LOGGER.info("Gateway " + name + " waiting for acknowledgement message(s): " + trackEventMap.size());
+            // Wait for a period before warning about failed ACKS
+            int totalCount = 0;
 
+            for (ZmqSocketSession socketSession : sessions.values()) {
+                final int sessionCount = socketSession.trackedCount();
+
+                if (sessionCount > 0) {
+                    LOGGER.info("Gateway [" + name + "@" + socketSession.getAddr() + "] waiting for acknowledgement message(s): "
+                        + sessionCount);
+                }
+
+                totalCount = totalCount + sessionCount;
+            }
+
+            if (totalCount > 0) {
                 try {
                     Thread.sleep(SOCKET_WAIT_MILLI_SECOND);
                 } catch (InterruptedException ex) {
@@ -322,7 +359,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             try {
                 journalStore.close();
             } catch (ZmqException ex) {
-                LOGGER.log(Level.SEVERE, "Unable to close the journal store: " + journalStore, ex);
+                LOGGER.log(Level.SEVERE, "Gateway [" + name + "] unable to close the journal store: " + journalStore, ex);
             }
         }
 
@@ -334,10 +371,10 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 final boolean success = listenerExecutor.awaitTermination(3, TimeUnit.SECONDS);
 
                 if (!success) {
-                    LOGGER.severe("Listener threads failed to stop: " + toString());
+                    LOGGER.severe("Gateway [" + name + "] listener threads failed to stop: " + toString());
                 }
             } catch (InterruptedException ex) {
-                LOGGER.log(Level.SEVERE, "Listener threads failed to stop: " + toString(), ex);
+                LOGGER.log(Level.SEVERE, "Gateway [" + name + "] listener threads failed to stop: " + toString(), ex);
             }
         }
 
@@ -356,11 +393,15 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
         // dump all tracked missing
         if (acknowledge) {
-            for (TrackEvent tackMessage : trackEventMap.values()) {
-                LOGGER.warning("Gateway " + name + " has un-acknowledged message (LOST): " + tackMessage);
+            for (ZmqSocketSession socketSession : sessions.values()) {
+                List<ZmqSocketSession.TrackEvent> lostEvents = socketSession.untrackAll();
+                for (ZmqSocketSession.TrackEvent lostEvent : lostEvents) {
+                    // Only send events should be logged as warnings, heart-beats can be ignored.
+                    if (lostEvent.getEvent() instanceof ZmqSendEvent) {
+                        LOGGER.warning("Gateway [" + name + "] has un-acknowledged message (LOST): " + lostEvent);
+                    }
+                }
             }
-
-            trackEventMap.clear();
         }
 
         LOGGER.info("Gateway closed: " + toString());
@@ -380,12 +421,12 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         if (journalStore != null) {
             try {
                 final ZmqJournalEntry journalEntry = journalStore.read();
-                if (journalEntry != null && (!trackEventMap.containsKey(journalEntry.getMessageId()))) {
+                if (journalEntry != null && (!source.isTracked(journalEntry.getMessageId()))) {
                     sendEvent =
                         eventHandler.createSendEvent(journalEntry.getMessageId(), journalEntry.getMessage());
                 }
             } catch (ZmqException ex) {
-                LOGGER.log(Level.WARNING, "Failed to read from the journal store", ex);
+                LOGGER.log(Level.WARNING, "Socket [" + name + "@" + socketAddr + "] failed to read from the journal store", ex);
             }
         }
 
@@ -393,7 +434,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             try {
                 sendEvent = outgoingQueue.poll(SOCKET_WAIT_MILLI_SECOND, TimeUnit.MILLISECONDS);
             } catch (InterruptedException ex) {
-                LOGGER.log(Level.WARNING, "Polling of outgoing queue interrupted", ex);
+                LOGGER.log(Level.WARNING, "Socket [" + name + "@" + socketAddr + "] polling of outgoing queue interrupted", ex);
             }
         }
 
@@ -411,28 +452,36 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 if (lastReceiveLaspedTime > AUTO_PAUSE_IDLE_MILLI_SECOND && status == ZmqSocketStatus.RUNNING) {
                     // connection has been dropped, so stop sending messages apart from heart-beats
                     source.pause();
+
+                    List<ZmqSocketSession.TrackEvent> redoEvents = source.untrackAll();
+                    for (ZmqSocketSession.TrackEvent redoEvent : redoEvents) {
+                        // Only save the send events, heart-beats can be ignored.
+                        if (redoEvent.getEvent() instanceof ZmqSendEvent) {
+                            socketError(source, redoEvent.getEvent());
+                        }
+                    }
+
                 } else {
                     sendEvent = eventHandler.createHeartbeatEvent();
+
+                    if (LOGGER.isLoggable(Level.FINEST)) {
+                        LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] send heartbeat: " + sendEvent);
+                    }
                 }
             }
+
         }
 
-        if (sendEvent instanceof ZmqHeartbeatEvent) {
-            if (acknowledge) {
-                final long messageSent = System.currentTimeMillis();
-                final Object messageId = sendEvent.getMessageId();
-                final TrackEvent tackEvent = new TrackEvent(sendEvent, messageSent);
+        if (sendEvent != null && (socketOutgoing && acknowledge)) {
+            source.track(sendEvent);
 
-                if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " tacking event: " + sendEvent);
-                }
-
-                trackEventMap.put(messageId, tackEvent);
+            if (LOGGER.isLoggable(Level.FINEST)) {
+                LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] tacking event: " + sendEvent);
             }
         }
 
         if (LOGGER.isLoggable(Level.FINEST) && sendEvent != null) {
-            LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " send event: " + sendEvent);
+            LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] send event: " + sendEvent);
         }
 
         return sendEvent;
@@ -451,10 +500,11 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 outgoingQueue.put(sendEvent);
 
                 if (LOGGER.isLoggable(Level.FINEST) && sendEvent != null) {
-                    LOGGER.log(Level.FINEST, "Socket " + source.getAddr() + " for gateway " + name + " send event: " + sendEvent);
+                    LOGGER.log(Level.FINEST, "Socket [" + source.getAddr() + "] send event: " + sendEvent);
                 }
             } catch (InterruptedException ex) {
-                LOGGER.log(Level.SEVERE, "Unable to re-send event: " + event, ex);
+                final String socketAddr = source.getAddr();
+                LOGGER.log(Level.SEVERE, "Socket [" + name + "@" + socketAddr + "] was unable to re-send event: " + event, ex);
             }
         }
     }
@@ -470,7 +520,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         final String socketAddr = source.getAddr();
 
         if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " consume event: " + event);
+            LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] consume event: " + event);
         }
         if (event instanceof ZmqSendEvent) {
             try {
@@ -480,12 +530,12 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
                 incomingQueue.put((ZmqSendEvent) event);
             } catch (InterruptedException ex) {
-                LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name
+                LOGGER.log(Level.SEVERE, "Socket [" + name + "@" + socketAddr + "] for gateway " + name
                     + " cannot consume message due to intenral error: " + event, ex);
 
                 return null;
             } catch (ZmqException ex) {
-                LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name
+                LOGGER.log(Level.SEVERE, "Socket [" + name + "@" + socketAddr + "] for gateway " + name
                     + " cannot store messahe due to intenral error: " + event, ex);
 
                 return null;
@@ -500,23 +550,24 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                     replyEvent = eventHandler.createAckEvent(event);
                 }
             } catch (ZmqException ex) {
-                LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name + " received corrupt event: " + event, ex);
+                LOGGER.log(Level.SEVERE, "Socket [" + name + "@" + socketAddr + "] received corrupt event: " + event, ex);
             }
         } else if (event instanceof ZmqAckEvent) {
             ZmqAckEvent ackEvent = (ZmqAckEvent) event;
             final Object messageId = ackEvent.getMessageId();
             if (messageId == null) {
-                LOGGER.log(Level.SEVERE, "Socket " + socketAddr + " for gateway " + name + " received corrupt event: " + event);
+                LOGGER.log(Level.SEVERE, "Socket [" + name + "@" + socketAddr + "] received corrupt event: " + event);
             } else {
-                final TrackEvent trackedEvent = trackEventMap.remove(messageId);
+                LOGGER.log(Level.INFO, "Socket [" + name + "@" + socketAddr + "] received ACK event: " + event);
+                final ZmqSocketSession.TrackEvent trackedEvent = source.untrack(messageId);
                 if (trackedEvent == null) {
-                    LOGGER.log(Level.WARNING, "Socket " + socketAddr + " for gateway " + name + " received ACK for untracked event: "
-                            + event);
+                    LOGGER.log(Level.WARNING, "Socket [" + name + "@" + socketAddr + "] received ACK for untracked event: "
+                        + event);
                 }
             }
         }
         if (replyEvent != null && LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.log(Level.FINEST, "Socket " + socketAddr + " for gateway " + name + " reply event: " + event);
+            LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] reply event: " + event);
         }
 
         return replyEvent;
@@ -637,7 +688,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         }
 
         if (message == null) {
-            throw new ZmqException("The gateway has been close: " + toString());
+            throw new ZmqException("Receive request, buy gateway has been close: " + toString());
         }
 
         return message;
@@ -652,7 +703,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
         }
         if (!active.get()) {
-            throw new ZmqException("The gateway has been close: " + toString());
+            throw new ZmqException("Receive request, buy gateway has been close: " + toString());
         }
 
         // check for re-delivers
@@ -669,7 +720,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 }
 
                 if (stopwatch != null) {
-                    LOGGER.log(Level.FINER, "Receive re-delivery message: " + stopwatch.elapsedTime() + " (msec)");
+                    LOGGER.log(Level.FINER, "Receive re-delivery message: " + stopwatch.elapsedTime() + " (msec) :" + toString());
                 }
 
                 return message;
@@ -779,6 +830,11 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     @Override
     public ZmqSocketType getType() {
         return type;
+    }
+
+    @Override
+    public ZmqSocketContext getSocketContext() {
+        return socketContext;
     }
 
     @Override

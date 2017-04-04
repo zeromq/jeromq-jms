@@ -30,6 +30,7 @@ public class TestZmqParGatewayRecovery {
     private static final Logger LOGGER = Logger.getLogger(TestZmqParGatewayRecovery.class.getCanonicalName());
 
     private static final String SOCKET_ADDR_1 = "tcp://*:9750";
+    private static final String SOCKET_ADDR_2 = "tcp://*:9751";
 
     private static final String MESSAGE_1 = "this is the text message 1";
     private static final String MESSAGE_2 = "this is the text message 2";
@@ -46,16 +47,12 @@ public class TestZmqParGatewayRecovery {
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
-        final ZmqSocketContext senderContext = new ZmqSocketContext(SOCKET_ADDR_1, ZmqSocketType.DEALER, true, flags);
-        final ZmqGateway sender = new ZmqParGateway("protocol:sender12", context, senderContext,
+        final ZmqSocketContext senderContext = new ZmqSocketContext(SOCKET_ADDR_1 + "," + SOCKET_ADDR_2, ZmqSocketType.DEALER, false, flags);
+        final ZmqGateway sender = new ZmqParGateway("send12", context, senderContext,
                 null, handler, null, null, null, null, false, Direction.OUTGOING);
 
-        final ZmqSocketContext receiverContext1 = new ZmqSocketContext(SOCKET_ADDR_1, ZmqSocketType.ROUTER, false, flags);
-        final ZmqGateway receiver1 = new ZmqParGateway("protocol:receiver1", context, receiverContext1,
-                  null, handler, null, null, null, null, false, Direction.INCOMING);
-
-        final ZmqSocketContext receiverContext2 = new ZmqSocketContext(SOCKET_ADDR_1, ZmqSocketType.ROUTER, false, flags);
-        final ZmqGateway receiver2 = new ZmqParGateway("protocol:receiver2", context, receiverContext2,
+        final ZmqSocketContext receiverContext1 = new ZmqSocketContext(SOCKET_ADDR_1 + "," + SOCKET_ADDR_2, ZmqSocketType.ROUTER, true, flags);
+        final ZmqGateway receiver1 = new ZmqParGateway("recv12", context, receiverContext1,
                   null, handler, null, null, null, null, false, Direction.INCOMING);
 
         try {
@@ -63,9 +60,7 @@ public class TestZmqParGatewayRecovery {
             final ZmqTextMessage outMessage2 = ZmqTextMessageBuilder.create().appendText(MESSAGE_2).toMessage();
 
             sender.open();
-
             receiver1.open();
-            receiver2.open();
 
             try {
                 Stopwatch stopwatch = new Stopwatch();
@@ -74,12 +69,7 @@ public class TestZmqParGatewayRecovery {
 
                 ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(1000);
 
-                if (inMessage1 == null) {
-                    inMessage1 = (ZmqTextMessage) receiver2.receive(1000);
-                    receiver2.close();
-                } else {
-                    receiver1.close();
-                }
+                receiver1.close();
 
                 Assert.assertNotNull(inMessage1);
                 Assert.assertEquals(MESSAGE_1, inMessage1.getText());
@@ -91,13 +81,9 @@ public class TestZmqParGatewayRecovery {
 
                 sender.send(outMessage2);
 
-                ZmqTextMessage inMessage2 = null;
+                receiver1.open();
 
-                if (receiver1.isActive()) {
-                    inMessage2 = (ZmqTextMessage) receiver1.receive(1000);
-                } else {
-                    inMessage2 = (ZmqTextMessage) receiver2.receive(1000);
-                }
+                ZmqTextMessage inMessage2 = (ZmqTextMessage) receiver1.receive(1000);
 
                 Assert.assertNotNull(inMessage2);
                 Assert.assertEquals(MESSAGE_2, inMessage2.getText());
@@ -114,9 +100,6 @@ public class TestZmqParGatewayRecovery {
 
                 if (receiver1.isActive()) {
                     receiver1.close();
-                }
-                if (receiver2.isActive()) {
-                    receiver2.close();
                 }
 
                 Thread.sleep(1000);

@@ -156,7 +156,7 @@ public class ZmqURI implements Externalizable {
         final Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
 
         if (!pattern.matcher(value).matches()) {
-            throw new ParseException("Invalid value [" + value + "] for pattern: " + regex, pos);
+            throw new ParseException("Invalid value [" + value + "] at position " + pos + " for pattern [" + regex + "]", pos);
         }
 
         return value;
@@ -196,6 +196,11 @@ public class ZmqURI implements Externalizable {
             // parse attributes
             for (int i = index; i < tokens.size(); i++) {
                 final String optionName = parseValue("(\\w|\\.)+", i, tokens);
+
+                if (optionName == null || optionName.length() == 0 || (optionName.startsWith("socket") && optionName.indexOf('.') <= 0)) {
+                    final Token token = tokens.get(i);
+                    throw new ParseException("Invalid tokattribute name [" + optionName + "] within token: " + token, token.pos);
+                }
                 // final int pos = tokens.get(i).pos;
                 // default to empty and try and fill
                 String optionValue = null;

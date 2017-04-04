@@ -111,6 +111,11 @@ public interface ZmqGateway {
     ZmqSocketType getType();
 
     /**
+     * @return  return the socket context
+     */
+    ZmqSocketContext getSocketContext();
+
+    /**
      * @return  return true when the socket has been bound to the address
      */
     boolean isBound();

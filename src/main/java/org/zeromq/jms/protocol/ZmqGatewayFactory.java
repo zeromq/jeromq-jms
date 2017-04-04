@@ -121,7 +121,7 @@ public class ZmqGatewayFactory {
     protected ZmqSocketContext getSocketContext(final ZmqURI uri, final ZmqSocketType defaultType, final boolean defaultBindFlag)
         throws ZmqException {
 
-        ZmqSocketContext context = new ZmqSocketContext();
+        final ZmqSocketContext context = new ZmqSocketContext();
 
         context.setRecieveMsgFlag(0);
 
@@ -133,6 +133,16 @@ public class ZmqGatewayFactory {
             context.setBindFlag(uri.getOptionValue("socket.bind", defaultBindFlag));
             context.setType(ZmqSocketType.valueOf(uri.getOptionValue("socket.type", defaultType.toString())));
             context.setAddr(uri.getOptionValue("socket.addr"));
+
+            final Map<String, List<String>> socketOptions = uri.getOptions("socket");
+
+            try {
+                ClassUtils.setMethods(socketOptions, context);
+            } catch (ReflectiveOperationException ex) {
+                throw new ZmqException("Unable to set 'socket' properties from URI: " + uri, ex);
+            }
+
+            //setContextValues(uri, context);
         }
 
         // Validate the details
@@ -187,7 +197,7 @@ public class ZmqGatewayFactory {
             }
 
             if (gatewayClass != null) {
-                LOGGER.info("Using gateway consumer  (" + gatewayClass.getClass().getCanonicalName() + ") for destination: " + destination);
+                LOGGER.info("Using gateway consumer  (" + gatewayClass.getCanonicalName() + ") for destination: " + destination);
             }
 
             final Constructor<?> consumerConstructor = gatewayClass.getConstructor(String.class, ZMQ.Context.class, ZmqSocketContext.class,

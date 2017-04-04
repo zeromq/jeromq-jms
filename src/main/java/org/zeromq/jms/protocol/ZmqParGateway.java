@@ -43,10 +43,8 @@ public class ZmqParGateway extends AbstractZmqGateway {
         final ZmqJournalStore store, final ZmqMessageSelector selector, final ZmqRedeliveryPolicy redelivery,
         final boolean transacted, final Direction direction) {
 
-        super(name, context, modifySocketContext(socketContext, direction),
-            filter, handler, listener,
-            store, selector, redelivery, transacted, getAcknowledge(direction),
-            getHeatbreat(direction), direction);
+        super(name, context, socketContext, filter, handler, listener,
+            store, selector, redelivery, transacted, true, getHeatbreat(direction), direction);
     }
 
     /**
@@ -67,27 +65,6 @@ public class ZmqParGateway extends AbstractZmqGateway {
         return (direction == Direction.OUTGOING);
     }
 
-    /**
-     * change the socket context based on the type and direction.
-     * @param socketContext  the current setting of the socket context
-     * @param direction      the direction of the gateway
-     * @return               return the existing context or an update context
-     */
-    protected static ZmqSocketContext modifySocketContext(final ZmqSocketContext socketContext, final Direction direction) {
-
-        final ZmqSocketType newType = getType(socketContext.getType(), direction);
-
-        if (newType == socketContext.getType()) {
-            // nothing changed
-            return socketContext;
-        }
-
-        final ZmqSocketContext newSocketContext = new ZmqSocketContext(socketContext);
-
-        newSocketContext.setType(newType);
-
-        return newSocketContext;
-    }
     /**
      * Return the type of ZMQ socket given for this direction.
      * @param type       the socket type

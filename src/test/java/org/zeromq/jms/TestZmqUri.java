@@ -47,4 +47,26 @@ public class TestZmqUri {
         Assert.assertEquals("Missing gateway :" + uri, "par", uri.getOptionValue("gateway"));
         Assert.assertEquals("Missing value [gateway.addr]:" + uri, "inproc://lat_test", uri.getOptionValues("gateway.addr")[0]);
     }
+
+    /**
+     * Negative testing of the parsing of a URI.
+     */
+    @Test
+    public void parseComplexUri() {
+        final ZmqURI socketUri =
+            ZmqURI.create(
+                "jms:queue:socketTest?socket.addr=tcp://*:9999&socket.type=DEALER&socket.bind=false&redelivery=retry&redelivery.retry=0"
+                   + "&socket.bindRetryWaitTime=1000&socket.recieveMsgFlag=10"
+                   + "&socket.linger=10000&socket.reconnectIVL=10002&socket.backlog=10003&socket.reconnectIVLMax=10004"
+                   + "&socket.maxMsgSize=10004&socket.sndHWM=10005&socket.rcvHWM=10006&socket.affinity=10007"
+                   + "&socket.identity=identify"
+                   + "&socket.rate=10010&socket.recoveryInterval=10011"
+                   + "&socket.reqCorrelate=true&socket.reqRelaxed=true"
+                   + "&socket.multicastHops=10010&socket.receiveTimeOut=10011&socket.sendTimeOut=10012"
+                   + "&socket.tcpKeepAlive=10020&socket.tcpKeepAliveCount=10021&socket.tcpKeepAliveInterval=10022&socket.tcpKeepAliveIdle=10023"
+                   + "&socket.sendBufferSize=10030&socket.receiveBufferSize=10031&socket.routerMandatory=true"
+                   + "&socket.xpubVerbose=true&socket.ipv4Only=true&socket.delayAttachOnConnect=true");
+
+        Assert.assertNotNull(socketUri);
+    }
 }

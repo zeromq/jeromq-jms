@@ -241,4 +241,10 @@ public class ZmqSocketMetrics implements Serializable {
             return getBucketCounts(receiveBucketIndex, receiveBucketCounts);
         }
     }
+
+    @Override
+    public String toString() {
+        return "ZmqSocketMetrics [addr=" + addr + ", status=" + status + ", sendCount=" + sendCount + ", receiveCount="
+                + receiveCount + ", sendTime=" + sendTime + ", receiveTime=" + receiveTime + "]";
+    }
 }

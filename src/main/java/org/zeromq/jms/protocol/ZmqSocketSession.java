@@ -7,6 +7,11 @@ package org.zeromq.jms.protocol;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,7 +23,8 @@ import org.zeromq.jms.protocol.event.ZmqEventHandler;
 import org.zeromq.jms.protocol.filter.ZmqFilterPolicy;
 
 /**
- *  This class maintains the Zero MQ socket using its own thread.
+ *  This class maintains the Zero MQ socket using its own thread. No need for locks, it is
+ *  single threaded.
  */
 public class ZmqSocketSession implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(ZmqSocketSession.class.getCanonicalName());
@@ -28,7 +34,8 @@ public class ZmqSocketSession implements Runnable {
     private volatile long lastReceiveTime = System.nanoTime();
     private volatile long lastSendTime    = System.nanoTime();
 
-    private final AtomicBoolean process;
+    private final AtomicBoolean active;
+    private final String name;
 
     private final ZMQ.Socket socket;
     private final ZmqSocketType socketType;
@@ -47,30 +54,72 @@ public class ZmqSocketSession implements Runnable {
     private final ZmqFilterPolicy filter;
 
     /**
-     * Socket session constructor.
-     * @param process            the process
-     * @param socket             the socket
-     * @param socketType         the socket type
-     * @param socketAddr         the socket address
-     * @param socketBound        the socket "bind" indicator
-     * @param socketIncoming     the socket incoming indicator
-     * @param socketOutgoing     the socket outgoing indicator
-     * @param socketFlags        the socket flags
-     * @param socketWaitTime     the socket wait time (milliseconds)
-     * @param socketHeartbeat    the socket send "heart-beat" indicator
-     * @param socketAcknowledge  the socket always "acknowledge" indicator
-     * @param socketListener     the socket listener
-     * @param filter             the ZMQ message filter policy
-     * @param handler            the message event handler
-     * @param metrics            the metrics for the socket
+     * Message tacking class.
      */
-    public ZmqSocketSession(final AtomicBoolean process, final ZMQ.Socket socket, final ZmqSocketType socketType, final String socketAddr,
-            final boolean socketBound, final boolean socketIncoming, final boolean socketOutgoing, final int socketFlags, final int socketWaitTime,
-            final boolean socketHeartbeat, final boolean socketAcknowledge,
-            final ZmqSocketListener socketListener, final ZmqFilterPolicy filter, final ZmqEventHandler handler,
-            final ZmqSocketMetrics metrics) {
+    public static final class TrackEvent {
+        private final ZmqEvent event;
+        private final long eventSent;
 
-        this.process = process;
+        /**
+         * Construct the event tracker instance.
+         * @param event      the event
+         * @param eventSent  the event sent time (nano seconds)
+         */
+        TrackEvent(final ZmqEvent event, final long eventSent) {
+            this.event = event;
+            this.eventSent = eventSent;
+        }
+
+        /**
+         * @return  return the event being tracked
+         */
+        public ZmqEvent getEvent() {
+            return event;
+        }
+
+        /**
+         * @return  return the time the event was sent
+         */
+        public long getEventSent() {
+            return eventSent;
+        }
+
+        @Override
+        public String toString() {
+            return "TrackEvent [eventSent=" + eventSent + ", event=" + event + "]";
+        }
+    }
+
+    private final Map<Object, TrackEvent> trackEventMap = new HashMap<Object, TrackEvent>();
+
+    /**
+     * Socket session constructor.
+     * @param name                 the gateway name
+     * @param active               the gateway active
+     * @param socket               the socket
+     * @param socketType           the socket type
+     * @param socketAddr           the socket address
+     * @param socketBound          the socket "bind" indicator
+     * @param socketIncoming       the socket incoming indicator
+     * @param socketOutgoing       the socket outgoing indicator
+     * @param socketFlags          the socket flags
+     * @param socketWaitTime       the socket wait time (milliseconds)
+     * @param socketHeartbeat      the socket send "heart-beat" indicator
+     * @param socketAcknowledge    the socket always "acknowledge" indicator
+     * @param socketListener       the socket listener
+     * @param filter               the ZMQ message filter policy
+     * @param handler              the message event handler
+     * @param metrics              the metrics for the socket
+     */
+    public ZmqSocketSession(final String name, final AtomicBoolean active,
+        final ZMQ.Socket socket, final ZmqSocketType socketType, final String socketAddr, final boolean socketBound,
+        final boolean socketIncoming, final boolean socketOutgoing, final int socketFlags, final int socketWaitTime,
+        final boolean socketHeartbeat, final boolean socketAcknowledge,
+        final ZmqSocketListener socketListener, final ZmqFilterPolicy filter, final ZmqEventHandler handler,
+        final ZmqSocketMetrics metrics) {
+
+        this.name = name;
+        this.active = active;
 
         this.socket = socket;
         this.socketType = socketType;
@@ -94,6 +143,13 @@ public class ZmqSocketSession implements Runnable {
      */
     public String getAddr() {
         return socketAddr;
+    }
+
+    /**
+     * @return  return the socket metrics
+     */
+    public ZmqSocketMetrics getMetrics() {
+        return metrics;
     }
 
     /**
@@ -139,14 +195,72 @@ public class ZmqSocketSession implements Runnable {
     }
 
     /**
+     * Remove the event from the tracker list.
+     * @param  messageId  the message to be removed
+     * @return            return null when not found, or the Tacked Event
+     */
+    public TrackEvent untrack(final Object messageId) {
+        return trackEventMap.remove(messageId);
+    }
+
+    /**
+     * @return  return a list of events that are no-longer being tracked
+     */
+    public List<TrackEvent> untrackAll() {
+        List<TrackEvent> untrackEvents = new ArrayList<TrackEvent>(trackEventMap.values());
+        trackEventMap.clear();
+        return untrackEvents;
+    }
+
+    /**
+     * Add the event to the tracker list.
+     * @param  event   the event to track
+     * @return         return the tracker event
+     */
+    public TrackEvent track(final ZmqEvent event) {
+        final long messageSent = System.currentTimeMillis();
+        final Object messageId = event.getMessageId();
+        final TrackEvent tackEvent = new TrackEvent(event, messageSent);
+
+        return trackEventMap.put(messageId, tackEvent);
+    }
+
+    /**
+     * @return  return the total number of events being tracked
+     */
+    public int trackedCount() {
+        return trackEventMap.size();
+    }
+
+    /**
+     * Return true when the event is being tracked.
+     * @param  messageId  the message id of the event
+     * @return            return true on tracking
+     */
+    public boolean isTracked(final Object messageId) {
+        return trackEventMap.containsKey(messageId);
+    }
+
+    /**
+     * Set the socket status.
+     * @param status  the new status
+     */
+    protected void setStatus(final ZmqSocketStatus status) {
+        if (this.status != status) {
+            this.status = status;
+            metrics.setStatus(status);
+
+            LOGGER.log(Level.INFO, "Socket [" + name + "@" + socketAddr + "] changed status: " + status);
+        }
+    }
+
+    /**
      * Pause the socket.
      */
     public void pause() {
-        if (status == ZmqSocketStatus.RUNNING) {
-            status = ZmqSocketStatus.WAITING;
+        setStatus(ZmqSocketStatus.WAITING);
 
-            LOGGER.warning("Socket paused: " + this);
-        }
+        LOGGER.warning("Socket paused: " + this);
     }
 
     /**
@@ -176,7 +290,7 @@ public class ZmqSocketSession implements Runnable {
 
         LOGGER.info("Started socket: " + this);
 
-        while (process.get()) {
+        while (active.get()) {
             if (socketOutgoing) {
                 sendSocket(this);
             }
@@ -184,10 +298,9 @@ public class ZmqSocketSession implements Runnable {
             if (socketIncoming) {
                 receiveSocket(this);
             }
-
-            metrics.setStatus(status);
         }
 
+        setStatus(ZmqSocketStatus.STOPPED);
         LOGGER.info("Stopped socket: " + this);
 
         // Check for ACK on last time
@@ -229,7 +342,7 @@ public class ZmqSocketSession implements Runnable {
 
         socketListener.open(this);
 
-        status = ZmqSocketStatus.RUNNING;
+        setStatus(ZmqSocketStatus.RUNNING);
     }
 
     /**
@@ -264,9 +377,9 @@ public class ZmqSocketSession implements Runnable {
             LOGGER.info("Disconnect socket successful: " + this);
         }
 
+        setStatus(ZmqSocketStatus.STOPPED);
         socketListener.close(this);
 
-        status = ZmqSocketStatus.STOPPED;
     }
 
     /**
@@ -274,8 +387,6 @@ public class ZmqSocketSession implements Runnable {
      * @param  socketSession  the socket session
      */
     protected void sendSocket(final ZmqSocketSession socketSession) {
-        final boolean active = (status == ZmqSocketStatus.RUNNING);
-
         ZmqEvent socketEvent = null;
 
         try {
@@ -293,16 +404,19 @@ public class ZmqSocketSession implements Runnable {
                             metrics.incrementSend();
 
                             lastSendTime = System.nanoTime();
-                        } else {
-                            LOGGER.log(Level.SEVERE, "Unable to send message: " + this);
 
-                            status = ZmqSocketStatus.WAITING;
+                            if (LOGGER.isLoggable(Level.FINEST)) {
+                                LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] sent message: " + socketEvent);
+                            }
+                        } else {
+                            LOGGER.log(Level.SEVERE, "Socket [" + name + "@" + socketAddr + "] Unable to send message: " + socketEvent);
+                            setStatus(ZmqSocketStatus.WAITING);
                             socketListener.error(this, socketEvent);
 
                             break;
                         }
                     }
-                } while (socketEvent != null && active);
+                } while (socketEvent != null && active.get());
             }
 
         } catch (ZmqException ex) {
@@ -317,11 +431,7 @@ public class ZmqSocketSession implements Runnable {
      * @param  socketSession  the socket session
      */
     protected void receiveSocket(final ZmqSocketSession socketSession) {
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.log(Level.FINEST, "Receive and wait (" + socket.getReceiveTimeOut() + ") : " + this);
-        }
-
-        if (status == ZmqSocketStatus.STOPPED) {
+        if (!active.get()) {
             return;
         }
 
@@ -334,7 +444,13 @@ public class ZmqSocketSession implements Runnable {
             try {
                 ZmqEvent event = handler.createEvent(socketType, msg);
 
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] recieved message: " + event);
+                }
+
                 if (event != null && socketListener != null) {
+                    setStatus(ZmqSocketStatus.RUNNING);
+
                     final ZmqEvent replyEvent = socketListener.receive(this, event);
 
                     // Send back a message when requested
@@ -343,11 +459,14 @@ public class ZmqSocketSession implements Runnable {
                             final ZMsg replyMsg = handler.createMsg(socketType, filter, replyEvent);
 
                             replyMsg.send(socket, true);
-
                             metrics.incrementSend();
                             lastSendTime = System.nanoTime();
                         } else {
                             LOGGER.log(Level.SEVERE, "Socketing has not outgoing state: " + this);
+                        }
+
+                        if (LOGGER.isLoggable(Level.FINEST)) {
+                            LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] sent response message: " + replyEvent);
                         }
                     }
                 }
@@ -361,9 +480,46 @@ public class ZmqSocketSession implements Runnable {
     }
 
     @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((socketAddr == null) ? 0 : socketAddr.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+       if (obj == null) {
+            return false;
+        }
+
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        ZmqSocketSession other = (ZmqSocketSession) obj;
+
+        if (socketAddr == null) {
+            if (other.socketAddr != null) {
+                return false;
+            }
+        } else if (!socketAddr.equals(other.socketAddr)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
     public String toString() {
-        return "ZmqSocketSession [socketType=" + socketType + ", socketAddr=" + socketAddr + ", socketBound=" + socketBound + ", socketIncoming="
-                + socketIncoming + ", socketOutgoing=" + socketOutgoing + ", socketFlags=" + socketFlags + ", socketWaitTime=" + socketWaitTime
-                + ", socketHeartbeat=" + socketHeartbeat + ", socketAcknowledge=" + socketAcknowledge + "]";
+        return "ZmqSocketSession [name=" + name
+            + ", socketType=" + socketType + ", socketAddr=" + socketAddr + ", socketBound=" + socketBound
+            + ", socketIncoming=" + socketIncoming + ", socketOutgoing=" + socketOutgoing + ", socketFlags=" + socketFlags
+            + ", socketWaitTime=" + socketWaitTime
+            + ", socketHeartbeat=" + socketHeartbeat + ", socketAcknowledge=" + socketAcknowledge + "]";
     }
 }

@@ -228,14 +228,14 @@ public class ClassUtils {
 
     /**
      * Scans all classes accessible from the context class loader which belong to the given package and sub-packages.
-     * @param packageName              the base package
+     * @param basePackageName          the base package
      * @return                         return the classes foundThe classes
      * @throws ClassNotFoundException  throws class not found exception
      * @throws IOException             throws I/O exception
      */
-    public static List<Class<?>> getClasses(final String packageName) throws ClassNotFoundException, IOException {
+    public static List<Class<?>> getClasses(final String basePackageName) throws ClassNotFoundException, IOException {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        final String path = packageName.replace('.', '/');
+        final String path = basePackageName.replace('.', '/');
         final Enumeration<URL> resources = classLoader.getResources(path);
         final Set<File> dirs = new HashSet<File>();
 
@@ -247,7 +247,7 @@ public class ClassUtils {
         final List<Class<?>> classes = new LinkedList<Class<?>>();
 
         for (File directory : dirs) {
-            classes.addAll(findClasses(directory, packageName));
+            classes.addAll(findClasses(directory, basePackageName));
         }
 
         return classes;
@@ -273,7 +273,11 @@ public class ClassUtils {
             if (file.isDirectory()) {
                 classes.addAll(findClasses(file, packageName + "." + file.getName()));
             } else if (file.getName().endsWith(".class")) {
-                classes.add(Class.forName(packageName + '.' + file.getName().substring(0, file.getName().length() - 6)));
+                try {
+                    classes.add(Class.forName(packageName + '.' + file.getName().substring(0, file.getName().length() - 6)));
+                } catch (UnsupportedClassVersionError ex) {
+                    LOGGER.log(Level.WARNING, "Unable to loader class: " + file.getName(), ex);
+                }
             }
         }
 
@@ -305,6 +309,8 @@ public class ClassUtils {
 
                     if (paramType == int.class || paramType.isAssignableFrom(Integer.class)) {
                         value = Integer.parseInt(paramValue);
+                    } else if (paramType == long.class || paramType.isAssignableFrom(Long.class)) {
+                        value = Long.parseLong(paramValue);
                     } else if (paramType == short.class || paramType.isAssignableFrom(Short.class)) {
                         value = Short.decode(paramValue);
                     } else if (paramType == double.class || paramType.isAssignableFrom(Double.class)) {
@@ -313,8 +319,9 @@ public class ClassUtils {
                         value = Float.parseFloat(paramValue);
                     } else if (paramType == boolean.class || paramType.isAssignableFrom(Boolean.class)) {
                         value = Boolean.parseBoolean(paramValue);
-                    } else {
-                        // Assume string and hope for the best
+                    } else if (paramType.isAssignableFrom(byte[].class)) {
+                        value = paramValue.getBytes();
+                    } else if (paramType.isAssignableFrom(String.class)) {
                         value = paramValue;
                     }
                 }

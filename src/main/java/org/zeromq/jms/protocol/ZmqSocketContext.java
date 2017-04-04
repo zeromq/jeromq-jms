@@ -1,5 +1,7 @@
 package org.zeromq.jms.protocol;
 
+import org.zeromq.jms.annotation.ZmqUriParameter;
+
 /**
  * ZMQ socket configuration.
  */
@@ -7,8 +9,9 @@ public class ZmqSocketContext {
 
     private String addr;
     private ZmqSocketType type;
-    private boolean bindFlag;
-    private int recieveMsgFlag;
+    private Boolean bindFlag;
+    private Long bindRetryWaitTime;
+    private Integer recieveMsgFlag;
 
     private Long linger;
     private Long reconnectIVL;
@@ -22,7 +25,7 @@ public class ZmqSocketContext {
     private byte[] identity;
 
     private Long rate;
-    private long recoveryInterval;
+    private Long recoveryInterval;
 
     private Boolean reqCorrelate;
     private Boolean reqRelaxed;
@@ -72,9 +75,10 @@ public class ZmqSocketContext {
         this.addr = context.addr;
         this.type = context.type;
         this.bindFlag = context.bindFlag;
+        this.bindRetryWaitTime = context.bindRetryWaitTime;
         this.recieveMsgFlag = context.recieveMsgFlag;
 
-        this.linger = context.affinity;
+        this.linger = context.linger;
         this.reconnectIVL = context.reconnectIVL;
         this.backlog = context.backlog;
         this.reconnectIVLMax = context.reconnectIVLMax;
@@ -141,22 +145,38 @@ public class ZmqSocketContext {
     /**
      * @return  return TRUE when to socket should bind to the address
      */
-    public boolean isBindFlag() {
-        return bindFlag;
+    public Boolean isBindFlag() {
+        return bindFlag != null && bindFlag;
     }
 
     /**
      * Set the bind/connect flag, "true" is to bind.
      * @param bindFlag  the bind flag value
      */
-    public void setBindFlag(final boolean bindFlag) {
+    public void setBindFlag(final Boolean bindFlag) {
         this.bindFlag = bindFlag;
+    }
+
+    /**
+     * @return  Return the wait time (milliseconds) between rebind attempts
+     */
+    public Long getBindRetryWaitTime() {
+        return this.bindRetryWaitTime;
+    }
+
+    /**
+     * Set the wait time between bind retries.
+     * @param bindRetryWaitTime  the wait time in milliseconds
+     */
+    @ZmqUriParameter("socket.bindRetryWaitTime")
+    public void setBindRetryWaitTime(final Long bindRetryWaitTime) {
+        this.bindRetryWaitTime = bindRetryWaitTime;
     }
 
     /**
      * @return  return the message receive flag
      */
-    public int getRecieveMsgFlag() {
+    public Integer getRecieveMsgFlag() {
         return recieveMsgFlag;
     }
 
@@ -164,7 +184,8 @@ public class ZmqSocketContext {
      * Set the ZMQ "revcieveMsgFlag", sued on the receive(...., flag) function.
      * @param recieveMsgFlag  the new value, or 0 for no wait.
      */
-    public void setRecieveMsgFlag(final int recieveMsgFlag) {
+    @ZmqUriParameter("socket.recieveMsgFlag")
+    public void setRecieveMsgFlag(final Integer recieveMsgFlag) {
         this.recieveMsgFlag = recieveMsgFlag;
     }
 
@@ -179,6 +200,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  linger  the value to set to
      */
+    @ZmqUriParameter("socket.linger")
     public void setLinger(final Long linger) {
         this.linger = linger;
     }
@@ -194,6 +216,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  reconnectIVL  the value to set to
      */
+    @ZmqUriParameter("socket.reconnectIVL")
     public void setReconnectIVL(final Long reconnectIVL) {
         this.reconnectIVL = reconnectIVL;
     }
@@ -209,6 +232,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  backlog  the value to set to
      */
+    @ZmqUriParameter("socket.backlog")
     public void setBacklog(final Long backlog) {
         this.backlog = backlog;
     }
@@ -224,6 +248,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  reconnectIVLMax  the value to set to
      */
+    @ZmqUriParameter("socket.reconnectIVLMax")
     public void setReconnectIVLMax(final Long reconnectIVLMax) {
         this.reconnectIVLMax = reconnectIVLMax;
     }
@@ -239,6 +264,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  maxMsgSize  the value to set to
      */
+    @ZmqUriParameter("socket.maxMsgSize")
     public void setMaxMsgSize(final Long maxMsgSize) {
         this.maxMsgSize = maxMsgSize;
     }
@@ -254,6 +280,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  sndHWM  the value to set to
      */
+    @ZmqUriParameter("socket.sndHWM")
     public void setSndHWM(final Long sndHWM) {
         this.sndHWM = sndHWM;
     }
@@ -269,6 +296,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  rcvHWM  the value to set to
      */
+    @ZmqUriParameter("socket.rcvHWM")
     public void setRcvHWM(final Long rcvHWM) {
         this.rcvHWM = rcvHWM;
     }
@@ -284,6 +312,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  affinity  the value to set to
      */
+    @ZmqUriParameter("socket.affinity")
     public void setAffinity(final Long affinity) {
         this.affinity = affinity;
     }
@@ -299,6 +328,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  identity  the value to set to
      */
+    @ZmqUriParameter("socket.identity")
     public void setIdentity(final byte[] identity) {
         this.identity = identity;
     }
@@ -314,6 +344,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  rate  the value to set to
      */
+    @ZmqUriParameter("socket.rate")
     public void setRate(final Long rate) {
         this.rate = rate;
     }
@@ -321,7 +352,7 @@ public class ZmqSocketContext {
     /**
      * @return  see <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      */
-    public long getRecoveryInterval() {
+    public Long getRecoveryInterval() {
         return recoveryInterval;
     }
 
@@ -329,7 +360,8 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  recoveryInterval  the value to set to
      */
-    public void setRecoveryInterval(final long recoveryInterval) {
+    @ZmqUriParameter("socket.recoveryInterval")
+    public void setRecoveryInterval(final Long recoveryInterval) {
         this.recoveryInterval = recoveryInterval;
     }
 
@@ -344,6 +376,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  reqCorrelate  the value to set to
      */
+    @ZmqUriParameter("socket.reqCorrelate")
     public void setReqCorrelate(final Boolean reqCorrelate) {
         this.reqCorrelate = reqCorrelate;
     }
@@ -359,6 +392,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  reqRelaxed  the value to set to
      */
+    @ZmqUriParameter("socket.reqRelaxed")
     public void setReqRelaxed(final Boolean reqRelaxed) {
         this.reqRelaxed = reqRelaxed;
     }
@@ -374,6 +408,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  multicastHops  the value to set to
      */
+    @ZmqUriParameter("socket.multicastHops")
     public void setMulticastHops(final Long multicastHops) {
         this.multicastHops = multicastHops;
     }
@@ -389,6 +424,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  receiveTimeOut  the value to set to
      */
+    @ZmqUriParameter("socket.receiveTimeOut")
     public void setReceiveTimeOut(final Integer receiveTimeOut) {
         this.receiveTimeOut = receiveTimeOut;
     }
@@ -404,6 +440,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  sendTimeOut  the value to set to
      */
+    @ZmqUriParameter("socket.sendTimeOut")
     public void setSendTimeOut(final Integer sendTimeOut) {
         this.sendTimeOut = sendTimeOut;
     }
@@ -419,6 +456,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  tcpKeepAlive  the value to set to
      */
+    @ZmqUriParameter("socket.tcpKeepAlive")
     public void setTcpKeepAlive(final Long tcpKeepAlive) {
         this.tcpKeepAlive = tcpKeepAlive;
     }
@@ -434,6 +472,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  tcpKeepAliveCount  the value to set to
      */
+    @ZmqUriParameter("socket.tcpKeepAliveCount")
     public void setTcpKeepAliveCount(final Long tcpKeepAliveCount) {
         this.tcpKeepAliveCount = tcpKeepAliveCount;
     }
@@ -449,6 +488,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  tcpKeepAliveInterval  the value to set to
      */
+    @ZmqUriParameter("socket.tcpKeepAliveInterval")
     public void setTcpKeepAliveInterval(final Long tcpKeepAliveInterval) {
         this.tcpKeepAliveInterval = tcpKeepAliveInterval;
     }
@@ -464,6 +504,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  tcpKeepAliveIdle  the value to set to
      */
+    @ZmqUriParameter("socket.tcpKeepAliveIdle")
     public void setTcpKeepAliveIdle(final Long tcpKeepAliveIdle) {
         this.tcpKeepAliveIdle = tcpKeepAliveIdle;
     }
@@ -479,6 +520,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  sendBufferSize  the value to set to
      */
+    @ZmqUriParameter("socket.sendBufferSize")
     public void setSendBufferSize(final Long sendBufferSize) {
         this.sendBufferSize = sendBufferSize;
     }
@@ -494,6 +536,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  receiveBufferSize  the value to set to
      */
+    @ZmqUriParameter("socket.receiveBufferSize")
     public void setReceiveBufferSize(final Long receiveBufferSize) {
         this.receiveBufferSize = receiveBufferSize;
     }
@@ -509,6 +552,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  routerMandatory  the value to set to
      */
+    @ZmqUriParameter("socket.routerMandatory")
     public void setRouterMandatory(final Boolean routerMandatory) {
         this.routerMandatory = routerMandatory;
     }
@@ -524,6 +568,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  xpubVerbose  the value to set to
      */
+    @ZmqUriParameter("socket.xpubVerbose")
     public void setXpubVerbose(final Boolean xpubVerbose) {
         this.xpubVerbose = xpubVerbose;
     }
@@ -539,6 +584,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  ipv4Only  the value to set to
      */
+    @ZmqUriParameter("socket.ipv4Only")
     public void setIpv4Only(final Boolean ipv4Only) {
         this.ipv4Only = ipv4Only;
     }
@@ -554,6 +600,7 @@ public class ZmqSocketContext {
      * See <a href="https://www.javadoc.io/doc/org.zeromq/jeromq/0.3.6">jeromq </a> java documentation for more detail.
      * @param  delayAttachOnConnect  the value to set to
      */
+    @ZmqUriParameter("socket.delayAttachOnConnect")
     public void setDelayAttachOnConnect(final Boolean delayAttachOnConnect) {
         this.delayAttachOnConnect = delayAttachOnConnect;
     }
@@ -561,6 +608,6 @@ public class ZmqSocketContext {
     @Override
     public String toString() {
         return "ZmqSocketContext [addr=" + addr + ", type=" + type + ", bindFlag=" + bindFlag
-            + ", recieveMsgFlag=" + recieveMsgFlag + "]";
+            + ", recieveMsgFlag=" + recieveMsgFlag + ", bindRetryWaitTime=" + bindRetryWaitTime + "]";
     }
 }

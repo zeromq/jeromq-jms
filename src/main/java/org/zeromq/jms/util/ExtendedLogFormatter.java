@@ -7,7 +7,10 @@ package org.zeromq.jms.util;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import java.text.MessageFormat;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import java.util.Date;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
@@ -16,19 +19,31 @@ import java.util.logging.LogRecord;
  * SimpleFormatter does not have the thread, so need to create a new formatter to expose the thread.
  */
 public class ExtendedLogFormatter extends Formatter {
-    private static final MessageFormat MESSAGE_FORMAT = new MessageFormat("{0,date,yyyy-mm-dd} {0,time,HH:mm:ss.SSS} {1} --- [{2}] {3} : {4}\n");
 
     @Override
     public String format(final LogRecord record) {
 
         Object[] arguments = new Object[6];
         arguments[0] = new Date(record.getMillis());
-        arguments[1] = String.format("%1$7s", record.getLevel().getName());
-        arguments[2] = String.format("%1$15s", Thread.currentThread().getName());
-        arguments[3] = String.format("%1$-60s", compactClassName(record.getSourceClassName()) + "." + record.getSourceMethodName());
-        arguments[4] = record.getMessage();
+        arguments[1] = record.getLevel().getName();
+        arguments[2] = Thread.currentThread().getName();
+        arguments[3] = compactClassName(record.getSourceClassName()) + "." + record.getSourceMethodName();
 
-        return MESSAGE_FORMAT.format(arguments);
+        final Throwable thrown = record.getThrown();
+
+        if (thrown == null) {
+            arguments[4] = record.getMessage();
+        } else {
+            final StringWriter stringWriter = new StringWriter();
+            final PrintWriter printWriter = new PrintWriter(stringWriter);
+
+            printWriter.println(record.getMessage());
+
+            thrown.printStackTrace(printWriter);
+            arguments[4] = stringWriter.toString();
+        }
+
+        return String.format("%1$tF %1$tT:%1$tL %2$7s --- [%3$16s] %4$-60s : %5$s\n", arguments);
     }
 
     /**
