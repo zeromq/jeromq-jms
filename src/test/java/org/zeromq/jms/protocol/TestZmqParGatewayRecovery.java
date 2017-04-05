@@ -55,12 +55,17 @@ public class TestZmqParGatewayRecovery {
         final ZmqGateway receiver1 = new ZmqParGateway("recv12", context, receiverContext1,
                   null, handler, null, null, null, null, false, Direction.INCOMING);
 
+        final ZmqSocketContext receiverContext2 = new ZmqSocketContext(SOCKET_ADDR_2 + "," + SOCKET_ADDR_1, ZmqSocketType.ROUTER, true, flags);
+        final ZmqGateway receiver2 = new ZmqParGateway("recv21", context, receiverContext1,
+                  null, handler, null, null, null, null, false, Direction.INCOMING);
+
         try {
             final ZmqTextMessage outMessage1 = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();
             final ZmqTextMessage outMessage2 = ZmqTextMessageBuilder.create().appendText(MESSAGE_2).toMessage();
 
             sender.open();
             receiver1.open();
+            receiver2.open();
 
             try {
                 Stopwatch stopwatch = new Stopwatch();
@@ -68,6 +73,10 @@ public class TestZmqParGatewayRecovery {
                 sender.send(outMessage1);
 
                 ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(1000);
+
+                if (inMessage1 == null) {
+                    inMessage1 = (ZmqTextMessage) receiver2.receive(1000);
+                }
 
                 receiver1.close();
 

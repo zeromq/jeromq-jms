@@ -10,7 +10,7 @@ package org.zeromq.jms.protocol;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -154,8 +154,8 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         this.direction = direction;
         this.startDateTime = new Date();
 
-        this.metrics = new LinkedList<ZmqSocketMetrics>();
-        this.sessions = new HashMap<String, ZmqSocketSession>();
+        this.metrics = Collections.synchronizedList(new LinkedList<ZmqSocketMetrics>());
+        this.sessions = Collections.synchronizedMap(new HashMap<String, ZmqSocketSession>());
     }
 
     /**
@@ -229,6 +229,19 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             // override closed socket (cannot re-use)
             sessions.put(addr, socketSession);
             socketExecutor.execute(socketSession);
+
+            // Make sure only ONE bound session is active on startup
+            if (socketSession.isBound()) {
+                ZmqSocketStatus status = socketSession.getStatus();
+
+                while (status == ZmqSocketStatus.STOPPED || status == ZmqSocketStatus.PENDING) {
+                    try {
+                        Thread.sleep(SOCKET_WAIT_MILLI_SECOND);
+                    } catch (InterruptedException ex) {
+                    }
+                    status = socketSession.getStatus();
+               }
+            }
         }
 
         LOGGER.info("Gateway openned: " + toString());
@@ -298,26 +311,28 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
         final ZmqSocketListener socketListener = new ZmqSocketListener() {
             @Override
-            public void open(final ZmqSocketSession session) {
+            public boolean open(final ZmqSocketSession session) {
+                return socketOpen(session);
             }
 
             @Override
-            public ZmqEvent send(final ZmqSocketSession source) {
-                return socketSend(source);
+            public ZmqEvent send(final ZmqSocketSession session) {
+                return socketSend(session);
             }
 
             @Override
-            public void error(final ZmqSocketSession source, final ZmqEvent event) {
-                socketError(source, event);
+            public void error(final ZmqSocketSession session, final ZmqEvent event) {
+                socketError(session, event);
             }
 
             @Override
-            public ZmqEvent receive(final ZmqSocketSession source, final ZmqEvent event) {
-                return socketReceive(source, event);
+            public ZmqEvent receive(final ZmqSocketSession session, final ZmqEvent event) {
+                return socketReceive(session, event);
             }
 
             @Override
-            public void close(final ZmqSocketSession session) {
+            public boolean close(final ZmqSocketSession session) {
+                return socketClose(session);
             }
         };
 
@@ -405,6 +420,35 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         }
 
         LOGGER.info("Gateway closed: " + toString());
+    }
+
+    /**
+     * Socket open event has been triggered. For "connecting" sockets the
+     * opening is always granted, but for "bind" we must ensure ONLY one of
+     * the sockets is bound, while others stay in pending state.
+     * @param source  the socket session
+     * @return        return the true to open socket (difference between connect and bind)
+     */
+    protected boolean socketOpen(final ZmqSocketSession source) {
+        if (source.isBound()) {
+            for (ZmqSocketSession socketSession : sessions.values()) {
+                ZmqSocketStatus status = socketSession.getStatus();
+                if (status == ZmqSocketStatus.RUNNING) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Socket close event has been triggered.
+     * @param source  the socket session
+     * @return        return the true to close socket
+     */
+    protected boolean socketClose(final ZmqSocketSession source) {
+        return true;
     }
 
     /**

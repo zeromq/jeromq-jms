@@ -12,5 +12,5 @@ package org.zeromq.jms.protocol;
  *  Socket status.
  */
 public enum ZmqSocketStatus {
-    RUNNING, WAITING, SUSPENDED, STOPPED, ERROR;
+    PENDING, RUNNING, PAUSED, ERROR, STOPPED;
 }

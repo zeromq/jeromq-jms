@@ -17,19 +17,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQException;
 import org.zeromq.ZMsg;
 import org.zeromq.jms.ZmqException;
 import org.zeromq.jms.protocol.event.ZmqEventHandler;
 import org.zeromq.jms.protocol.filter.ZmqFilterPolicy;
 
 /**
+ *  NOTE: THIS IS NOT THREAD SAVE, IT IS NOT MENT TO BE
  *  This class maintains the Zero MQ socket using its own thread. No need for locks, it is
- *  single threaded.
+ *  single threaded, where it call out into the multi-threaded gateway.
  */
 public class ZmqSocketSession implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(ZmqSocketSession.class.getCanonicalName());
 
     private volatile ZmqSocketStatus status = ZmqSocketStatus.STOPPED;
+
+    private static final int SOCKET_RETRY_MILLI_SECOND = 3000;
 
     private volatile long lastReceiveTime = System.nanoTime();
     private volatile long lastSendTime    = System.nanoTime();
@@ -258,7 +262,7 @@ public class ZmqSocketSession implements Runnable {
      * Pause the socket.
      */
     public void pause() {
-        setStatus(ZmqSocketStatus.WAITING);
+        setStatus(ZmqSocketStatus.PAUSED);
 
         LOGGER.warning("Socket paused: " + this);
     }
@@ -279,29 +283,51 @@ public class ZmqSocketSession implements Runnable {
 
     @Override
     public void run() {
-        openSocket(this);
+        setStatus(ZmqSocketStatus.PENDING);
 
-        // Only set a wait for "consumer sockets"
-        if (socketOutgoing) {
-            socket.setReceiveTimeOut(0);
-        } else {
-            socket.setReceiveTimeOut(socketWaitTime);
-        }
+        // Retry loop is for for the bind, a connection will come successful
+        do {
+            // Only one of the sockets can be "bind", the others were come back pending
+            final ZmqSocketStatus status = openSocket(this);
 
-        LOGGER.info("Started socket: " + this);
+            if (status == ZmqSocketStatus.PENDING && active.get()) {
+                // Sleep and retry to bind again
+                try {
+                    Thread.sleep(SOCKET_RETRY_MILLI_SECOND);
+                } catch (InterruptedException ex) {
+                }
+            }
+        } while (status == ZmqSocketStatus.PENDING && active.get());
 
-        while (active.get()) {
+        // Need to know if the socket was really opened for closure
+        final boolean closeSocket = (status == ZmqSocketStatus.RUNNING);
+
+        if (status == ZmqSocketStatus.RUNNING && active.get()) {
+            // Only set a wait for "consumer sockets"
             if (socketOutgoing) {
-                sendSocket(this);
+                socket.setReceiveTimeOut(0);
+            } else {
+                socket.setReceiveTimeOut(socketWaitTime);
             }
 
-            if (socketIncoming) {
-                receiveSocket(this);
+            while (active.get()) {
+                if (socketOutgoing) {
+                    status = sendSocket(this);
+
+                    if (status == ZmqSocketStatus.ERROR) {
+                        break;
+                    }
+                }
+
+                if (socketIncoming) {
+                    status = receiveSocket(this);
+
+                    if (status == ZmqSocketStatus.ERROR) {
+                        break;
+                    }
+                }
             }
         }
-
-        setStatus(ZmqSocketStatus.STOPPED);
-        LOGGER.info("Stopped socket: " + this);
 
         // Check for ACK on last time
         if (socketHeartbeat && socketOutgoing && socketIncoming) {
@@ -309,22 +335,42 @@ public class ZmqSocketSession implements Runnable {
             sendSocket(this);
         }
 
-        closeSocket(this);
+        setStatus(ZmqSocketStatus.STOPPED);
+
+        if (closeSocket) {
+            closeSocket(this);
+        }
     }
 
     /**
      * Open and either "bind" or "connect" to the ZMQ socket.
-     * @param socketSession  the session of the socket
+     * @param  socketSession  the session of the socket
+     * @return                return the socket status
      */
-    protected void openSocket(final ZmqSocketSession socketSession) {
+    protected ZmqSocketStatus openSocket(final ZmqSocketSession socketSession) {
         final String socketAddr = socketSession.socketAddr;
         final ZMQ.Socket socket = socketSession.socket;
+
+        final boolean openSocket = socketListener.open(this);
+
+        if (!openSocket) {
+            setStatus(ZmqSocketStatus.PAUSED);
+            return getStatus();
+        }
 
         if (socketBound) {
             try {
                 socket.bind(socketAddr);
-            } catch (Exception ex) {
+            } catch (ZMQException ex) {
+                if (ex.getErrorCode() == 48) {
+                    setStatus(ZmqSocketStatus.PAUSED);
+                    LOGGER.info("Bind socket UNSUCCESSFUL (Already Bound): " + this);
+
+                    return getStatus();
+                }
+
                 LOGGER.log(Level.SEVERE, "Socket binding failure: " + this);
+                setStatus(ZmqSocketStatus.ERROR);
                 throw ex;
             }
 
@@ -334,22 +380,23 @@ public class ZmqSocketSession implements Runnable {
                 socket.connect(socketAddr);
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, "Socket connect failure: " + this, ex);
+                setStatus(ZmqSocketStatus.ERROR);
                 throw ex;
             }
 
             LOGGER.info("Connect socket successful: " + this);
         }
 
-        socketListener.open(this);
-
         setStatus(ZmqSocketStatus.RUNNING);
+        return getStatus();
     }
 
     /**
      * Close Zero MQ "unbind" or "disconnect" socket functionality.
-     * @param socketSession  the socket session
+     * @param  socketSession  the socket session
+     * @return                return the socket status
      */
-    protected void closeSocket(final ZmqSocketSession socketSession) {
+    protected ZmqSocketStatus closeSocket(final ZmqSocketSession socketSession) {
         final String socketAddr = socketSession.socketAddr;
         final ZMQ.Socket socket = socketSession.socket;
 
@@ -380,13 +427,15 @@ public class ZmqSocketSession implements Runnable {
         setStatus(ZmqSocketStatus.STOPPED);
         socketListener.close(this);
 
+        return getStatus();
     }
 
     /**
      * Produce messages for the outgoing message queue onto the specified socket queue.
      * @param  socketSession  the socket session
+     * @return                return the socket status
      */
-    protected void sendSocket(final ZmqSocketSession socketSession) {
+    protected ZmqSocketStatus sendSocket(final ZmqSocketSession socketSession) {
         ZmqEvent socketEvent = null;
 
         try {
@@ -410,7 +459,7 @@ public class ZmqSocketSession implements Runnable {
                             }
                         } else {
                             LOGGER.log(Level.SEVERE, "Socket [" + name + "@" + socketAddr + "] Unable to send message: " + socketEvent);
-                            setStatus(ZmqSocketStatus.WAITING);
+                            setStatus(ZmqSocketStatus.PAUSED);
                             socketListener.error(this, socketEvent);
 
                             break;
@@ -424,15 +473,18 @@ public class ZmqSocketSession implements Runnable {
 
             socketListener.error(this, socketEvent);
         }
+
+        return getStatus();
     }
 
     /**
      * Consume message from the incoming message queue from the specified socket queue.
      * @param  socketSession  the socket session
+     * @return                return the socket status
      */
-    protected void receiveSocket(final ZmqSocketSession socketSession) {
+    protected ZmqSocketStatus receiveSocket(final ZmqSocketSession socketSession) {
         if (!active.get()) {
-            return;
+            return getStatus();
         }
 
         ZMsg msg = ZMsg.recvMsg(socket, socketFlags);
@@ -477,6 +529,8 @@ public class ZmqSocketSession implements Runnable {
             msg.destroy();
             msg = ZMsg.recvMsg(socket);
         }
+
+        return getStatus();
     }
 
     @Override

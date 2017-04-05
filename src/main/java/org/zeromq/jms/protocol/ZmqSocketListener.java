@@ -24,8 +24,9 @@ public interface ZmqSocketListener {
     /**
      * Invoked by the socket session when the connection has been open successfully.
      * @param  source  the socket session involved
+     * @return         return TRUE when possible
      */
-    void open(ZmqSocketSession source);
+    boolean open(ZmqSocketSession source);
 
     /**
      * Poll for the next outgoing event to send to the specified source. This is general a message event
@@ -47,6 +48,7 @@ public interface ZmqSocketListener {
     /**
      * Invoked by the socket session when the connection has been closed successfully.
      * @param  source  the socket session involved
+     * @return         return TRUE when possible
      */
-    void close(ZmqSocketSession source);
+    boolean close(ZmqSocketSession source);
 }
