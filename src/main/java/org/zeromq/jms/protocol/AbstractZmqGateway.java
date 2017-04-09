@@ -227,7 +227,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 SOCKET_WAIT_MILLI_SECOND, heartbeat, acknowledge, socketListener, filterPolicy, eventHandler, socketMetrics);
 
             // override closed socket (cannot re-use)
-            sessions.put(addr, socketSession);
+            sessions.put(socketAddr, socketSession);
             socketExecutor.execute(socketSession);
 
             // Make sure only ONE bound session is active on startup
@@ -346,6 +346,8 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
     @Override
     public void close() {
+        active.set(false);
+
         if (acknowledge) {
             // Wait for a period before warning about failed ACKS
             int totalCount = 0;
@@ -370,6 +372,21 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             }
         }
 
+        // What for sockets to shut down
+        for (ZmqSocketSession socketSession : sessions.values()) {
+            ZmqSocketStatus status = socketSession.getStatus();
+
+            while (status != ZmqSocketStatus.STOPPED) {
+                try {
+                    Thread.sleep(SOCKET_WAIT_MILLI_SECOND);
+                } catch (InterruptedException ex) {
+                    LOGGER.throwing(AbstractZmqGateway.class.getCanonicalName(), "close()", ex);
+                }
+
+                status = socketSession.getStatus();
+            }
+        }
+
         if (journalStore != null) {
             try {
                 journalStore.close();
@@ -377,8 +394,6 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 LOGGER.log(Level.SEVERE, "Gateway [" + name + "] unable to close the journal store: " + journalStore, ex);
             }
         }
-
-        active.set(false);
 
         if (listenerExecutor != null) {
             try {
@@ -812,7 +827,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                     }
 
                     if (stopwatch != null) {
-                        LOGGER.log(Level.FINER, "Receive incoming message: " + stopwatch.elapsedTime() + " (msec)");
+                        LOGGER.log(Level.FINER, "Gateway [" + name + "] receive incoming message: " + stopwatch.elapsedTime() + " (msec)");
                     }
 
                     return message;
@@ -832,9 +847,9 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
             if (stopwatch != null) {
                 if (message == null) {
-                    LOGGER.log(Level.FINER, "Receive incoming message (Wait): " + stopwatch.elapsedTime() + " (msec)");
+                    LOGGER.log(Level.FINER, "Gateway  [" + name + "] receive incoming message (Wait): " + stopwatch.elapsedTime() + " (msec)");
                 } else {
-                    LOGGER.log(Level.FINER, "Receive no message (Timeout): " + stopwatch.elapsedTime() + " (msec)");
+                    LOGGER.log(Level.FINER, "Gatewau  [" + name + "] receive no message (Timeout): " + stopwatch.elapsedTime() + " (msec)");
                 }
             }
 

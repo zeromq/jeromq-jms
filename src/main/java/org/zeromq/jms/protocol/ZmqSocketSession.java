@@ -290,17 +290,16 @@ public class ZmqSocketSession implements Runnable {
             // Only one of the sockets can be "bind", the others were come back pending
             final ZmqSocketStatus status = openSocket(this);
 
-            if (status == ZmqSocketStatus.PENDING && active.get()) {
-                // Sleep and retry to bind again
-                try {
-                    Thread.sleep(SOCKET_RETRY_MILLI_SECOND);
-                } catch (InterruptedException ex) {
-                }
+            if (status == (ZmqSocketStatus.RUNNING) || !active.get()) {
+                break;
             }
-        } while (status == ZmqSocketStatus.PENDING && active.get());
 
-        // Need to know if the socket was really opened for closure
-        final boolean closeSocket = (status == ZmqSocketStatus.RUNNING);
+            // Sleep and retry to bind again
+            try {
+                Thread.sleep(SOCKET_RETRY_MILLI_SECOND);
+            } catch (InterruptedException ex) {
+            }
+        } while (status == ZmqSocketStatus.PAUSED && active.get());
 
         if (status == ZmqSocketStatus.RUNNING && active.get()) {
             // Only set a wait for "consumer sockets"
@@ -327,19 +326,16 @@ public class ZmqSocketSession implements Runnable {
                     }
                 }
             }
+
+            // Check for ACK on last time
+            if (socketHeartbeat && socketOutgoing && socketIncoming) {
+                socket.setReceiveTimeOut(socketWaitTime);
+                sendSocket(this);
+            }
         }
 
-        // Check for ACK on last time
-        if (socketHeartbeat && socketOutgoing && socketIncoming) {
-            socket.setReceiveTimeOut(socketWaitTime);
-            sendSocket(this);
-        }
-
+        closeSocket(this);
         setStatus(ZmqSocketStatus.STOPPED);
-
-        if (closeSocket) {
-            closeSocket(this);
-        }
     }
 
     /**
@@ -402,8 +398,8 @@ public class ZmqSocketSession implements Runnable {
 
         if (socketBound) {
             try {
+                socket.setLinger(0);
                 socket.unbind(socketAddr);
-                // socket.setLinger(0);
                 socket.close();
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, "Socketing unbind failure: " + this, ex);
@@ -413,7 +409,7 @@ public class ZmqSocketSession implements Runnable {
             LOGGER.info("Unbind socket successful: " + this);
         } else {
             try {
-                // socket.setLinger(0);
+                socket.setLinger(0);
                 socket.disconnect(socketAddr);
                 socket.close();
             } catch (Exception ex) {
@@ -487,47 +483,52 @@ public class ZmqSocketSession implements Runnable {
             return getStatus();
         }
 
-        ZMsg msg = ZMsg.recvMsg(socket, socketFlags);
+        try {
+            ZMsg msg = ZMsg.recvMsg(socket, socketFlags);
 
-        while (msg != null) {
-            metrics.incrementReceive();
-            lastReceiveTime = System.nanoTime();
+            while (msg != null) {
+                metrics.incrementReceive();
+                lastReceiveTime = System.nanoTime();
 
-            try {
-                ZmqEvent event = handler.createEvent(socketType, msg);
+                try {
+                    ZmqEvent event = handler.createEvent(socketType, msg);
 
-                if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] recieved message: " + event);
-                }
+                    if (LOGGER.isLoggable(Level.FINEST)) {
+                        LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] recieved message: " + event);
+                    }
 
-                if (event != null && socketListener != null) {
-                    setStatus(ZmqSocketStatus.RUNNING);
+                    if (event != null && socketListener != null) {
+                        setStatus(ZmqSocketStatus.RUNNING);
 
-                    final ZmqEvent replyEvent = socketListener.receive(this, event);
+                        final ZmqEvent replyEvent = socketListener.receive(this, event);
 
-                    // Send back a message when requested
-                    if (replyEvent != null) {
-                        if (socketIncoming) {
-                            final ZMsg replyMsg = handler.createMsg(socketType, filter, replyEvent);
+                        // Send back a message when requested
+                        if (replyEvent != null) {
+                            if (socketIncoming) {
+                                final ZMsg replyMsg = handler.createMsg(socketType, filter, replyEvent);
 
-                            replyMsg.send(socket, true);
-                            metrics.incrementSend();
-                            lastSendTime = System.nanoTime();
-                        } else {
-                            LOGGER.log(Level.SEVERE, "Socketing has not outgoing state: " + this);
-                        }
+                                replyMsg.send(socket, true);
+                                metrics.incrementSend();
+                                lastSendTime = System.nanoTime();
+                            } else {
+                                LOGGER.log(Level.SEVERE, "Socketing has not outgoing state: " + this);
+                            }
 
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] sent response message: " + replyEvent);
+                            if (LOGGER.isLoggable(Level.FINEST)) {
+                                LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] sent response message: " + replyEvent);
+                            }
                         }
                     }
+                } catch (ZmqException ex) {
+                    LOGGER.log(Level.SEVERE, "Socketing incoming failure: " + this, ex);
                 }
-            } catch (ZmqException ex) {
-                LOGGER.log(Level.SEVERE, "Socketing incoming failure: " + this, ex);
-            }
 
-            msg.destroy();
-            msg = ZMsg.recvMsg(socket);
+                msg.destroy();
+                msg = ZMsg.recvMsg(socket);
+            }
+        } catch (org.zeromq.ZMQException ex) {
+            setStatus(ZmqSocketStatus.ERROR);
+            LOGGER.log(Level.SEVERE, "Socketing incoming failure: " + this, ex);
         }
 
         return getStatus();
