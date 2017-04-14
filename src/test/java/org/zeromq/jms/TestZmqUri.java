@@ -17,12 +17,30 @@ import org.junit.Test;
 public class TestZmqUri {
 
     /**
-     * Test the parsing of the URI.
+     * Test the parsing of the URI with old "gateway" attributes.
      */
     @Test
-    public void parseUri() {
-        // URI uri = URI.create("jms:zmp:/queue?addr=tcp://*:9586&destination=queue_2&retry=0");
+    public void parseOldUri() {
         final ZmqURI uri = ZmqURI.create("jms:queue:queue_2?gateway=fireAndForget&gateway.addr=tcp://*:9586&redelivery.retry=3");
+
+        Assert.assertEquals("Scheme not found :" + uri, "jms", uri.getScheme());
+        Assert.assertEquals("Destination name not found :" + uri, "queue", uri.getDestinationType());
+        Assert.assertEquals("Destination type not found :" + uri, "queue_2", uri.getDestinationName());
+        Assert.assertEquals("Missing gateway :" + uri, "fireAndForget", uri.getOptionValue("gateway"));
+        Assert.assertEquals("Missing default value [redelivery]:" + uri, "retry", uri.getOptionValue("redelivery", "retry"));
+        Assert.assertEquals("Missing value [gateway.addr]:" + uri, "tcp://*:9586", uri.getOptionValues("gateway.addr")[0]);
+        Assert.assertEquals("Missing value [redelivery.retry]:" + uri, "3", uri.getOptionValues("redelivery.retry")[0]);
+        Assert.assertEquals("Missing default value [redelivery.backout]:" + uri, "DLQ",
+                uri.getOptionValues("redelivery.backout", new String[] { "DLQ" })[0]);
+    }
+
+    /**
+     * Test the parsing of the URI with old "socket" attributes, that replaces "gateway".
+     */
+    @Test
+    public void parseNewUri() {
+        // URI uri = URI.create("jms:zmp:/queue?addr=tcp://*:9586&destination=queue_2&retry=0");
+        final ZmqURI uri = ZmqURI.create("jms:queue:queue_2?gateway=fireAndForget&socket.addr=tcp://*:9586&redelivery.retry=3");
 
         Assert.assertEquals("Scheme not found :" + uri, "jms", uri.getScheme());
         Assert.assertEquals("Destination name not found :" + uri, "queue", uri.getDestinationType());
@@ -41,7 +59,7 @@ public class TestZmqUri {
     @Test
     public void parseUri2() {
 
-        final ZmqURI uri = ZmqURI.create("jms:queue:latTestQueue?gateway=par&gateway.addr=inproc://lat_test&redelivery.retry=3");
+        final ZmqURI uri = ZmqURI.create("jms:queue:latTestQueue?gateway=par&socket.addr=inproc://lat_test&redelivery.retry=3");
 
         Assert.assertEquals("Scheme not found :" + uri, "jms", uri.getScheme());
         Assert.assertEquals("Missing gateway :" + uri, "par", uri.getOptionValue("gateway"));

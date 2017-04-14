@@ -62,9 +62,9 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
     private final List<ZmqSocketMetrics> metrics;
     private final Map<String, ZmqSocketSession> socketSessions;
-    
+
     private ZmqProxySession proxySession = null; //optional proxy
-    
+
     private final boolean transacted;
     private final boolean acknowledge;
     private final boolean heartbeat;
@@ -521,23 +521,26 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
         ZmqEvent sendEvent = null;
 
-        if (journalStore != null) {
-            try {
-                final ZmqJournalEntry journalEntry = journalStore.read();
-                if (journalEntry != null && (!source.isTracked(journalEntry.getMessageId()))) {
-                    sendEvent =
-                        eventHandler.createSendEvent(journalEntry.getMessageId(), journalEntry.getMessage());
+        // Only get real message if the socket session is running.
+        if (source.getStatus() == ZmqSocketStatus.RUNNING) {
+            if (journalStore != null) {
+                try {
+                    final ZmqJournalEntry journalEntry = journalStore.read();
+                    if (journalEntry != null && (!source.isTracked(journalEntry.getMessageId()))) {
+                        sendEvent =
+                                eventHandler.createSendEvent(journalEntry.getMessageId(), journalEntry.getMessage());
+                    }
+                } catch (ZmqException ex) {
+                    LOGGER.log(Level.WARNING, "Socket [" + name + "@" + socketAddr + "] failed to read from the journal store", ex);
                 }
-            } catch (ZmqException ex) {
-                LOGGER.log(Level.WARNING, "Socket [" + name + "@" + socketAddr + "] failed to read from the journal store", ex);
             }
-        }
 
-        if (sendEvent == null) {
-            try {
-                sendEvent = outgoingQueue.poll(SOCKET_WAIT_MILLI_SECOND, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ex) {
-                LOGGER.log(Level.WARNING, "Socket [" + name + "@" + socketAddr + "] polling of outgoing queue interrupted", ex);
+            if (sendEvent == null) {
+                try {
+                    sendEvent = outgoingQueue.poll(SOCKET_WAIT_MILLI_SECOND, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException ex) {
+                    LOGGER.log(Level.WARNING, "Socket [" + name + "@" + socketAddr + "] polling of outgoing queue interrupted", ex);
+                }
             }
         }
 

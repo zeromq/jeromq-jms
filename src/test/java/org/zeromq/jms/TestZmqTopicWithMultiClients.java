@@ -1,5 +1,7 @@
 package org.zeromq.jms;
 
+import java.util.ArrayList;
+import java.util.List;
 /*
  * Copyright (c) 2015 Jeremy Miller
  *
@@ -40,12 +42,15 @@ public class TestZmqTopicWithMultiClients {
 
     private static final Logger LOGGER = Logger.getLogger(TestZmqTopicWithMultiClients.class.getCanonicalName());
 
-    private static final String TOPIC_NAME = "topic_1";
     private static final String TOPIC_ADDR = "tcp://*:9713";
-    private static final String TOPIC_URI = "jms:topic:" + TOPIC_NAME + "?gateway.addr=" + TOPIC_ADDR + "&redlivery.retry=0&event=stomp";
+    private static final String TOPIC_PUB_NAME = "topicPub";
+    private static final String TOPIC_PUB_URI = "jms:topic:" + TOPIC_PUB_NAME + "?socket.addr=" + TOPIC_ADDR + "&redlivery.retry=0&event=stomp";
+
+    private static final String TOPIC_REC_NAME = "topicRec";
+    private static final String TOPIC_REC_URI = "jms:topic:" + TOPIC_REC_NAME + "?socket.addr=" + TOPIC_ADDR + "&redlivery.retry=0&event=stomp";
 
     private static final int CLIENT_COUNT = 5;
-    private static final int CLIENT_MESSAGE_COUNT = 1000;
+    private static final int CLIENT_MESSAGE_COUNT = 100;
     private static final int CLIENT_MESSAGE_COMMIT_COUNT = 7000;
 
     private static InitialContext context;
@@ -92,7 +97,7 @@ public class TestZmqTopicWithMultiClients {
                 final TopicConnectionFactory factory = (TopicConnectionFactory) context.lookup("java:/comp/env/jms/topicConnectionFactory");
                 final TopicConnection connection = factory.createTopicConnection();
                 final TopicSession session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
-                final Topic topic = (Topic) context.lookup("java:/comp/env/jms/topicTest");
+                final Topic topic = (Topic) context.lookup("java:/comp/env/jms/topicRec");
 
                 TopicSubscriber subscriber = null;
 
@@ -137,6 +142,13 @@ public class TestZmqTopicWithMultiClients {
 
             messageCountLatch.countDown();
         }
+
+        @Override
+        public String toString() {
+            return "Client [clientStartedLatch=" + clientStartedLatch + ", clientStoppedLatch=" + clientStoppedLatch
+                    + ", messageCountLatch=" + messageCountLatch + ", messageCount=" + messageCount + ", clientId="
+                    + clientId + ", transacted=" + transacted + "]";
+        }
     }
 
     /**
@@ -155,8 +167,10 @@ public class TestZmqTopicWithMultiClients {
         context.createSubcontext("java:/comp/env");
         context.createSubcontext("java:/comp/env/jms");
 
-        context.bind("java:/comp/env/jms/topicConnectionFactory", new ZmqConnectionFactory(new String[] { TOPIC_URI }));
-        context.bind("java:/comp/env/jms/topicTest", new ZmqTopic(TOPIC_NAME));
+        context.bind("java:/comp/env/jms/topicConnectionFactory",
+            new ZmqConnectionFactory(new String[] { TOPIC_PUB_URI, TOPIC_REC_URI }));
+        context.bind("java:/comp/env/jms/topicPub", new ZmqTopic(TOPIC_PUB_NAME));
+        context.bind("java:/comp/env/jms/topicRec", new ZmqTopic(TOPIC_REC_NAME));
     }
 
     /**
@@ -183,7 +197,7 @@ public class TestZmqTopicWithMultiClients {
             final TopicConnectionFactory factory = (TopicConnectionFactory) context.lookup("java:/comp/env/jms/topicConnectionFactory");
             final TopicConnection connection = factory.createTopicConnection();
             final TopicSession session = connection.createTopicSession(serverTransacted, Session.AUTO_ACKNOWLEDGE);
-            final Topic topic = (Topic) context.lookup("java:/comp/env/jms/topicTest");
+            final Topic topic = (Topic) context.lookup("java:/comp/env/jms/topicPub");
 
             TopicPublisher publisher = null;
 
@@ -199,14 +213,16 @@ public class TestZmqTopicWithMultiClients {
 
                 LOGGER.info("<<<< START CLIENTS >>>>");
 
+                final List<Client> clients = new ArrayList<Client>();
                 for (int i = 0; i < CLIENT_COUNT; i++) {
-                    Client client = new Client(clientStartedDownLatch, clientStoppedDownLatch, messageCount, "CLIENT_" + i, clientTransacted);
+                    final Client client = new Client(clientStartedDownLatch, clientStoppedDownLatch, messageCount, "CLIENT_" + i, clientTransacted);
                     client.start();
+                    clients.add(client);
                 }
 
                 // Wait till all the clients have started
                 try {
-                    clientStartedDownLatch.await(60, TimeUnit.SECONDS);
+                    clientStartedDownLatch.await(10, TimeUnit.SECONDS);
                 } catch (InterruptedException ex) {
                     throw ex;
                 }
@@ -234,13 +250,16 @@ public class TestZmqTopicWithMultiClients {
 
                 // Wait till all the clients have stopped
                 try {
-                    clientStoppedDownLatch.await(60, TimeUnit.SECONDS);
+                    clientStoppedDownLatch.await(30, TimeUnit.SECONDS);
                 } catch (InterruptedException ex) {
                     throw ex;
                 }
 
                 LOGGER.info("<<<< COMPLETE CHECKS >>>>");
 
+                for (Client client : clients) {
+                    LOGGER.info("Client state: " + client);
+                }
                 Assert.assertEquals(0, clientStoppedDownLatch.getCount());
                 Assert.assertEquals(totalMessageCount, messageCount.intValue());
             } finally {

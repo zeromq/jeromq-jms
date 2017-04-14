@@ -42,12 +42,18 @@ public class TestZmqQueueWithMultiClients {
 
     private static final Logger LOGGER = Logger.getLogger(TestZmqQueueWithMultiClients.class.getCanonicalName());
 
-    private static final String QUEUE_NAME = "queue_1";
     private static final String QUEUE_ADDR = "tcp://*:9712";
-    private static final String QUEUE_URI = "jms:queue:" + QUEUE_NAME + "?gateway.addr=" + QUEUE_ADDR + "&redlivery.retry=0&event=stomp";
+    private static final String QUEUE_CLIENT_NAME = "send1";
+    private static final String QUEUE_CLIENT_URI = "jms:queue:" + QUEUE_CLIENT_NAME
+        + "?socket.addr=" + QUEUE_ADDR + "&socket.sndHWM=100000&redlivery.retry=0&event=stomp";
+    private static final String QUEUE_SERVER_NAME = "recv1";
+    private static final String QUEUE_SERVER_URI = "jms:queue:" + QUEUE_SERVER_NAME
+        + "?socket.addr=" + QUEUE_ADDR + "&socket.bind=true&sndHWM=10000&redlivery.retry=0&event=stomp";
 
     private static final int CLIENT_COUNT = 10;
-    private static final int CLIENT_MESSAGE_COUNT = 100000;
+
+    // NOTE: Need to set high-water mark, otherwise flooding queue, and blocks, i.e. socket.setSndHwm(100000)
+    private static final int CLIENT_MESSAGE_COUNT = 5000;
     private static final int CLIENT_MESSAGE_COMMIT_COUNT = 500;
 
     private static InitialContext context;
@@ -114,7 +120,7 @@ public class TestZmqQueueWithMultiClients {
                 final QueueConnectionFactory factory = (QueueConnectionFactory) context.lookup("java:/comp/env/jms/queueConnectionFactory_1");
                 final QueueConnection connection = factory.createQueueConnection();
                 final QueueSession session = connection.createQueueSession(transacted, Session.AUTO_ACKNOWLEDGE);
-                final Queue queue = (Queue) context.lookup("java:/comp/env/jms/queueTest_1");
+                final Queue queue = (Queue) context.lookup("java:/comp/env/jms/queueSend1");
 
                 QueueSender sender = null;
 
@@ -160,8 +166,10 @@ public class TestZmqQueueWithMultiClients {
         context.createSubcontext("java:/comp/env");
         context.createSubcontext("java:/comp/env/jms");
 
-        context.bind("java:/comp/env/jms/queueConnectionFactory_1", new ZmqConnectionFactory(new String[] { QUEUE_URI }));
-        context.bind("java:/comp/env/jms/queueTest_1", new ZmqQueue(QUEUE_NAME));
+        context.bind("java:/comp/env/jms/queueConnectionFactory_1",
+            new ZmqConnectionFactory(new String[] { QUEUE_CLIENT_URI, QUEUE_SERVER_URI }));
+        context.bind("java:/comp/env/jms/queueSend1", new ZmqQueue(QUEUE_CLIENT_NAME));
+        context.bind("java:/comp/env/jms/queueRecv1", new ZmqQueue(QUEUE_SERVER_NAME));
 
     }
 
@@ -186,7 +194,7 @@ public class TestZmqQueueWithMultiClients {
             final QueueConnectionFactory factory = (QueueConnectionFactory) context.lookup("java:/comp/env/jms/queueConnectionFactory_1");
             final QueueConnection connection = factory.createQueueConnection();
             final QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-            final Queue queue = (Queue) context.lookup("java:/comp/env/jms/queueTest_1");
+            final Queue queue = (Queue) context.lookup("java:/comp/env/jms/queueRecv1");
 
             QueueReceiver receiver = null;
 
@@ -236,7 +244,7 @@ public class TestZmqQueueWithMultiClients {
             final QueueConnectionFactory factory = (QueueConnectionFactory) context.lookup("java:/comp/env/jms/queueConnectionFactory_1");
             final QueueConnection connection = factory.createQueueConnection();
             final QueueSession session = connection.createQueueSession(true, Session.AUTO_ACKNOWLEDGE);
-            final Queue queue = (Queue) context.lookup("java:/comp/env/jms/queueTest_1");
+            final Queue queue = (Queue) context.lookup("java:/comp/env/jms/queueRecv1");
 
             QueueReceiver receiver = null;
 

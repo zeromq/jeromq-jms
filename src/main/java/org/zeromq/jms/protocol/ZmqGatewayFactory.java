@@ -207,7 +207,7 @@ public class ZmqGatewayFactory {
 
             ZmqSocketContext socketContext = getSocketContext(uri, type, isBound);
 
-            final String name = namePrefix + "@" + socketContext.getAddr();
+            final String name = namePrefix + ":" + destinationName;
             final ZmqGateway protocol =
                 (ZmqGateway) consumerConstructor.newInstance(name, context, socketContext,
                     filter, eventHandler, null, store, selector, redelivery,
@@ -275,7 +275,7 @@ public class ZmqGatewayFactory {
 
             ZmqSocketContext socketContext = getSocketContext(uri, type, isBound);
 
-            final String name = namePrefix + "@" + socketContext.getAddr();
+            final String name = namePrefix + ":" + destinationName;
             final ZmqGateway protocol = (ZmqGateway) producerConstructor.newInstance(name, context, socketContext,
                     filter, handler, listener, store, selector, redelivery,
                     transacted, ZmqGateway.Direction.OUTGOING);

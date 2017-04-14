@@ -276,7 +276,7 @@ public class ClassUtils {
                 try {
                     classes.add(Class.forName(packageName + '.' + file.getName().substring(0, file.getName().length() - 6)));
                 } catch (UnsupportedClassVersionError ex) {
-                    LOGGER.log(Level.WARNING, "Unable to loader class: " + file.getName(), ex);
+                    LOGGER.log(Level.WARNING, "Unable to loader class " + file.getName() + " due to JVM version conflict: " + ex.getMessage());
                 }
             }
         }

@@ -55,6 +55,7 @@ public class TestZmqParGatewayRecovery {
                 null, handler, null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqSocketContext receiverContext = new ZmqSocketContext(SOCKET_ADDR_1 + "," + SOCKET_ADDR_2, ZmqSocketType.ROUTER, true, flags);
+
         final ZmqGateway receiver1 = new ZmqParGateway("recv1", context, receiverContext,
                   null, handler, null, null, null, null, false, Direction.INCOMING);
         final ZmqGateway receiver2 = new ZmqParGateway("recv2", context, receiverContext,
@@ -73,7 +74,7 @@ public class TestZmqParGatewayRecovery {
                 sender.open();
                 sender.send(outMessage1);
 
-                ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(3000);
+                ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(5000);
 
                 Assert.assertNotNull(inMessage1);
                 Assert.assertEquals(MESSAGE_1, inMessage1.getText());
@@ -90,7 +91,24 @@ public class TestZmqParGatewayRecovery {
                 LOGGER.info("Send message 2");
                 sender.send(outMessage2);
 
-                ZmqTextMessage inMessage2 = (ZmqTextMessage) receiver2.receive(3000);
+                ZmqTextMessage inMessage2 = (ZmqTextMessage) receiver2.receive(5000);
+
+                /*
+                 * NOTE:
+                 * There ia a 50% change that socket "tcp://*:9751" picked up the MESSAGE_1
+                 * first, and although later returns the message for "tcp://*:9750" to send
+                 * it, that actual ZMQ.Socket will still have the copy and still be trying.
+                 *
+                 * Hence with the open of other receiver, they will get this PHANTOM message
+                 * before MESSAGE_@ comes through.
+                 *
+                 * This will not happen if the sender is closed, and then re-opened.
+                 */
+                Assert.assertNotNull(inMessage2);
+                if (MESSAGE_1.equals(inMessage2.getText())) {
+                    // Phantom message, read the next
+                    inMessage2 = (ZmqTextMessage) receiver2.receive(5000);
+                }
 
                 Assert.assertNotNull(inMessage2);
                 Assert.assertEquals(MESSAGE_2, inMessage2.getText());
@@ -108,6 +126,8 @@ public class TestZmqParGatewayRecovery {
                 Assert.assertNull(inMessage3);
 
                 receiver3.close();
+            } catch (AssertionError ex) {
+                throw ex;
             } catch (RuntimeException ex) {
                 ex.printStackTrace();
 

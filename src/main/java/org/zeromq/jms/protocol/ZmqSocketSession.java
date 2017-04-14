@@ -454,9 +454,18 @@ public class ZmqSocketSession implements Runnable {
                                 LOGGER.log(Level.FINEST, "Socket [" + name + "@" + socketAddr + "] sent message: " + socketEvent);
                             }
                         } else {
-                            LOGGER.log(Level.SEVERE, "Socket [" + name + "@" + socketAddr + "] Unable to send message: " + socketEvent);
-                            setStatus(ZmqSocketStatus.PAUSED);
+                            // Message are being blocker from being sent, propably use to message buffer full
+                            LOGGER.log(Level.WARNING, "Socket [" + name + "@" + socketAddr + "] Unable to send message: " + socketEvent);
+                            LOGGER.log(Level.WARNING, "Socket [" + name + "@" + socketAddr + "] Session sleeping "
+                                + ", try increasing queue capcility (i.e. socket.sndHWM=n)");
+                            //setStatus(ZmqSocketStatus.PAUSED);
                             socketListener.error(this, socketEvent);
+
+                            try {
+                                Thread.sleep(3000);
+                            } catch (InterruptedException ex) {
+                                LOGGER.log(Level.SEVERE, "Socket [" + name + "@" + socketAddr + "] Session sleeping interuupted", ex);
+                            }
 
                             break;
                         }

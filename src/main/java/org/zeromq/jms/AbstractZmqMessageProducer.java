@@ -1,5 +1,7 @@
 package org.zeromq.jms;
 
+import java.util.logging.Logger;
+
 import javax.jms.CompletionListener;
 /*
  * Copyright (c) 2015 Jeremy Miller
@@ -20,6 +22,8 @@ import org.zeromq.jms.protocol.ZmqGateway;
  * Abstract class Zero MQ JMS message consumer use to subclass for specialisation (Topic and Queue Consumers).
  */
 abstract class AbstractZmqMessageProducer implements MessageProducer {
+
+    private static final Logger LOGGER = Logger.getLogger(AbstractZmqMessageConsumer.class.getCanonicalName());
 
     private ZmqGateway protocol;
 
@@ -52,6 +56,8 @@ abstract class AbstractZmqMessageProducer implements MessageProducer {
     public void close() throws JMSException {
 
         protocol.close();
+
+        LOGGER.info("Message producer closed: " + protocol.getName());
     }
 
     @Override
