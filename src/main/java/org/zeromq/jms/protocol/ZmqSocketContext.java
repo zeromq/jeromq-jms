@@ -13,6 +13,9 @@ public class ZmqSocketContext {
     private Long bindRetryWaitTime;
     private Integer recieveMsgFlag;
 
+    private ZmqSocketType proxyType;
+    private String proxyAddr;
+
     private Long linger;
     private Long reconnectIVL;
     private Long backlog;
@@ -77,6 +80,9 @@ public class ZmqSocketContext {
         this.bindFlag = context.bindFlag;
         this.bindRetryWaitTime = context.bindRetryWaitTime;
         this.recieveMsgFlag = context.recieveMsgFlag;
+
+        this.proxyType = context.proxyType;
+        this.proxyAddr = context.proxyAddr;
 
         this.linger = context.linger;
         this.reconnectIVL = context.reconnectIVL;
@@ -155,6 +161,38 @@ public class ZmqSocketContext {
      */
     public void setBindFlag(final Boolean bindFlag) {
         this.bindFlag = bindFlag;
+    }
+
+    /**
+     * @return  return the proxy address, or NULL when NO PROXY.
+     */
+    public String getProxyAddr() {
+        return proxyAddr;
+    }
+
+    /**
+     * Set the address for "ZMQ_PROXY" for the socket.
+     * @param proxyAddr       the optional proxy address to allow ZMQ_POLLER
+     */
+    @ZmqUriParameter("proxy.proxyAddr")
+    public void setProxy(final String proxyAddr) {
+        this.proxyAddr = proxyAddr;
+    }
+
+    /**
+     * @return  return the proxy type.
+     */
+    public ZmqSocketType getProxyType() {
+        return proxyType;
+    }
+
+    /**
+     * Set the socket type for the "ZMQ_PROXY".
+     * @param proxyType       the optional proxy socket type, i.e. ROUTER
+     */
+    @ZmqUriParameter("proxy.proxyType")
+    public void setProxy(final ZmqSocketType proxyType) {
+        this.proxyType = proxyType;
     }
 
     /**
@@ -608,6 +646,7 @@ public class ZmqSocketContext {
     @Override
     public String toString() {
         return "ZmqSocketContext [addr=" + addr + ", type=" + type + ", bindFlag=" + bindFlag
-            + ", recieveMsgFlag=" + recieveMsgFlag + ", bindRetryWaitTime=" + bindRetryWaitTime + "]";
+            + ", recieveMsgFlag=" + recieveMsgFlag + ", bindRetryWaitTime=" + bindRetryWaitTime
+            + ", proxyAddr= " + proxyAddr + "]";
     }
 }

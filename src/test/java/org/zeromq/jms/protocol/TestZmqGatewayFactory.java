@@ -53,7 +53,8 @@ public class TestZmqGatewayFactory {
                    + "&socket.multicastHops=10010&socket.receiveTimeOut=10011&socket.sendTimeOut=10012"
                    + "&socket.tcpKeepAlive=10020&socket.tcpKeepAliveCount=10021&socket.tcpKeepAliveInterval=10022&socket.tcpKeepAliveIdle=10023"
                    + "&socket.sendBufferSize=10030&socket.receiveBufferSize=10031&socket.routerMandatory=true"
-                   + "&socket.xpubVerbose=true&socket.ipv4Only=true&socket.delayAttachOnConnect=true");
+                   + "&socket.xpubVerbose=true&socket.ipv4Only=true&socket.delayAttachOnConnect=true"
+                   + "&proxy.proxyAddr=tcp://*:9998&proxy.proxyType=ROUTER");
 
         destinationSchema.put(uri.getDestinationName(), uri);
         destinationSchema.put(oldUri.getDestinationName(), oldUri);
@@ -149,5 +150,8 @@ public class TestZmqGatewayFactory {
         Assert.assertEquals(Boolean.TRUE, socketContext.getXpubVerbose());
         Assert.assertEquals(Boolean.TRUE, socketContext.getIpv4Only());
         Assert.assertEquals(Boolean.TRUE, socketContext.getDelayAttachOnConnect());
+
+        Assert.assertEquals("tcp://*:9998", socketContext.getProxyAddr());
+        Assert.assertEquals(ZmqSocketType.ROUTER, socketContext.getProxyType());
     }
 }

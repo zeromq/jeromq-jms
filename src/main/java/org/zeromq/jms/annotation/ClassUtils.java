@@ -290,6 +290,7 @@ public class ClassUtils {
      * @param  config                        the instantiated class
      * @throws ReflectiveOperationException  throws reflective operation exception
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void setMethods(final Map<String, List<String>> parameters, final Object config) throws ReflectiveOperationException {
         final List<Method> methods = getMethods(config.getClass(), ZmqUriParameter.class);
 
@@ -323,6 +324,11 @@ public class ClassUtils {
                         value = paramValue.getBytes();
                     } else if (paramType.isAssignableFrom(String.class)) {
                         value = paramValue;
+                    } else if (paramType.isEnum()) {
+                        value = Enum.valueOf((Class<Enum>) paramType, paramValue);
+                    } else {
+                        throw new UnsupportedOperationException("Unable to map parameter [" + paramName + "] with value ["
+                            + paramValue + "] to required type: " + paramType);
                     }
                 }
 

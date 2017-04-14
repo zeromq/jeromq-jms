@@ -135,14 +135,14 @@ public class ZmqGatewayFactory {
             context.setAddr(uri.getOptionValue("socket.addr"));
 
             final Map<String, List<String>> socketOptions = uri.getOptions("socket");
+            final Map<String, List<String>> proxyOptions = uri.getOptions("proxy");
 
             try {
                 ClassUtils.setMethods(socketOptions, context);
+                ClassUtils.setMethods(proxyOptions, context);
             } catch (ReflectiveOperationException ex) {
                 throw new ZmqException("Unable to set 'socket' properties from URI: " + uri, ex);
             }
-
-            //setContextValues(uri, context);
         }
 
         // Validate the details

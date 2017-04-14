@@ -53,11 +53,18 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     private final ZmqSocketType type;
     private final boolean bound;
     private final String addr;
+
+    private final ZmqSocketType proxyType;
+    private final String proxyAddr;
+
     private final int flags;
     private final ZMQ.Context context;
 
     private final List<ZmqSocketMetrics> metrics;
-    private final Map<String, ZmqSocketSession> sessions;
+    private final Map<String, ZmqSocketSession> socketSessions;
+    
+    private ZmqProxySession proxySession = null; //optional proxy
+    
     private final boolean transacted;
     private final boolean acknowledge;
     private final boolean heartbeat;
@@ -76,6 +83,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
     private ExecutorService socketExecutor = null;
     private ExecutorService listenerExecutor = null;
+    private ExecutorService proxyExecutor = null;
 
     private static final int SOCKET_WAIT_MILLI_SECOND = 500;
 
@@ -141,6 +149,8 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         this.socketContext = new ZmqSocketContext(socketContext);
         this.bound = socketContext.isBindFlag();
         this.addr = socketContext.getAddr();
+        this.proxyType = socketContext.getProxyType();
+        this.proxyAddr = socketContext.getProxyAddr();
         this.flags = socketContext.getRecieveMsgFlag();
         this.filterPolicy = filter;
         this.eventHandler = handler;
@@ -155,7 +165,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         this.startDateTime = new Date();
 
         this.metrics = Collections.synchronizedList(new LinkedList<ZmqSocketMetrics>());
-        this.sessions = Collections.synchronizedMap(new HashMap<String, ZmqSocketSession>());
+        this.socketSessions = Collections.synchronizedMap(new HashMap<String, ZmqSocketSession>());
     }
 
     /**
@@ -192,10 +202,12 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
         String[] socketAddrs = getSocketAddrs();
         socketExecutor = Executors.newFixedThreadPool(socketAddrs.length);
+        proxyExecutor = Executors.newFixedThreadPool(1);
 
         final boolean socketOutgoing = (direction == Direction.OUTGOING || heartbeat || acknowledge);
         final boolean socketIncoming = (direction == Direction.INCOMING || heartbeat || acknowledge);
 
+        // Setup the ZMQ sockets
         for (String socketAddr : socketAddrs) {
             final ZMQ.Socket socket = getSocket(context, socketContext);
 
@@ -210,7 +222,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 }
             }
 
-            ZmqSocketSession socketSession = sessions.get(addr);
+            ZmqSocketSession socketSession = socketSessions.get(addr);
             // re-use socket metrics on a closed socket
             ZmqSocketMetrics socketMetrics = (socketSession != null) ? socketSession.getMetrics() : null;
 
@@ -227,10 +239,10 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 SOCKET_WAIT_MILLI_SECOND, heartbeat, acknowledge, socketListener, filterPolicy, eventHandler, socketMetrics);
 
             // override closed socket (cannot re-use)
-            sessions.put(socketAddr, socketSession);
+            socketSessions.put(socketAddr, socketSession);
             socketExecutor.execute(socketSession);
 
-            // Make sure only ONE bound session is active on startup
+            // Make sure only ONE bound session (address) is active on startup
             if (socketSession.isBound()) {
                 ZmqSocketStatus status = socketSession.getStatus();
 
@@ -242,6 +254,25 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                     status = socketSession.getStatus();
                }
             }
+        }
+
+        //Setup the ZMQ PROXY
+        if (proxyAddr != null && proxyType != null) {
+            final String proxyName = "proxy(" + name + ")";
+            final ZMQ.Socket frontSocket = getSocket(context, socketContext);
+            final ZmqSocketType frontSocketType = ZmqSocketType.ROUTER;
+            final String frontSocketAddr = proxyAddr;
+            final boolean frontSocketBound = true;
+            final ZMQ.Socket backSocket = getSocket(context, socketContext);
+            final ZmqSocketType backSocketType = ZmqSocketType.ROUTER;
+            final String backSocketAddr = addr;
+            final boolean backSocketBound = true;
+
+            proxySession =
+                new ZmqProxySession(proxyName, active,
+                    frontSocket, frontSocketType, frontSocketAddr, frontSocketBound,
+                    backSocket, backSocketType, backSocketAddr, backSocketBound);
+            socketExecutor.execute(proxySession);
         }
 
         LOGGER.info("Gateway openned: " + toString());
@@ -352,7 +383,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             // Wait for a period before warning about failed ACKS
             int totalCount = 0;
 
-            for (ZmqSocketSession socketSession : sessions.values()) {
+            for (ZmqSocketSession socketSession : socketSessions.values()) {
                 final int sessionCount = socketSession.trackedCount();
 
                 if (sessionCount > 0) {
@@ -373,7 +404,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         }
 
         // What for sockets to shut down
-        for (ZmqSocketSession socketSession : sessions.values()) {
+        for (ZmqSocketSession socketSession : socketSessions.values()) {
             ZmqSocketStatus status = socketSession.getStatus();
 
             while (status != ZmqSocketStatus.STOPPED) {
@@ -408,6 +439,19 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             }
         }
 
+        if (proxyExecutor != null) {
+            try {
+                proxyExecutor.shutdown();
+                final boolean success = proxyExecutor.awaitTermination(3, TimeUnit.SECONDS);
+
+                if (!success) {
+                    LOGGER.severe("Proxy thread failed to stop: " + toString());
+                }
+            } catch (InterruptedException ex) {
+                LOGGER.log(Level.SEVERE, "Proxy threads failed to stop: " + toString(), ex);
+            }
+        }
+
         if (socketExecutor != null) {
             try {
                 socketExecutor.shutdown();
@@ -423,7 +467,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
         // dump all tracked missing
         if (acknowledge) {
-            for (ZmqSocketSession socketSession : sessions.values()) {
+            for (ZmqSocketSession socketSession : socketSessions.values()) {
                 List<ZmqSocketSession.TrackEvent> lostEvents = socketSession.untrackAll();
                 for (ZmqSocketSession.TrackEvent lostEvent : lostEvents) {
                     // Only send events should be logged as warnings, heart-beats can be ignored.
@@ -446,7 +490,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
      */
     protected boolean socketOpen(final ZmqSocketSession source) {
         if (source.isBound()) {
-            for (ZmqSocketSession socketSession : sessions.values()) {
+            for (ZmqSocketSession socketSession : socketSessions.values()) {
                 ZmqSocketStatus status = socketSession.getStatus();
                 if (status == ZmqSocketStatus.RUNNING) {
                     return false;
@@ -958,6 +1002,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     public String toString() {
         return getClass().getCanonicalName()
             + " [active=" + active + ", name=" + name + ", type=" + type + ", isBound=" + bound + ", addr=" + addr
+            + ", proxyAddr=" + proxyAddr
             + ", transacted=" + transacted + ", acknowleged=" + acknowledge + ", heartbeat=" + heartbeat + ", direction=" + direction
             + ", eventHandler=" + eventHandler + ", journalStore=" + journalStore + "]";
     }
