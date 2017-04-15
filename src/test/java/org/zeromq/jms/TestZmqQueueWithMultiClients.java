@@ -1,5 +1,7 @@
 package org.zeromq.jms;
 
+import java.util.ArrayList;
+import java.util.List;
 /*
  * Copyright (c) 2015 Jeremy Miller
  *
@@ -53,7 +55,7 @@ public class TestZmqQueueWithMultiClients {
     private static final int CLIENT_COUNT = 10;
 
     // NOTE: Need to set high-water mark, otherwise flooding queue, and blocks, i.e. socket.setSndHwm(100000)
-    private static final int CLIENT_MESSAGE_COUNT = 5000;
+    private static final int CLIENT_MESSAGE_COUNT = 3000;
     private static final int CLIENT_MESSAGE_COMMIT_COUNT = 500;
 
     private static InitialContext context;
@@ -115,7 +117,7 @@ public class TestZmqQueueWithMultiClients {
         @Override
         public void run() {
             try {
-                LOGGER.info("Starting client: " + clientId);
+                LOGGER.info("Starting client: " + this);
 
                 final QueueConnectionFactory factory = (QueueConnectionFactory) context.lookup("java:/comp/env/jms/queueConnectionFactory_1");
                 final QueueConnection connection = factory.createQueueConnection();
@@ -144,10 +146,15 @@ public class TestZmqQueueWithMultiClients {
                     session.close();
                 }
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, "Client " + clientId + " could not send messages.", ex);
+                LOGGER.log(Level.SEVERE, "Client could not send messages: " + this, ex);
             }
 
-            LOGGER.info("Stopping client: " + clientId);
+            LOGGER.info("Stopping client: " + this);
+        }
+
+        @Override
+        public String toString() {
+            return "Client [clientId=" + clientId + ", transacted=" + transacted + "]";
         }
     }
 
@@ -213,8 +220,11 @@ public class TestZmqQueueWithMultiClients {
 
                 final ExecutorService executor = Executors.newFixedThreadPool(CLIENT_COUNT);
 
+                final List<Client> clients = new ArrayList<Client>();
                 for (int i = 0; i < CLIENT_COUNT; i++) {
+                    final Client client = new Client("CLIENT_" + i, false);
                     executor.execute(new Client("CLIENT_" + i, false));
+                    clients.add(client);
                 }
 
                 try {
@@ -225,6 +235,10 @@ public class TestZmqQueueWithMultiClients {
 
                 executor.shutdown();
                 executor.awaitTermination(10000, TimeUnit.MILLISECONDS);
+
+                for (Client client : clients) {
+                    LOGGER.info("Client state: " + client);
+                }
 
                 Assert.assertEquals(totalMessageCount, messageCount.get());
             } finally {
@@ -261,10 +275,11 @@ public class TestZmqQueueWithMultiClients {
 
                 Thread.sleep(3000);
 
+                final List<Client> clients = new ArrayList<Client>();
                 for (int i = 0; i < CLIENT_COUNT; i++) {
-                    Client client = new Client("CLIENT_" + i, true);
-
+                    final Client client = new Client("CLIENT_" + i, true);
                     new Thread(client).start();
+                    clients.add(client);
                 }
 
                 try {
@@ -274,6 +289,10 @@ public class TestZmqQueueWithMultiClients {
                 }
 
                 Thread.sleep(3000);
+
+                for (Client client : clients) {
+                    LOGGER.info("Client state: " + client);
+                }
 
                 Assert.assertEquals(totalMessageCount, messageCount.get());
             } finally {

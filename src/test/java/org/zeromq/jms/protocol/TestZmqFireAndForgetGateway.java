@@ -60,8 +60,8 @@ public class TestZmqFireAndForgetGateway {
         try {
             final ZmqTextMessage outMessage = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();
 
-            sender.open();
-            receiver.open();
+            sender.open(-1);
+            receiver.open(-1);
 
             try {
                 sender.send(outMessage);
@@ -74,8 +74,8 @@ public class TestZmqFireAndForgetGateway {
 
                 Assert.fail(ex.getMessage());
             } finally {
-                sender.close();
-                receiver.close();
+                sender.close(-1);
+                receiver.close(-1);
 
                 context.close();
             }
@@ -119,8 +119,8 @@ public class TestZmqFireAndForgetGateway {
         final ZmqGateway receiver = new ZmqFireAndForgetGateway("protocol:receiver", context, receiverContext,
                 null, handler, listener, null, null, null, true, Direction.INCOMING);
 
-        sender.open();
-        receiver.open();
+        sender.open(-1);
+        receiver.open(-1);
 
         try {
             sender.send(ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage());
@@ -141,8 +141,8 @@ public class TestZmqFireAndForgetGateway {
 
             Assert.fail(ex.getMessage());
         } finally {
-            sender.close();
-            receiver.close();
+            sender.close(-1);
+            receiver.close(-1);
 
             context.close();
         }
@@ -176,9 +176,9 @@ public class TestZmqFireAndForgetGateway {
         try {
             final ZmqTextMessage outMessage = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();
 
-            publisher.open();
-            subscriber1.open();
-            subscriber2.open();
+            publisher.open(-1);
+            subscriber1.open(-1);
+            subscriber2.open(-1);
 
             try {
                 Thread.sleep(100);
@@ -199,9 +199,9 @@ public class TestZmqFireAndForgetGateway {
 
                 Assert.fail(ex.getMessage());
             } finally {
-                publisher.close();
-                subscriber1.close();
-                subscriber2.close();
+                publisher.close(-1);
+                subscriber1.close(-1);
+                subscriber2.close(-1);
 
                 context.close();
             }
@@ -249,12 +249,10 @@ public class TestZmqFireAndForgetGateway {
             final ZmqGateway subscriber = new ZmqFireAndForgetGateway("protocol:subscriber", context, subscriberContext,
                     filter, handler, listener, null, selector, null, false, Direction.INCOMING);
 
-            publisher.open();
-            subscriber.open();
+            publisher.open(-1);
+            subscriber.open(-1);
 
             try {
-                Thread.sleep(100);
-
                 publisher.send(ZmqTextMessageBuilder.create().appendText(MESSAGE_1).appendProperty("Region", "EMEA").toMessage());
                 publisher.send(ZmqTextMessageBuilder.create().appendText(MESSAGE_2).appendProperty("Region", "APAC").toMessage());
                 publisher.send(ZmqTextMessageBuilder.create().appendText(MESSAGE_3).appendProperty("Region", "NASA").toMessage());
@@ -272,8 +270,8 @@ public class TestZmqFireAndForgetGateway {
 
                 Assert.fail(ex.getMessage());
             } finally {
-                publisher.close();
-                subscriber.close();
+                publisher.close(-1);
+                subscriber.close(-1);
 
                 context.close();
             }

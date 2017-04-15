@@ -13,7 +13,6 @@ import java.util.logging.Logger;
 import javax.jms.JMSException;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.zeromq.ZMQ;
 import org.zeromq.jms.ZmqException;
@@ -43,7 +42,7 @@ public class TestZmqParGatewayFailover {
      * Test a send and receive protocol functionality were a re-direct on fail-over.
      * @throws InterruptedException  throws interrupt exception on failed waits
      */
-    @Ignore @Test
+    @Test
     public void testFailoverWithRedirect() throws InterruptedException {
         LOGGER.info("Start Failover with Redirect test.");
 
@@ -51,15 +50,15 @@ public class TestZmqParGatewayFailover {
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
-        final ZmqSocketContext senderContext = new ZmqSocketContext(SOCKET_ADDR_1 + "," + SOCKET_ADDR_2, ZmqSocketType.DEALER, true, flags);
+        final ZmqSocketContext senderContext = new ZmqSocketContext(SOCKET_ADDR_1 + "," + SOCKET_ADDR_2, ZmqSocketType.DEALER, false, flags);
         final ZmqGateway sender = new ZmqParGateway("send12", context, senderContext,
                 null, handler, null, null, null, null, false, Direction.OUTGOING);
 
-        final ZmqSocketContext receiverContext1 = new ZmqSocketContext(SOCKET_ADDR_1, ZmqSocketType.ROUTER, false, flags);
+        final ZmqSocketContext receiverContext1 = new ZmqSocketContext(SOCKET_ADDR_1, ZmqSocketType.ROUTER, true, flags);
         final ZmqGateway receiver1 = new ZmqParGateway("recv01", context, receiverContext1,
                   null, handler, null, null, null, null, false, Direction.INCOMING);
 
-        final ZmqSocketContext receiverContext2 = new ZmqSocketContext(SOCKET_ADDR_2, ZmqSocketType.ROUTER, false, flags);
+        final ZmqSocketContext receiverContext2 = new ZmqSocketContext(SOCKET_ADDR_2, ZmqSocketType.ROUTER, true, flags);
         final ZmqGateway receiver2 = new ZmqParGateway("recv02", context, receiverContext2,
                   null, handler, null, null, null, null, false, Direction.INCOMING);
 
@@ -67,23 +66,27 @@ public class TestZmqParGatewayFailover {
             final ZmqTextMessage outMessage1 = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();
             final ZmqTextMessage outMessage2 = ZmqTextMessageBuilder.create().appendText(MESSAGE_2).toMessage();
 
-            sender.open();
+            receiver1.open(-1);
+            receiver2.open(-1);
 
-            receiver1.open();
-            receiver2.open();
+            sender.open(-1);
 
             try {
                 Stopwatch stopwatch = new Stopwatch();
 
                 sender.send(outMessage1);
 
-                ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(1000);
+                // Ensure it has a change to get to the valid active receiver
+                Thread.sleep(3000);
+
+                ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(3000);
 
                 if (inMessage1 == null) {
-                    inMessage1 = (ZmqTextMessage) receiver2.receive(1000);
-                    receiver2.close();
+                    LOGGER.info("Try receiver2 for message");
+                    inMessage1 = (ZmqTextMessage) receiver2.receive(3000);
+                    receiver2.close(-1);
                 } else {
-                    receiver1.close();
+                    receiver1.close(-1);
                 }
 
                 Assert.assertNotNull(inMessage1);
@@ -92,7 +95,7 @@ public class TestZmqParGatewayFailover {
                 // Need to ensure switch-over
                 Thread.sleep(5000);
 
-                LOGGER.info("Elapse time (msec): " + stopwatch.elapsedTime());
+                LOGGER.info("Elapse time (msec): " + stopwatch.lapsedTime());
 
                 sender.send(outMessage2);
 
@@ -113,15 +116,15 @@ public class TestZmqParGatewayFailover {
             } finally {
                 LOGGER.info("Closing sender gateway");
 
-                sender.close();
+                sender.close(-1);
 
                 LOGGER.info("Closing receiver gateway");
 
                 if (receiver1.isActive()) {
-                    receiver1.close();
+                    receiver1.close(-1);
                 }
                 if (receiver2.isActive()) {
-                    receiver2.close();
+                    receiver2.close(-1);
                 }
 
                 Thread.sleep(1000);
@@ -169,10 +172,10 @@ public class TestZmqParGatewayFailover {
 
             LOGGER.info("Open sender & receivers.");
 
-            sender.open();
+            sender.open(-1);
 
-            receiver1.open();
-            receiver2.open();
+            receiver1.open(-1);
+            receiver2.open(-1);
 
             try {
                 Stopwatch stopwatch = new Stopwatch();
@@ -194,7 +197,7 @@ public class TestZmqParGatewayFailover {
                 Assert.assertEquals(MESSAGE_1, inMessage1.getText());
 
                 LOGGER.info("Received message1: " + inMessage1);
-                LOGGER.info("Elapse time (msec): " + stopwatch.elapsedTime());
+                LOGGER.info("Elapse time (msec): " + stopwatch.lapsedTime());
 
                 dumpMetrics(sender);
                 dumpMetrics(receiver1);
@@ -204,8 +207,8 @@ public class TestZmqParGatewayFailover {
 
                 LOGGER.info("Close receivers");
 
-                receiver1.close();
-                receiver2.close();
+                receiver1.close(-1);
+                receiver2.close(-1);
 
                 Thread.sleep(3000);
 
@@ -223,7 +226,7 @@ public class TestZmqParGatewayFailover {
 
                 LOGGER.info("Open receivers1 again");
 
-                receiver1.open();
+                receiver1.open(-1);
 
                 Thread.sleep(3000);
 
@@ -233,7 +236,7 @@ public class TestZmqParGatewayFailover {
 
                 final ZmqTextMessage inMessage2 = (ZmqTextMessage) receiver1.receive(3000);
 
-                LOGGER.info("Elapse time (msec): " + stopwatch.elapsedTime());
+                LOGGER.info("Elapse time (msec): " + stopwatch.lapsedTime());
 
                 Assert.assertNotNull(inMessage2);
                 Assert.assertEquals(MESSAGE_2, inMessage2.getText());
@@ -244,8 +247,8 @@ public class TestZmqParGatewayFailover {
 
                 Assert.fail(ex.getMessage());
             } finally {
-                sender.close();
-                receiver1.close();
+                sender.close(-1);
+                receiver1.close(-1);
 
                 Thread.sleep(1000);
 

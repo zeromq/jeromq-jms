@@ -58,8 +58,8 @@ public class TestZmqFireAndForgetGatewayWithRetry {
             final ZmqTextMessage outMessage3 = ZmqTextMessageBuilder.create().appendText(MESSAGE_3).toMessage();
             final ZmqTextMessage outMessage4 = ZmqTextMessageBuilder.create().appendText(MESSAGE_4).toMessage();
 
-            sender.open();
-            receiver.open();
+            sender.open(-1);
+            receiver.open(-1);
 
             try {
                 sender.send(outMessage1);
@@ -108,8 +108,8 @@ public class TestZmqFireAndForgetGatewayWithRetry {
 
                 Assert.fail(ex.getMessage());
             } finally {
-                sender.close();
-                receiver.close();
+                sender.close(-1);
+                receiver.close(-1);
 
                 context.close();
             }

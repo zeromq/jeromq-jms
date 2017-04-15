@@ -27,9 +27,11 @@ public interface ZmqGateway {
     };
 
     /**
-     * Bind or Connect the ZMQ socket, etc...
+     * Bind or Connect the ZMQ socket, etc... This is a asynchronous, but can
+     * wait till all sockets are "open" by specify a timeout.
+     * @param timeout         the wait time out
      */
-    void open();
+    void open(int timeout);
 
     /**
      * @return  return true when socket is open.
@@ -37,9 +39,11 @@ public interface ZmqGateway {
     boolean isActive();
 
     /**
-     * Gracefully close the ZMQ socket, etc...
+     * Gracefully close the ZMQ socket, etc... This is a asynchronous, but can
+     * wait till all sockets are "closed" by specify a timeout.
+     * @param timeout         the wait time out
      */
-    void close();
+    void close(int timeout);
 
     /**
      * Start the protocol listener.

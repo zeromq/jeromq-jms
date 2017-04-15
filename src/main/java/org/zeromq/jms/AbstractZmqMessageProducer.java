@@ -1,5 +1,6 @@
 package org.zeromq.jms;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.jms.CompletionListener;
@@ -54,27 +55,27 @@ abstract class AbstractZmqMessageProducer implements MessageProducer {
 
     @Override
     public void close() throws JMSException {
+        protocol.close(-1);
 
-        protocol.close();
-
-        LOGGER.info("Message producer closed: " + protocol.getName());
+        if (LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.log(Level.FINEST, "Message producer closed: " + this, new Exception("Closing stack"));
+        } else {
+            LOGGER.info("Message producer closed: " + this);
+        }
     }
 
     @Override
     public int getDeliveryMode() throws JMSException {
-
         return deliveryMode;
     }
 
     @Override
     public Destination getDestination() throws JMSException {
-
         return destination;
     }
 
     @Override
     public boolean getDisableMessageID() throws JMSException {
-
         return disableMessageID;
     }
 
@@ -85,31 +86,27 @@ abstract class AbstractZmqMessageProducer implements MessageProducer {
 
     @Override
     public int getPriority() throws JMSException {
-
         return priority;
     }
 
     @Override
     public long getTimeToLive() throws JMSException {
-
         return timeToLive;
     }
 
     @Override
     public void send(final Message message) throws JMSException {
-
         send(destination, message);
     }
 
     @Override
     public void send(final Message message, final int deliveryMode, final int priority, final long timeToLive) throws JMSException {
-
         send(destination, message, deliveryMode, priority, timeToLive);
     }
 
     @Override
     public void send(final Destination destination, final Message message, final int deliveryMode, final int priority, final long timeToLive)
-            throws JMSException {
+        throws JMSException {
 
         message.setJMSDeliveryMode(deliveryMode);
         message.setJMSPriority(priority);
@@ -120,7 +117,6 @@ abstract class AbstractZmqMessageProducer implements MessageProducer {
 
     @Override
     public void send(final Destination destination, final Message message) throws JMSException {
-
         try {
             protocol.send((ZmqMessage) message);
         } catch (ZmqException | ZMQException ex) {
@@ -130,20 +126,16 @@ abstract class AbstractZmqMessageProducer implements MessageProducer {
 
     @Override
     public void setDeliveryMode(final int deliveryMode) throws JMSException {
-
         this.deliveryMode = deliveryMode;
-
     }
 
     @Override
     public void setDisableMessageID(final boolean disableMessageID) throws JMSException {
-
         this.disableMessageID = disableMessageID;
     }
 
     @Override
     public void setDisableMessageTimestamp(final boolean disableMessageTimestamp) throws JMSException {
-
         this.disableMessageTimestamp = disableMessageTimestamp;
     }
 
@@ -191,5 +183,12 @@ abstract class AbstractZmqMessageProducer implements MessageProducer {
     @Override
     public void setDeliveryDelay(final long deliveryDelay) throws JMSException {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String toString() {
+        return "AbstractZmqMessageProducer [protocol=" + protocol + ", deliveryMode=" + deliveryMode + ", destination="
+                + destination + ", disableMessageID=" + disableMessageID + ", disableMessageTimestamp="
+                + disableMessageTimestamp + ", priority=" + priority + ", timeToLive=" + timeToLive + "]";
     }
 }

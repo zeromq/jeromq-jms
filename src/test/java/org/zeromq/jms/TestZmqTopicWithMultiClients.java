@@ -260,6 +260,7 @@ public class TestZmqTopicWithMultiClients {
                 for (Client client : clients) {
                     LOGGER.info("Client state: " + client);
                 }
+
                 Assert.assertEquals(0, clientStoppedDownLatch.getCount());
                 Assert.assertEquals(totalMessageCount, messageCount.intValue());
             } finally {

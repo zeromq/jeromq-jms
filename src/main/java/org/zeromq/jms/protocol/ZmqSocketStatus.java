@@ -9,8 +9,34 @@ package org.zeromq.jms.protocol;
  */
 
 /**
- *  Socket status.
+ *  Socket status represents the life cycle states of a socket
  */
 public enum ZmqSocketStatus {
-    PENDING, RUNNING, PAUSED, ERROR, STOPPED;
+
+    /**
+     * Initialising the socket.
+     */
+    PENDING,
+    
+    /**
+     * Socket is running and listening to messages.
+     */
+    RUNNING,
+    
+    /**
+     * Socket has been "paused" from consuming or sending JMS message, but will
+     * still listening for heart-beats, etc.. This state is obtained when the socket
+     * could not bind to a connection, or has lost contact with the server.
+     */
+    PAUSED,
+    
+    /**
+     * Socket has had an fatal error, and is no-longer responding to any messages.
+     */
+    ERROR,
+    
+    /**
+     * Socket is is a "stop" state.
+     */
+    STOPPED;
 }

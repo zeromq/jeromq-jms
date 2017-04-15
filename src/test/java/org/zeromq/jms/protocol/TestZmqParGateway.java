@@ -53,8 +53,8 @@ public class TestZmqParGateway {
             final ZmqTextMessage outMessage2 = ZmqTextMessageBuilder.create().appendText(MESSAGE_2).toMessage();
             final ZmqTextMessage outMessage3 = ZmqTextMessageBuilder.create().appendText(MESSAGE_3).toMessage();
 
-            sender.open();
-            receiver.open();
+            sender.open(-1);
+            receiver.open(-1);
 
             try {
                 sender.send(outMessage1);
@@ -79,8 +79,8 @@ public class TestZmqParGateway {
 
                 Assert.fail(ex.getMessage());
             } finally {
-                sender.close();
-                receiver.close();
+                sender.close(-1);
+                receiver.close(-1);
 
                 context.close();
             }

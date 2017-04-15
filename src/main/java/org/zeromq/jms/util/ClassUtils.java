@@ -1,4 +1,4 @@
-package org.zeromq.jms.annotation;
+package org.zeromq.jms.util;
 
 /*
  * Copyright (c) 2015 Jeremy Miller
@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.zeromq.jms.annotation.ZmqUriParameter;
 
 /**
  * Helper class to assist in finding classes with a specified annotation.

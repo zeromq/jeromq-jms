@@ -12,6 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +46,15 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
     private static final int HEARTBEAT_RATE_MILLI_SECOND = 1000;
     private static final int AUTO_PAUSE_IDLE_MILLI_SECOND = 3000;
+
+    private static final int SOCKET_STATUS_TIMEOUT_MILLI_SECOND = 5000;
+    private static final int SOCKET_WAIT_MILLI_SECOND = 500;
+    private static final int SOCKET_METRIC_BUCKET_COUNT = 360;
+    private static final int SOCKET_METRIC_BUCKET_INTERVAL_MILLI_SECOND = 10000;
+
+    private static final int LISTENER_THREAD_POOL = 1;
+    private static final int LISTENER_WAIT_MILLI_SECOND = 500;
+
 
     private AtomicBoolean active = new AtomicBoolean(false);
 
@@ -84,14 +94,6 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     private ExecutorService socketExecutor = null;
     private ExecutorService listenerExecutor = null;
     private ExecutorService proxyExecutor = null;
-
-    private static final int SOCKET_WAIT_MILLI_SECOND = 500;
-
-    private static final int SOCKET_METRIC_BUCKET_COUNT = 360;
-    private static final int SOCKET_METRIC_BUCKET_INTERVAL_MILLI_SECOND = 10000;
-
-    private static final int LISTENER_THREAD_POOL = 1;
-    private static final int LISTENER_WAIT_MILLI_SECOND = 500;
 
     private final TransferQueue<ZmqSendEvent> incomingQueue = new LinkedTransferQueue<ZmqSendEvent>();
     private final Queue<ZmqSendEvent> incomingSnapshot = new LinkedList<ZmqSendEvent>();
@@ -176,8 +178,48 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         return addrs;
     }
 
+    /**
+     * wait for a status to change and return true, otherwise timeout and return false.
+     * @param  millis    the milliseconds to wait before giving up
+     * @param  onStatus  the set of status you are waiting for
+     * @return           return true when the status have been met
+     */
+    protected boolean waitOnStatus(final long millis, final EnumSet<ZmqSocketStatus> onStatus) {
+        final Stopwatch stopwatch = new Stopwatch();
+
+        long waitTime = SOCKET_WAIT_MILLI_SECOND;
+
+        if (millis < 0) {
+            waitTime = SOCKET_STATUS_TIMEOUT_MILLI_SECOND;
+        } else if (millis < waitTime) {
+            waitTime = millis / 2;
+        }
+        boolean success = false;
+
+        do {
+            success = true;
+
+            for (ZmqSocketSession socketSession : socketSessions.values()) {
+                final ZmqSocketStatus status = socketSession.getStatus();
+
+                if (!onStatus.contains(status)) {
+                    success = false;
+                    break;
+                }
+            }
+
+            if (success) {
+                break;
+            }
+
+            stopwatch.sleep(waitTime);
+        } while (stopwatch.before(millis));
+
+        return success;
+    }
+
     @Override
-    public void open() {
+    public void open(final int timeout) {
         if (active.get()) {
             return;
         }
@@ -274,6 +316,9 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                     backSocket, backSocketType, backSocketAddr, backSocketBound);
             socketExecutor.execute(proxySession);
         }
+
+        waitOnStatus(timeout,
+            EnumSet.of(ZmqSocketStatus.RUNNING, ZmqSocketStatus.PAUSED, ZmqSocketStatus.ERROR));
 
         LOGGER.info("Gateway openned: " + toString());
     }
@@ -376,7 +421,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     }
 
     @Override
-    public void close() {
+    public void close(final int timeout) {
         active.set(false);
 
         if (acknowledge) {
@@ -404,19 +449,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         }
 
         // What for sockets to shut down
-        for (ZmqSocketSession socketSession : socketSessions.values()) {
-            ZmqSocketStatus status = socketSession.getStatus();
-
-            while (status != ZmqSocketStatus.STOPPED) {
-                try {
-                    Thread.sleep(SOCKET_WAIT_MILLI_SECOND);
-                } catch (InterruptedException ex) {
-                    LOGGER.throwing(AbstractZmqGateway.class.getCanonicalName(), "close()", ex);
-                }
-
-                status = socketSession.getStatus();
-            }
-        }
+        waitOnStatus(timeout, EnumSet.of(ZmqSocketStatus.STOPPED));
 
         if (journalStore != null) {
             try {
@@ -806,8 +839,8 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
         if (LOGGER.isLoggable(Level.FINER)) {
             stopwatch = new Stopwatch();
-
         }
+
         if (!active.get()) {
             throw new ZmqException("Receive request, buy gateway has been close: " + toString());
         }
@@ -826,7 +859,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 }
 
                 if (stopwatch != null) {
-                    LOGGER.log(Level.FINER, "Receive re-delivery message: " + stopwatch.elapsedTime() + " (msec) :" + toString());
+                    LOGGER.log(Level.FINER, "Receive re-delivery message: " + stopwatch.lapsedTime() + " (msec) :" + toString());
                 }
 
                 return message;
@@ -874,7 +907,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                     }
 
                     if (stopwatch != null) {
-                        LOGGER.log(Level.FINER, "Gateway [" + name + "] receive incoming message: " + stopwatch.elapsedTime() + " (msec)");
+                        LOGGER.log(Level.FINER, "Gateway [" + name + "] receive incoming message: " + stopwatch.lapsedTime() + " (msec)");
                     }
 
                     return message;
@@ -894,9 +927,9 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
             if (stopwatch != null) {
                 if (message == null) {
-                    LOGGER.log(Level.FINER, "Gateway  [" + name + "] receive incoming message (Wait): " + stopwatch.elapsedTime() + " (msec)");
+                    LOGGER.log(Level.FINER, "Gateway  [" + name + "] receive incoming message (Wait): " + stopwatch.lapsedTime() + " (msec)");
                 } else {
-                    LOGGER.log(Level.FINER, "Gatewau  [" + name + "] receive no message (Timeout): " + stopwatch.elapsedTime() + " (msec)");
+                    LOGGER.log(Level.FINER, "Gatewau  [" + name + "] receive no message (Timeout): " + stopwatch.lapsedTime() + " (msec)");
                 }
             }
 

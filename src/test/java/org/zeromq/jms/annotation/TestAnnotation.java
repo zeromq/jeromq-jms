@@ -19,6 +19,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.zeromq.jms.protocol.ZmqParGateway;
 import org.zeromq.jms.protocol.redelivery.ZmqRetryRedeliveryPolicy;
+import org.zeromq.jms.util.ClassUtils;
 
 /**
  * Test Zero MQ annotation functionality.

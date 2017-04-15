@@ -25,7 +25,6 @@ import org.zeromq.jms.AbstractZmqDestination;
 import org.zeromq.jms.ZmqException;
 import org.zeromq.jms.ZmqSession;
 import org.zeromq.jms.ZmqURI;
-import org.zeromq.jms.annotation.ClassUtils;
 import org.zeromq.jms.annotation.ZmqComponent;
 import org.zeromq.jms.protocol.event.ZmqEventHandler;
 import org.zeromq.jms.protocol.event.ZmqStompEventHandler;
@@ -36,6 +35,7 @@ import org.zeromq.jms.protocol.redelivery.ZmqRetryRedeliveryPolicy;
 import org.zeromq.jms.protocol.store.ZmqJournalStore;
 import org.zeromq.jms.selector.ZmqMessageSelector;
 import org.zeromq.jms.selector.ZmqMessageSelectorFactory;
+import org.zeromq.jms.util.ClassUtils;
 
 /**
  * Factory class for returning a protocol instance.

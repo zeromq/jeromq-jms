@@ -1,5 +1,6 @@
 package org.zeromq.jms;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /*
@@ -66,10 +67,13 @@ abstract class AbstractZmqMessageConsumer implements MessageConsumer {
 
     @Override
     public void close() throws JMSException {
+        protocol.close(-1);
 
-        protocol.close();
-
-        LOGGER.info("Message commumer closed: " + protocol.getName());
+        if (LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.log(Level.FINEST, "Message commumer closed: " + this, new Exception("Closing stack"));
+        } else {
+            LOGGER.info("Message commumer closed: " + this);
+        }
     }
 
     @Override
@@ -134,5 +138,11 @@ abstract class AbstractZmqMessageConsumer implements MessageConsumer {
         };
 
         protocol.setListener(protcolListener);
+    }
+
+    @Override
+    public String toString() {
+        return "AbstractZmqMessageConsumer [protocol=" + protocol + ", destination=" + destination
+                + ", messageSelector=" + messageSelector + "]";
     }
 }

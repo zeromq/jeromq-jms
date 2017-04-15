@@ -109,7 +109,7 @@ public class ZmqSession implements QueueSession, TopicSession {
     protected void open(final ZMQ.Context context, final ZmqGateway gateway) throws JMSException {
 
         try {
-            gateway.open();
+            gateway.open(-1);
 
             List<ObjectName> objectNames = ZmqMBeanUtils.register(gateway);
 
@@ -133,7 +133,7 @@ public class ZmqSession implements QueueSession, TopicSession {
         synchronized (gateways) {
             for (ZmqGateway gateway : gateways) {
                 if (gateway.isActive()) {
-                    gateway.close();
+                    gateway.close(-1);
                 }
             }
 
@@ -152,7 +152,11 @@ public class ZmqSession implements QueueSession, TopicSession {
 
         mbeanNames.clear();
 
-        LOGGER.info("Session closed");
+        if (LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.log(Level.FINEST, "Session closed: " + this, new Exception("Closing stack"));
+        } else {
+            LOGGER.info("Session closed: " + this);
+        }
     }
 
     @Override

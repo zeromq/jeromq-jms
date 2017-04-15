@@ -69,9 +69,9 @@ public class TestZmqParGatewayRecovery {
             final ZmqTextMessage outMessage3 = ZmqTextMessageBuilder.create().appendText(MESSAGE_3).toMessage();
 
             try {
-                receiver1.open();
+                receiver1.open(-1);
 
-                sender.open();
+                sender.open(-1);
                 sender.send(outMessage1);
 
                 ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(5000);
@@ -80,13 +80,13 @@ public class TestZmqParGatewayRecovery {
                 Assert.assertEquals(MESSAGE_1, inMessage1.getText());
 
                 LOGGER.info("Open gateways 3");
-                receiver2.open();
+                receiver2.open(-1);
                 // Ensure socket2 gets the binding
                 Thread.sleep(3000);
-                receiver3.open();
+                receiver3.open(-1);
 
                 LOGGER.info("Closing gateways 1");
-                receiver1.close();
+                receiver1.close(-1);
 
                 LOGGER.info("Send message 2");
                 sender.send(outMessage2);
@@ -125,7 +125,7 @@ public class TestZmqParGatewayRecovery {
 
                 Assert.assertNull(inMessage3);
 
-                receiver3.close();
+                receiver3.close(-1);
             } catch (AssertionError ex) {
                 throw ex;
             } catch (RuntimeException ex) {
@@ -135,11 +135,11 @@ public class TestZmqParGatewayRecovery {
             } finally {
                 LOGGER.info("Closing gateways (sender & 3)");
 
-                sender.close();
+                sender.close(-1);
 
-                receiver1.close();
-                receiver2.close();
-                receiver3.close();
+                receiver1.close(-1);
+                receiver2.close(-1);
+                receiver3.close(-1);
 
                 LOGGER.info("Closing context");
 
@@ -175,21 +175,21 @@ public class TestZmqParGatewayRecovery {
         final ZmqGateway receiver3 = new ZmqParGateway("recv3", context2, receiverContext,
                 null, handler, null, null, null, null, false, Direction.INCOMING);
 
-        receiver1.open();
-        receiver2.open();
+        receiver1.open(-1);
+        receiver2.open(-1);
 
         Thread.sleep(3000);
 
-        receiver3.open();
+        receiver3.open(-1);
 
         Thread.sleep(3000);
 
-        receiver1.close();
+        receiver1.close(-1);
 
         Thread.sleep(5000);
 
-        receiver2.close();
-        receiver3.close();
+        receiver2.close(-1);
+        receiver3.close(-1);
 
         context1.close();
         context2.close();
