@@ -64,9 +64,6 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     private final boolean bound;
     private final String addr;
 
-    private final ZmqSocketType proxyType;
-    private final String proxyAddr;
-
     private final int flags;
     private final ZMQ.Context context;
 
@@ -151,8 +148,6 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         this.socketContext = new ZmqSocketContext(socketContext);
         this.bound = socketContext.isBindFlag();
         this.addr = socketContext.getAddr();
-        this.proxyType = socketContext.getProxyType();
-        this.proxyAddr = socketContext.getProxyAddr();
         this.flags = socketContext.getRecieveMsgFlag();
         this.filterPolicy = filter;
         this.eventHandler = handler;
@@ -244,7 +239,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
         String[] socketAddrs = getSocketAddrs();
         socketExecutor = Executors.newFixedThreadPool(socketAddrs.length);
-        proxyExecutor = Executors.newFixedThreadPool(1);
+        proxyExecutor = (socketContext.isProxy()) ? Executors.newFixedThreadPool(1) : null;
 
         final boolean socketOutgoing = (direction == Direction.OUTGOING || heartbeat || acknowledge);
         final boolean socketIncoming = (direction == Direction.INCOMING || heartbeat || acknowledge);
@@ -299,22 +294,22 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         }
 
         //Setup the ZMQ PROXY
-        if (proxyAddr != null && proxyType != null) {
+        if (socketContext.isProxy()) {
             final String proxyName = "proxy(" + name + ")";
-            final ZMQ.Socket frontSocket = getSocket(context, socketContext);
-            final ZmqSocketType frontSocketType = ZmqSocketType.ROUTER;
-            final String frontSocketAddr = proxyAddr;
+            final String frontSocketAddr = socketContext.getProxyAddr();
+            final ZmqSocketType frontSocketType = (socketContext.getProxyType() == null) ? ZmqSocketType.ROUTER : socketContext.getProxyType();
             final boolean frontSocketBound = true;
-            final ZMQ.Socket backSocket = getSocket(context, socketContext);
-            final ZmqSocketType backSocketType = ZmqSocketType.ROUTER;
+            final ZMQ.Socket frontSocket = context.socket(frontSocketType.getType());
             final String backSocketAddr = addr;
+            final ZmqSocketType backSocketType = (socketContext.getOutProxyType() == null) ? ZmqSocketType.DEALER : socketContext.getOutProxyType();
             final boolean backSocketBound = true;
+            final ZMQ.Socket backSocket =  context.socket(backSocketType.getType());
 
             proxySession =
                 new ZmqProxySession(proxyName, active,
                     frontSocket, frontSocketType, frontSocketAddr, frontSocketBound,
                     backSocket, backSocketType, backSocketAddr, backSocketBound);
-            socketExecutor.execute(proxySession);
+            proxyExecutor.execute(proxySession);
         }
 
         waitOnStatus(timeout,
@@ -478,7 +473,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 final boolean success = proxyExecutor.awaitTermination(3, TimeUnit.SECONDS);
 
                 if (!success) {
-                    LOGGER.severe("Proxy thread failed to stop: " + toString());
+                    LOGGER.warning("Proxy thread fails to stop, until context terminated (ZMQ issue): " + toString());
                 }
             } catch (InterruptedException ex) {
                 LOGGER.log(Level.SEVERE, "Proxy threads failed to stop: " + toString(), ex);
@@ -1038,7 +1033,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     public String toString() {
         return getClass().getCanonicalName()
             + " [active=" + active + ", name=" + name + ", type=" + type + ", isBound=" + bound + ", addr=" + addr
-            + ", proxyAddr=" + proxyAddr
+            + ", proxyAddr=" + socketContext.getProxyAddr()
             + ", transacted=" + transacted + ", acknowleged=" + acknowledge + ", heartbeat=" + heartbeat + ", direction=" + direction
             + ", eventHandler=" + eventHandler + ", journalStore=" + journalStore + "]";
     }

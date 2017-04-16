@@ -14,6 +14,8 @@ import java.util.logging.Logger;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
+import zmq.ZError;
+
 /**
  * This is the session class for the ZMQ PROXY. It has it's own thread, and is not
  * thread safe.
@@ -46,16 +48,14 @@ public class ZmqProxySession implements Runnable {
      * @param frontSocketType   the front socket type
      * @param frontSocketAddr   the front socket address
      * @param frontSocketBound  the front socket "bind" indicator
-     * @param backSocket        the back socket
+     * @param backSocket        the front socket
      * @param backSocketType    the back socket type
      * @param backSocketAddr    the back socket address
      * @param backSocketBound   the back socket "bind" indicator
      */
     public ZmqProxySession(final String name, final AtomicBoolean active,
-        final ZMQ.Socket frontSocket, final ZmqSocketType frontSocketType,
-        final String frontSocketAddr, final boolean frontSocketBound,
-        final ZMQ.Socket backSocket, final ZmqSocketType backSocketType,
-        final String backSocketAddr, final boolean backSocketBound) {
+        final ZMQ.Socket frontSocket, final ZmqSocketType frontSocketType, final String frontSocketAddr, final boolean frontSocketBound,
+        final ZMQ.Socket backSocket, final ZmqSocketType backSocketType, final String backSocketAddr, final boolean backSocketBound) {
 
         this.active = active;
         this.name = name;
@@ -87,6 +87,7 @@ public class ZmqProxySession implements Runnable {
     @Override
     public void run() {
         setStatus(ZmqSocketStatus.PENDING);
+
 
         // NOTE: Open sockets "Back to Front" to ensure message start flowing
         //       only when the backend is active.
@@ -122,6 +123,22 @@ public class ZmqProxySession implements Runnable {
             }
         } while (status == ZmqSocketStatus.PAUSED && active.get());
 
+        // Keep running until told to stop
+        if (status == ZmqSocketStatus.RUNNING && active.get()) {
+            // Run the proxy until the user interrupts us
+            ZMQ.proxy(frontSocket, backSocket, null);
+
+            while (active.get()) {
+                // Sleep and retry to bind again
+                try {
+                    Thread.sleep(SOCKET_RETRY_MILLI_SECOND);
+                } catch (InterruptedException ex) {
+                }
+            }
+        }
+
+
+        // Close down the proxy
         closeSocket(frontSocket, frontSocketAddr, frontSocketBound);
         closeSocket(backSocket, backSocketAddr, backSocketBound);
 
@@ -147,26 +164,33 @@ public class ZmqProxySession implements Runnable {
 
         if (socketBound) {
             try {
-                socket.setLinger(0);
-                socket.unbind(socketAddr);
+                try {
+                    socket.setLinger(0);
+                } catch (ZError.CtxTerminatedException e) {
+                }
+
+                try {
+                    socket.unbind(socketAddr);
+                } catch (ZError.CtxTerminatedException e) {
+                }
                 socket.close();
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, "Socketing unbind failure: " + this, ex);
+                LOGGER.log(Level.SEVERE, "Proxy [" + socketAddr + "] unbind failure: " + this, ex);
                 throw ex;
             }
 
-            LOGGER.info("Unbind socket successful: " + this);
+            LOGGER.info("Unbind Proxy [" + socket + "] successful: " + this);
         } else {
             try {
-                socket.setLinger(0);
+                //socket.setLinger(0);
                 socket.disconnect(socketAddr);
                 socket.close();
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, "Socket disconnect failure: " + this, ex);
+                LOGGER.log(Level.SEVERE, "Proxy [" + socketAddr + "] disconnect failure: " + this, ex);
                 throw ex;
             }
 
-            LOGGER.info("Disconnect socket successful: " + this);
+            LOGGER.info("Disconnect Proxy [" + socketAddr + "] successful: " + this);
         }
 
         setStatus(ZmqSocketStatus.STOPPED);
@@ -190,27 +214,27 @@ public class ZmqProxySession implements Runnable {
             } catch (ZMQException ex) {
                 if (ex.getErrorCode() == 48) {
                     setStatus(ZmqSocketStatus.PAUSED);
-                    LOGGER.info("Bind socket UNSUCCESSFUL (Already Bound): " + this);
+                    LOGGER.info("Proxy [" + socketAddr + "] socket UNSUCCESSFUL (Already Bound): " + this);
 
                     return getStatus();
                 }
 
-                LOGGER.log(Level.SEVERE, "Socket binding failure: " + this);
+                LOGGER.log(Level.SEVERE, "Proxy [" + socketAddr + "] binding failure: " + this);
                 setStatus(ZmqSocketStatus.ERROR);
                 throw ex;
             }
 
-            LOGGER.info("Bind socket successful: " + this);
+            LOGGER.info("Bind proxy [" + socketAddr + "] successful: " + this);
         } else {
             try {
                 socket.connect(socketAddr);
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, "Socket connect failure: " + this, ex);
+                LOGGER.log(Level.SEVERE, "Proxy [" + socketAddr + "] connect failure: " + this, ex);
                 setStatus(ZmqSocketStatus.ERROR);
                 throw ex;
             }
 
-            LOGGER.info("Connect socket successful: " + this);
+            LOGGER.info("Connect Proxy [" + socketAddr + "] successful: " + this);
         }
 
         setStatus(ZmqSocketStatus.RUNNING);

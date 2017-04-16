@@ -47,7 +47,7 @@ public class TestZmqUri {
         Assert.assertEquals("Destination type not found :" + uri, "queue_2", uri.getDestinationName());
         Assert.assertEquals("Missing gateway :" + uri, "fireAndForget", uri.getOptionValue("gateway"));
         Assert.assertEquals("Missing default value [redelivery]:" + uri, "retry", uri.getOptionValue("redelivery", "retry"));
-        Assert.assertEquals("Missing value [gateway.addr]:" + uri, "tcp://*:9586", uri.getOptionValues("gateway.addr")[0]);
+        Assert.assertEquals("Missing value [socket.addr]:" + uri, "tcp://*:9586", uri.getOptionValues("socket.addr")[0]);
         Assert.assertEquals("Missing value [redelivery.retry]:" + uri, "3", uri.getOptionValues("redelivery.retry")[0]);
         Assert.assertEquals("Missing default value [redelivery.backout]:" + uri, "DLQ",
                 uri.getOptionValues("redelivery.backout", new String[] { "DLQ" })[0]);
@@ -63,7 +63,7 @@ public class TestZmqUri {
 
         Assert.assertEquals("Scheme not found :" + uri, "jms", uri.getScheme());
         Assert.assertEquals("Missing gateway :" + uri, "par", uri.getOptionValue("gateway"));
-        Assert.assertEquals("Missing value [gateway.addr]:" + uri, "inproc://lat_test", uri.getOptionValues("gateway.addr")[0]);
+        Assert.assertEquals("Missing value [socket.addr]:" + uri, "inproc://lat_test", uri.getOptionValues("socket.addr")[0]);
     }
 
     /**

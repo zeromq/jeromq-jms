@@ -13,8 +13,9 @@ public class ZmqSocketContext {
     private Long bindRetryWaitTime;
     private Integer recieveMsgFlag;
 
-    private ZmqSocketType proxyType;
     private String proxyAddr;
+    private ZmqSocketType proxyType;
+    private ZmqSocketType proxyOutType;
 
     private Long linger;
     private Long reconnectIVL;
@@ -164,6 +165,13 @@ public class ZmqSocketContext {
     }
 
     /**
+     * @return  return true when context has proxy setup details.
+     */
+    public boolean isProxy() {
+        return (proxyAddr != null);
+    }
+
+    /**
      * @return  return the proxy address, or NULL when NO PROXY.
      */
     public String getProxyAddr() {
@@ -175,12 +183,12 @@ public class ZmqSocketContext {
      * @param proxyAddr       the optional proxy address to allow ZMQ_POLLER
      */
     @ZmqUriParameter("proxy.proxyAddr")
-    public void setProxy(final String proxyAddr) {
+    public void setProxyAddr(final String proxyAddr) {
         this.proxyAddr = proxyAddr;
     }
 
     /**
-     * @return  return the proxy type.
+     * @return  return the proxy socket type.
      */
     public ZmqSocketType getProxyType() {
         return proxyType;
@@ -191,8 +199,24 @@ public class ZmqSocketContext {
      * @param proxyType       the optional proxy socket type, i.e. ROUTER
      */
     @ZmqUriParameter("proxy.proxyType")
-    public void setProxy(final ZmqSocketType proxyType) {
+    public void setProxyType(final ZmqSocketType proxyType) {
         this.proxyType = proxyType;
+    }
+
+    /**
+     * @return  return the proxy outgoing socket type.
+     */
+    public ZmqSocketType getOutProxyType() {
+        return proxyOutType;
+    }
+
+    /**
+     * Set the outgoing socket type for the "ZMQ_PROXY".
+     * @param proxyOutType    the optional proxy socket type, i.e. DEALER
+     */
+    @ZmqUriParameter("proxy.proxyOutType")
+    public void setProxyOutType(final ZmqSocketType proxyOutType) {
+        this.proxyOutType = proxyOutType;
     }
 
     /**

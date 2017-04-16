@@ -1,5 +1,4 @@
 package org.zeromq.jms.protocol.event;
-
 /*
  * Copyright (c) 2015 Jeremy Miller
  *
@@ -7,12 +6,13 @@ package org.zeromq.jms.protocol.event;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.Format;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -376,32 +376,28 @@ public class ZmqStompEventHandler implements ZmqEventHandler {
 
     @Override
     public ZmqEvent createEvent(final ZmqSocketType socketType, final ZMsg msg) throws ZmqException {
-        ZFrame address = null;
+        if (msg.contentSize() == 0) {
+            return null;
+        }
 
-        switch (socketType) {
-        case SUB:
-            msg.unwrap(); // remove subscription
-            break;
+        LinkedList<ZFrame> msgFrames = new LinkedList<ZFrame>();
+        ZFrame msgFrame = msg.pop();
 
-        case ROUTER:
-        case REP:
-            address = msg.unwrap(); // get address
-            break;
-
-        case DEALER:
-            // msg.unwrap(); // remove null frame
-            break;
-
-        default:
+        // Get all address hops and actual data message
+        while (msgFrame != null) {
+            if (msgFrame.hasData()) {
+                msgFrames.add(msgFrame);
+            }
+            msgFrame = msg.pop();
         }
 
         ZmqEvent event = null;
 
-        final Iterator<ZFrame> msgFrameEnum = msg.iterator();
-
-        while (msgFrameEnum.hasNext()) {
-            final ZFrame msgFrame = msgFrameEnum.next();
-            final byte[] msgFrameData = msgFrame.getData();
+        // The last is always the data messages, others are optional address hops
+        // see:  http://zguide.zeromq.org/php:chapter3
+        if (msgFrames.size() > 0) {
+            final ZFrame address = msgFrames.size() > 1 ? msgFrames.getFirst() : null;
+            final byte[] msgFrameData = msgFrames.getLast().getData();
 
             try {
                 final String rawMessage = new String(msgFrameData, charset);

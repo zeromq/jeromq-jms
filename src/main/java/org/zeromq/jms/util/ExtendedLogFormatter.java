@@ -43,7 +43,7 @@ public class ExtendedLogFormatter extends Formatter {
             arguments[4] = stringWriter.toString();
         }
 
-        return String.format("%1$tF %1$tT:%1$tL %2$7s --- [%3$16s] %4$-60s : %5$s\n", arguments);
+        return String.format("%1$tF %1$tT:%1$tL %2$7s --- [%3$17s] %4$-60s : %5$s\n", arguments);
     }
 
     /**

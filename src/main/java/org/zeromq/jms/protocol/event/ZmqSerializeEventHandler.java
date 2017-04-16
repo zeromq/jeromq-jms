@@ -7,6 +7,7 @@ package org.zeromq.jms.protocol.event;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,7 +15,7 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -167,23 +168,25 @@ public class ZmqSerializeEventHandler implements ZmqEventHandler {
 
     @Override
     public ZmqEvent createEvent(final ZmqSocketType socketType, final ZMsg msg) throws ZmqException {
-        switch (socketType) {
-        case SUB:
-        case ROUTER:
-        case REP:
-        case DEALER:
-            msg.unwrap(); // remove null frame
-            break;
-
-        default:
+        if (msg.contentSize() == 0) {
+            return null;
         }
 
-        final Iterator<ZFrame> msgFrameEnum = msg.iterator();
+        LinkedList<ZFrame> msgFrames = new LinkedList<ZFrame>();
+        ZFrame msgFrame = msg.pop();
 
-        while (msgFrameEnum.hasNext()) {
-            final ZFrame msgFrame = msgFrameEnum.next();
-            final byte[] msgFrameData = msgFrame.getData();
+        // Get all address hops and actual data message
+        while (msgFrame != null) {
+            if (msgFrame.hasData()) {
+                msgFrames.add(msgFrame);
+            }
+            msgFrame = msg.pop();
+        }
 
+        // The last is always the data messages, others are optional address hops
+        // see:  http://zguide.zeromq.org/php:chapter3
+        if (msgFrames.size() > 0) {
+            final byte[] msgFrameData = msgFrames.getLast().getData();
             final ByteArrayInputStream byteArrayInput = new ByteArrayInputStream(msgFrameData);
             try {
                 final ObjectInput objectInput = new ObjectInputStream(byteArrayInput);

@@ -36,7 +36,7 @@ public class TestAnnotation {
     public void testFindClassesUnderPackage() throws ClassNotFoundException, IOException {
         final List<Class<?>> classes = ClassUtils.getClasses("org.zeromq.jms.protocol");
 
-        Assert.assertEquals(47, classes.size());
+        Assert.assertEquals(50, classes.size());
     }
 
     /**
