@@ -28,8 +28,7 @@ public class TestZmqGatewayWithProxy {
     private static final String SOCKET_SERVER_ADDR = "tcp://*:9733";
 
     private static final String MESSAGE_1 = "this is the text message 1";
-    //private static final String MESSAGE_2 = "this is the text message 2";
-    //private static final String MESSAGE_3 = "this is the text message 3";
+    private static final String MESSAGE_2 = "this is the text message 2";
 
     /**
      * Test a n-1-n scenario were both "n"s are connecting and the proxy is bound.
@@ -56,24 +55,36 @@ public class TestZmqGatewayWithProxy {
 
         try {
             final ZmqTextMessage outMessage1 = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();
+            final ZmqTextMessage outMessage2 = ZmqTextMessageBuilder.create().appendText(MESSAGE_2).toMessage();
 
             receiver1.open(-1);
-            //receiver2.open(-1);
+            receiver2.open(-1);
 
             sender1.open(-1);
-            //sender2.open(-1);
+            sender2.open(-1);
 
             try {
                 sender1.send(outMessage1);
 
                 ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(1000);
 
-                //if (inMessage1 == null) {
-                //    inMessage1 = (ZmqTextMessage) receiver2.receive(1000);
-                //}
+                if (inMessage1 == null) {
+                    inMessage1 = (ZmqTextMessage) receiver2.receive(1000);
+                }
 
                 Assert.assertNotNull(inMessage1);
                 Assert.assertEquals(MESSAGE_1, inMessage1.getText());
+
+                sender1.send(outMessage2);
+
+                ZmqTextMessage inMessage2 = (ZmqTextMessage) receiver1.receive(1000);
+
+                if (inMessage2 == null) {
+                    inMessage2 = (ZmqTextMessage) receiver2.receive(1000);
+                }
+
+                Assert.assertNotNull(inMessage2);
+                Assert.assertEquals(MESSAGE_2, inMessage2.getText());
             } catch (ZmqException ex) {
                 ex.printStackTrace();
 
