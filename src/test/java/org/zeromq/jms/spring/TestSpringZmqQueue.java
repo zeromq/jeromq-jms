@@ -1,4 +1,4 @@
-package org.zeromq.jms;
+package org.zeromq.jms.spring;
 
 /*
  * Copyright (c) 2015 Jeremy Miller
@@ -22,6 +22,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.zeromq.jms.TestMessageListener;
 
 /**
  * Test Zero MQ Queues work with the spring frame work.

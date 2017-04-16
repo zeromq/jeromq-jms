@@ -14,8 +14,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 import org.zeromq.jms.protocol.ZmqParGateway;
 import org.zeromq.jms.protocol.redelivery.ZmqRetryRedeliveryPolicy;
@@ -36,7 +35,7 @@ public class TestAnnotation {
     public void testFindClassesUnderPackage() throws ClassNotFoundException, IOException {
         final List<Class<?>> classes = ClassUtils.getClasses("org.zeromq.jms.protocol");
 
-        Assert.assertEquals(50, classes.size());
+        Assert.assertEquals(49, classes.size());
     }
 
     /**

@@ -51,9 +51,9 @@
     <version.java>1.7</version.java>
     <version.jeromq>0.4.0</version.jeromq>
     <version.jms>2.0.1</version.jms>
-    <version.junit>4.10</version.junit>
-    <version.spring>4.1.1.RELEASE</version.spring>
-    <version.tomcat-catalina>8.0.23</version.tomcat-catalina>
+    <version.junit>4.12</version.junit>
+    <version.spring>4.2.5.RELEASE</version.spring>
+    <version.tomcat-catalina>8.5.13</version.tomcat-catalina>
 
 	<checkstyle.config.location>src/checkstyle.xml</checkstyle.config.location>
     <!--

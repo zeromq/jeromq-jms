@@ -9,10 +9,8 @@ package org.zeromq.jms;
  */
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,7 +40,6 @@ import javax.jms.TopicSession;
 import javax.jms.TopicSubscriber;
 import javax.management.ObjectName;
 
-import org.zeromq.ZMQ;
 import org.zeromq.jms.jmx.ZmqMBeanUtils;
 import org.zeromq.jms.protocol.ZmqGateway;
 import org.zeromq.jms.protocol.ZmqGatewayFactory;
@@ -60,13 +57,11 @@ public class ZmqSession implements QueueSession, TopicSession {
     private final int acknowledgeMode;
     private final ExceptionListener exceptionHandler;
     private final List<ZmqGateway> gateways = new ArrayList<ZmqGateway>();
-    private final Set<ZMQ.Context> contexts = new HashSet<ZMQ.Context>();
 
     private static AtomicInteger gatewayProducerCount = new AtomicInteger(0);
     private static AtomicInteger gatewayConsumerCount = new AtomicInteger(0);
 
     private final ZmqGatewayFactory gatewayFactory;
-    private ZMQ.Context defaultContext = ZMQ.context(1);
 
     private final List<ObjectName> mbeanNames = new ArrayList<ObjectName>();
 
@@ -90,23 +85,11 @@ public class ZmqSession implements QueueSession, TopicSession {
     }
 
     /**
-     * Determine weather to re-uses existing context.
-     * @param   destination  the destination
-     * @return               return the context
-     */
-    protected ZMQ.Context getContext(final AbstractZmqDestination destination) {
-        final ZMQ.Context context = defaultContext;
-
-        return context;
-    }
-
-    /**
      * Bind to a Zero MQ socket(s) to the address under specified within the gateway.
-     * @param  context       the Zero MQ context
      * @param  gateway       the gateway containing the Zero MQ socket(s) to be bind
      * @throws JMSException  throws JMX exception
      */
-    protected void open(final ZMQ.Context context, final ZmqGateway gateway) throws JMSException {
+    protected void open(final ZmqGateway gateway) throws JMSException {
 
         try {
             gateway.open(-1);
@@ -119,7 +102,6 @@ public class ZmqSession implements QueueSession, TopicSession {
 
             synchronized (gateways) {
                 gateways.add(gateway);
-                contexts.add(context);
             }
         } catch (RuntimeException ex) {
             LOGGER.log(Level.SEVERE, "Unable to open to ZMQ gateway: " + gateway, ex);
@@ -138,12 +120,6 @@ public class ZmqSession implements QueueSession, TopicSession {
             }
 
             gateways.clear();
-
-            for (ZMQ.Context context : contexts) {
-                context.close();
-            }
-
-            contexts.clear();
         }
 
         for (ObjectName objectName : mbeanNames) {
@@ -458,12 +434,11 @@ public class ZmqSession implements QueueSession, TopicSession {
 
         final ZmqQueue zmqQueue = (ZmqQueue) queue;
         final boolean transacted = getTransacted();
-        final ZMQ.Context context = getContext(zmqQueue);
         final String prefixName = "receiver-" + gatewayConsumerCount.incrementAndGet();
-        final ZmqGateway gateway = gatewayFactory.newConsumerGateway(prefixName, zmqQueue, context, ZmqSocketType.PULL, true, messageSelector,
+        final ZmqGateway gateway = gatewayFactory.newConsumerGateway(prefixName, zmqQueue, ZmqSocketType.PULL, true, messageSelector,
                 transacted);
 
-        open(context, gateway);
+        open(gateway);
 
         final QueueReceiver reciever = new ZmqQueueReciever(gateway, queue, messageSelector, exceptionHandler);
 
@@ -477,11 +452,10 @@ public class ZmqSession implements QueueSession, TopicSession {
 
         final ZmqQueue zmqQueue = (ZmqQueue) queue;
         final boolean transacted = getTransacted();
-        final ZMQ.Context context = getContext(zmqQueue);
         final String prefixName = "sender-" + gatewayProducerCount.incrementAndGet();
-        final ZmqGateway gateway = gatewayFactory.newProducerGateway(prefixName, zmqQueue, context, ZmqSocketType.PUSH, false, transacted);
+        final ZmqGateway gateway = gatewayFactory.newProducerGateway(prefixName, zmqQueue, ZmqSocketType.PUSH, false, transacted);
 
-        open(context, gateway);
+        open(gateway);
 
         QueueSender sender = new ZmqQueueSender(gateway, queue);
 
@@ -495,11 +469,10 @@ public class ZmqSession implements QueueSession, TopicSession {
 
         final ZmqTopic zmqTopic = (ZmqTopic) topic;
         final boolean transacted = getTransacted();
-        final ZMQ.Context context = getContext(zmqTopic);
         final String prefixName = "publisher-" + gatewayProducerCount.incrementAndGet();
-        final ZmqGateway gateway = gatewayFactory.newProducerGateway(prefixName, zmqTopic, context, ZmqSocketType.PUB, true, transacted);
+        final ZmqGateway gateway = gatewayFactory.newProducerGateway(prefixName, zmqTopic, ZmqSocketType.PUB, true, transacted);
 
-        open(context, gateway);
+        open(gateway);
 
         TopicPublisher publisher = new ZmqTopicPublisher(gateway, topic);
 
@@ -521,12 +494,11 @@ public class ZmqSession implements QueueSession, TopicSession {
 
         final ZmqTopic zmqTopic = (ZmqTopic) topic;
         final boolean transacted = getTransacted();
-        final ZMQ.Context context = getContext(zmqTopic);
         final String prefixName = "subscriber-" + gatewayConsumerCount.incrementAndGet();
-        final ZmqGateway gateway = gatewayFactory.newConsumerGateway(prefixName, zmqTopic, context, ZmqSocketType.SUB, false, messageSelector,
+        final ZmqGateway gateway = gatewayFactory.newConsumerGateway(prefixName, zmqTopic, ZmqSocketType.SUB, false, messageSelector,
                 transacted);
 
-        open(context, gateway);
+        open(gateway);
 
         final TopicSubscriber subscriber = new ZmqTopicSubscriber(gateway, topic, messageSelector, noLocal, exceptionHandler);
 

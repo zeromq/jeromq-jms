@@ -13,7 +13,6 @@ import javax.jms.JMSException;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.zeromq.ZMQ;
 import org.zeromq.jms.ZmqTextMessage;
 import org.zeromq.jms.ZmqTextMessageBuilder;
 import org.zeromq.jms.protocol.ZmqGateway.Direction;
@@ -46,21 +45,20 @@ public class TestZmqParGatewayRecovery {
     public void testRecoverySendMessages() throws InterruptedException {
         LOGGER.info("Start Failover with Redirect test.");
 
-        final ZMQ.Context context = ZMQ.context(1);
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqSocketContext senderContext = new ZmqSocketContext(SOCKET_ADDR_1 + "," + SOCKET_ADDR_2, ZmqSocketType.DEALER, false, flags);
-        final ZmqGateway sender = new ZmqParGateway("send1", context, senderContext,
+        final ZmqGateway sender = new ZmqParGateway("send1", senderContext,
                 null, handler, null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqSocketContext receiverContext = new ZmqSocketContext(SOCKET_ADDR_1 + "," + SOCKET_ADDR_2, ZmqSocketType.ROUTER, true, flags);
 
-        final ZmqGateway receiver1 = new ZmqParGateway("recv1", context, receiverContext,
+        final ZmqGateway receiver1 = new ZmqParGateway("recv1", receiverContext,
                   null, handler, null, null, null, null, false, Direction.INCOMING);
-        final ZmqGateway receiver2 = new ZmqParGateway("recv2", context, receiverContext,
+        final ZmqGateway receiver2 = new ZmqParGateway("recv2", receiverContext,
                  null, handler, null, null, null, null, false, Direction.INCOMING);
-        final ZmqGateway receiver3 = new ZmqParGateway("recv3", context, receiverContext,
+        final ZmqGateway receiver3 = new ZmqParGateway("recv3", receiverContext,
                 null, handler, null, null, null, null, false, Direction.INCOMING);
 
         try {
@@ -142,8 +140,6 @@ public class TestZmqParGatewayRecovery {
                 receiver3.close(-1);
 
                 LOGGER.info("Closing context");
-
-                context.close();
             }
         } catch (JMSException ex) {
             ex.printStackTrace();
@@ -162,17 +158,15 @@ public class TestZmqParGatewayRecovery {
     public void testRedundencyServer() throws InterruptedException {
         LOGGER.info("Start Failover with Redirect test.");
 
-        final ZMQ.Context context1 = ZMQ.context(1);
-        final ZMQ.Context context2 = ZMQ.context(1);
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqSocketContext receiverContext = new ZmqSocketContext(SOCKET_ADDR_1 + "," + SOCKET_ADDR_2, ZmqSocketType.ROUTER, true, flags);
-        final ZmqGateway receiver1 = new ZmqParGateway("recv1", context1, receiverContext,
+        final ZmqGateway receiver1 = new ZmqParGateway("recv1", receiverContext,
                   null, handler, null, null, null, null, false, Direction.INCOMING);
-        final ZmqGateway receiver2 = new ZmqParGateway("recv2", context1, receiverContext,
+        final ZmqGateway receiver2 = new ZmqParGateway("recv2", receiverContext,
                  null, handler, null, null, null, null, false, Direction.INCOMING);
-        final ZmqGateway receiver3 = new ZmqParGateway("recv3", context2, receiverContext,
+        final ZmqGateway receiver3 = new ZmqParGateway("recv3", receiverContext,
                 null, handler, null, null, null, null, false, Direction.INCOMING);
 
         receiver1.open(-1);
@@ -190,9 +184,6 @@ public class TestZmqParGatewayRecovery {
 
         receiver2.close(-1);
         receiver3.close(-1);
-
-        context1.close();
-        context2.close();
 
         LOGGER.info("Finish Recover with Redirect test.");
     }

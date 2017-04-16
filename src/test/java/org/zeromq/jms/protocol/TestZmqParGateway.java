@@ -11,7 +11,6 @@ import javax.jms.JMSException;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.zeromq.ZMQ;
 import org.zeromq.jms.ZmqTextMessage;
 import org.zeromq.jms.ZmqTextMessageBuilder;
 import org.zeromq.jms.protocol.ZmqGateway.Direction;
@@ -36,16 +35,15 @@ public class TestZmqParGateway {
     @Test
     public void testSendAndReceiveMessageWithoutTransaction() {
 
-        final ZMQ.Context context = ZMQ.context(1);
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqSocketContext senderContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.DEALER, true, flags);
-        final ZmqGateway sender = new ZmqParGateway("protocol:sender", context, senderContext,
+        final ZmqGateway sender = new ZmqParGateway("protocol:sender", senderContext,
                   null, handler, null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqSocketContext receiverContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.ROUTER, false, flags);
-        final ZmqGateway receiver = new ZmqParGateway("protocol:receiver", context, receiverContext,
+        final ZmqGateway receiver = new ZmqParGateway("protocol:receiver", receiverContext,
                   null, handler, null, null, null, null, false, Direction.INCOMING);
 
         try {
@@ -81,8 +79,6 @@ public class TestZmqParGateway {
             } finally {
                 sender.close(-1);
                 receiver.close(-1);
-
-                context.close();
             }
         } catch (JMSException ex) {
             ex.printStackTrace();

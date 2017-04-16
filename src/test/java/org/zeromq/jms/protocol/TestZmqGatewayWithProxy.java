@@ -11,7 +11,6 @@ import javax.jms.JMSException;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.zeromq.ZMQ;
 import org.zeromq.jms.ZmqException;
 import org.zeromq.jms.ZmqTextMessage;
 import org.zeromq.jms.ZmqTextMessageBuilder;
@@ -29,33 +28,34 @@ public class TestZmqGatewayWithProxy {
 
     private static final String MESSAGE_1 = "this is the text message 1";
     private static final String MESSAGE_2 = "this is the text message 2";
+    private static final String MESSAGE_3 = "this is the text message 3";
 
     /**
      * Test a n-1-n scenario were both "n"s are connecting and the proxy is bound.
      */
     @Test
     public void test() {
-        final ZMQ.Context context = ZMQ.context(1);
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqSocketContext senderContext = new ZmqSocketContext(SOCKET_PROXY_ADDR, ZmqSocketType.PUSH, false, flags);
-        final ZmqGateway sender1 = new ZmqFireAndForgetGateway("snd1", context, senderContext,
+        final ZmqGateway sender1 = new ZmqFireAndForgetGateway("snd1", senderContext,
                 null, handler, null, null, null, null, false, Direction.OUTGOING);
-        final ZmqGateway sender2 = new ZmqFireAndForgetGateway("snd2", context, senderContext,
+        final ZmqGateway sender2 = new ZmqFireAndForgetGateway("snd2", senderContext,
                 null, handler, null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqSocketContext receiverContext = new ZmqSocketContext(SOCKET_SERVER_ADDR, ZmqSocketType.PULL, false, flags);
         receiverContext.setProxyAddr(SOCKET_PROXY_ADDR);
 
-        final ZmqGateway receiver1 = new ZmqFireAndForgetGateway("rcv1", context, receiverContext,
+        final ZmqGateway receiver1 = new ZmqFireAndForgetGateway("rcv1", receiverContext,
                  null, handler, null, null, null, null, false, Direction.INCOMING);
-        final ZmqGateway receiver2 = new ZmqFireAndForgetGateway("rcv2", context, receiverContext,
+        final ZmqGateway receiver2 = new ZmqFireAndForgetGateway("rcv2", receiverContext,
                 null, handler, null, null, null, null, false, Direction.INCOMING);
 
         try {
             final ZmqTextMessage outMessage1 = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();
             final ZmqTextMessage outMessage2 = ZmqTextMessageBuilder.create().appendText(MESSAGE_2).toMessage();
+            final ZmqTextMessage outMessage3 = ZmqTextMessageBuilder.create().appendText(MESSAGE_3).toMessage();
 
             receiver1.open(-1);
             receiver2.open(-1);
@@ -66,7 +66,7 @@ public class TestZmqGatewayWithProxy {
             try {
                 sender1.send(outMessage1);
 
-                ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(1000);
+                ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(5000);
 
                 if (inMessage1 == null) {
                     inMessage1 = (ZmqTextMessage) receiver2.receive(1000);
@@ -77,7 +77,7 @@ public class TestZmqGatewayWithProxy {
 
                 sender1.send(outMessage2);
 
-                ZmqTextMessage inMessage2 = (ZmqTextMessage) receiver1.receive(1000);
+                ZmqTextMessage inMessage2 = (ZmqTextMessage) receiver1.receive(5000);
 
                 if (inMessage2 == null) {
                     inMessage2 = (ZmqTextMessage) receiver2.receive(1000);
@@ -85,18 +85,27 @@ public class TestZmqGatewayWithProxy {
 
                 Assert.assertNotNull(inMessage2);
                 Assert.assertEquals(MESSAGE_2, inMessage2.getText());
+
+                sender2.send(outMessage3);
+
+                ZmqTextMessage inMessage3 = (ZmqTextMessage) receiver1.receive(5000);
+
+                if (inMessage3 == null) {
+                    inMessage3 = (ZmqTextMessage) receiver2.receive(1000);
+                }
+
+                Assert.assertNotNull(inMessage3);
+                Assert.assertEquals(MESSAGE_3, inMessage3.getText());
             } catch (ZmqException ex) {
                 ex.printStackTrace();
 
                 Assert.fail(ex.getMessage());
             } finally {
                 sender1.close(-1);
-                //sender2.close(-1);
+                sender2.close(-1);
 
                 receiver1.close(-1);
-                //receiver2.close(-1);
-
-                context.close();
+                receiver2.close(-1);
             }
         } catch (JMSException ex) {
             ex.printStackTrace();

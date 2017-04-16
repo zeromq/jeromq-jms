@@ -15,7 +15,6 @@ import javax.jms.JMSException;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.zeromq.ZMQ;
 import org.zeromq.jms.ZmqException;
 import org.zeromq.jms.ZmqMessage;
 import org.zeromq.jms.ZmqTextMessage;
@@ -45,16 +44,15 @@ public class TestZmqFireAndForgetGateway {
     @Test
     public void testSendAndReceiveMessageWithoutTransaction() {
 
-        final ZMQ.Context context = ZMQ.context(1);
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqSocketContext senderContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.PUSH, false, flags);
-        final ZmqGateway sender = new ZmqFireAndForgetGateway("protocol:sender", context, senderContext,
+        final ZmqGateway sender = new ZmqFireAndForgetGateway("protocol:sender", senderContext,
                 null, handler, null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqSocketContext receiverContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.PULL, true, flags);
-        final ZmqGateway receiver = new ZmqFireAndForgetGateway("protocol:receiver", context, receiverContext,
+        final ZmqGateway receiver = new ZmqFireAndForgetGateway("protocol:receiver", receiverContext,
                  null, handler, null, null, null, null, false, Direction.INCOMING);
 
         try {
@@ -76,8 +74,6 @@ public class TestZmqFireAndForgetGateway {
             } finally {
                 sender.close(-1);
                 receiver.close(-1);
-
-                context.close();
             }
         } catch (JMSException ex) {
             ex.printStackTrace();
@@ -92,12 +88,11 @@ public class TestZmqFireAndForgetGateway {
     @Test
     public void testSendAndReceiveMessageWithTransaction() {
 
-        final ZMQ.Context context = ZMQ.context(1);
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqSocketContext senderContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.PUSH, false, flags);
-        final ZmqGateway sender = new ZmqFireAndForgetGateway("protocol:sender", context, senderContext,
+        final ZmqGateway sender = new ZmqFireAndForgetGateway("protocol:sender", senderContext,
                 null, handler, null, null, null, null, true, Direction.OUTGOING);
 
         final CountDownLatch messageCountDownLatch = new CountDownLatch(3);
@@ -116,7 +111,7 @@ public class TestZmqFireAndForgetGateway {
         };
 
         final ZmqSocketContext receiverContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.PULL, true, flags);
-        final ZmqGateway receiver = new ZmqFireAndForgetGateway("protocol:receiver", context, receiverContext,
+        final ZmqGateway receiver = new ZmqFireAndForgetGateway("protocol:receiver", receiverContext,
                 null, handler, listener, null, null, null, true, Direction.INCOMING);
 
         sender.open(-1);
@@ -143,8 +138,6 @@ public class TestZmqFireAndForgetGateway {
         } finally {
             sender.close(-1);
             receiver.close(-1);
-
-            context.close();
         }
     }
 
@@ -154,7 +147,6 @@ public class TestZmqFireAndForgetGateway {
     @Test
     public void testPublishedAndSubscribeMessageWithoutTransaction() {
 
-        final ZMQ.Context context = ZMQ.context(1);
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
         final ZmqFilterPolicy filter = new ZmqFixedFilterPolicy();
@@ -162,15 +154,15 @@ public class TestZmqFireAndForgetGateway {
         filter.setFilters(new String[] { ZmqFilterPolicy.DEFAULT_FILTER });
 
         final ZmqSocketContext publisherContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.PUB, true, flags);
-        final ZmqGateway publisher = new ZmqFireAndForgetGateway("protocol:publisher", context, publisherContext,
+        final ZmqGateway publisher = new ZmqFireAndForgetGateway("protocol:publisher", publisherContext,
                  filter, handler, null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqSocketContext subscriberContext1 = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.SUB, false, flags);
-        final ZmqGateway subscriber1 = new ZmqFireAndForgetGateway("protocol:subscriber1", context, subscriberContext1,
+        final ZmqGateway subscriber1 = new ZmqFireAndForgetGateway("protocol:subscriber1", subscriberContext1,
                   filter, handler, null, null, null, null, false, Direction.INCOMING);
 
         final ZmqSocketContext subscriberContext2 = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.SUB, false, flags);
-        final ZmqGateway subscriber2 = new ZmqFireAndForgetGateway("protocol:subscriber2", context, subscriberContext2,
+        final ZmqGateway subscriber2 = new ZmqFireAndForgetGateway("protocol:subscriber2", subscriberContext2,
                   filter, handler, null, null, null, null, false, Direction.INCOMING);
 
         try {
@@ -202,8 +194,6 @@ public class TestZmqFireAndForgetGateway {
                 publisher.close(-1);
                 subscriber1.close(-1);
                 subscriber2.close(-1);
-
-                context.close();
             }
         } catch (JMSException ex) {
             ex.printStackTrace();
@@ -217,13 +207,12 @@ public class TestZmqFireAndForgetGateway {
      */
     @Test
     public void testPublishedAndSubscribeMessageWithSelector() {
-        final ZMQ.Context context = ZMQ.context(1);
         final int flags = 0;
         final ZmqFilterPolicy filter = new ZmqFixedFilterPolicy();
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
         final ZmqSocketContext publisherContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.PUB, true, flags);
-        final ZmqGateway publisher = new ZmqFireAndForgetGateway("protocol:publisher", context, publisherContext,
+        final ZmqGateway publisher = new ZmqFireAndForgetGateway("protocol:publisher", publisherContext,
                   filter, handler, null, null, null, null, false, Direction.OUTGOING);
 
         // User a count down latch to find 2 of the 3 messages since we have specified "Region IN ('NASA','APAC')"
@@ -246,7 +235,7 @@ public class TestZmqFireAndForgetGateway {
             final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("Region IN ('NASA','APAC')");
 
             final ZmqSocketContext subscriberContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.SUB, false, flags);
-            final ZmqGateway subscriber = new ZmqFireAndForgetGateway("protocol:subscriber", context, subscriberContext,
+            final ZmqGateway subscriber = new ZmqFireAndForgetGateway("protocol:subscriber", subscriberContext,
                     filter, handler, listener, null, selector, null, false, Direction.INCOMING);
 
             publisher.open(-1);
@@ -272,8 +261,6 @@ public class TestZmqFireAndForgetGateway {
             } finally {
                 publisher.close(-1);
                 subscriber.close(-1);
-
-                context.close();
             }
         } catch (JMSException | ParseException ex) {
             ex.printStackTrace();

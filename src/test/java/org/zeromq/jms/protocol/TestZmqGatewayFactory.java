@@ -10,11 +10,10 @@ package org.zeromq.jms.protocol;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.zeromq.ZMQ;
+
 import org.zeromq.jms.ZmqException;
 import org.zeromq.jms.ZmqQueue;
 import org.zeromq.jms.ZmqURI;
@@ -73,9 +72,7 @@ public class TestZmqGatewayFactory {
     public void testFactoryUrl() throws ZmqException {
         final ZmqURI uri = destinationSchema.get("queue_old");
         final ZmqQueue queue = new ZmqQueue(uri);
-
-        final ZMQ.Context context = ZMQ.context(1);
-        final ZmqGateway protocol = factory.newConsumerGateway("test@", queue, context, ZmqSocketType.PULL, true, null, false);
+        final ZmqGateway protocol = factory.newConsumerGateway("test", queue, ZmqSocketType.PULL, true, null, false);
 
         Assert.assertNotNull(protocol);
     }
@@ -89,9 +86,7 @@ public class TestZmqGatewayFactory {
         final ZmqURI uri = destinationSchema.get("bad_uri");
         final ZmqQueue queue = new ZmqQueue(uri);
 
-        final ZMQ.Context context = ZMQ.context(1);
-
-        factory.newConsumerGateway("test@", queue, context, ZmqSocketType.PULL, true, null, false);
+        factory.newConsumerGateway("test@", queue, ZmqSocketType.PULL, true, null, false);
 
         Assert.fail("No exceptino was thrown");
     }
@@ -105,8 +100,8 @@ public class TestZmqGatewayFactory {
         final ZmqURI uri = destinationSchema.get("socketTest");
 
         final ZmqQueue queue = new ZmqQueue(uri);
-        final ZMQ.Context context = ZMQ.context(1);
-        final ZmqGateway protocol = factory.newConsumerGateway("test@", queue, context, ZmqSocketType.PULL, true, null, false);
+
+        final ZmqGateway protocol = factory.newConsumerGateway("test", queue, ZmqSocketType.PULL, true, null, false);
         final ZmqSocketContext socketContext = protocol.getSocketContext();
 
         Assert.assertEquals("tcp://*:9999", socketContext.getAddr());

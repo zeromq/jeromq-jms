@@ -1,5 +1,7 @@
 package org.zeromq.jms;
 
+import org.junit.Assert;
+
 /*
  * Copyright (c) 2015 Jeremy Miller
  *
@@ -7,7 +9,6 @@ package org.zeromq.jms;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-import junit.framework.Assert;
 
 import org.junit.Test;
 

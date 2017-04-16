@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 
 import javax.jms.Queue;
 
-import org.zeromq.ZMQ;
 import org.zeromq.jms.AbstractZmqDestination;
 import org.zeromq.jms.ZmqException;
 import org.zeromq.jms.ZmqSession;
@@ -157,7 +156,6 @@ public class ZmqGatewayFactory {
      * Return the Zero MQ JMS consumer protocol based on the attributes and any meta data.
      * @param  namePrefix       the prefix name of the producer gateway
      * @param  destination      the destination
-     * @param  context          the ZMQ context
      * @param  type             the ZMQ socket type as enum, i.e. PUB, SUB, etc...
      * @param  isBound          the connect or bind to the socket
      * @param  messageSelector  the JMS select expression
@@ -165,7 +163,7 @@ public class ZmqGatewayFactory {
      * @return                  return the constructed gateway
      * @throws ZmqException     throw JMS exception when filters cannot be resolved
      */
-    public ZmqGateway newConsumerGateway(final String namePrefix, final AbstractZmqDestination destination, final ZMQ.Context context,
+    public ZmqGateway newConsumerGateway(final String namePrefix, final AbstractZmqDestination destination,
             final ZmqSocketType type, final boolean isBound, final String messageSelector, final boolean transacted) throws ZmqException {
 
         final String destinationName = destination.getName();
@@ -200,7 +198,7 @@ public class ZmqGatewayFactory {
                 LOGGER.info("Using gateway consumer  (" + gatewayClass.getCanonicalName() + ") for destination: " + destination);
             }
 
-            final Constructor<?> consumerConstructor = gatewayClass.getConstructor(String.class, ZMQ.Context.class, ZmqSocketContext.class,
+            final Constructor<?> consumerConstructor = gatewayClass.getConstructor(String.class, ZmqSocketContext.class,
                     ZmqFilterPolicy.class, ZmqEventHandler.class, ZmqGatewayListener.class,
                     ZmqJournalStore.class, ZmqMessageSelector.class, ZmqRedeliveryPolicy.class,
                     boolean.class, ZmqGateway.Direction.class);
@@ -209,7 +207,7 @@ public class ZmqGatewayFactory {
 
             final String name = namePrefix + ":" + destinationName;
             final ZmqGateway protocol =
-                (ZmqGateway) consumerConstructor.newInstance(name, context, socketContext,
+                (ZmqGateway) consumerConstructor.newInstance(name, socketContext,
                     filter, eventHandler, null, store, selector, redelivery,
                     transacted, ZmqGateway.Direction.INCOMING);
 
@@ -230,14 +228,13 @@ public class ZmqGatewayFactory {
      * Return the Zero MQ JMS producer protocol based on the attributes and any meta data.
      * @param  namePrefix     the prefix name of the producer gateway
      * @param  destination    the destination
-     * @param  context        the ZMQ context
      * @param  type           the ZMQ socket type as enum, i.e. PUB, SUB, etc...
      * @param  isBound        the connect or bind to the socket
      * @param  transacted     the transaction indicator
      * @return                return the constructed gateway
      * @throws ZmqException   throw JMS exception when filters cannot be resolved
      */
-    public ZmqGateway newProducerGateway(final String namePrefix, final AbstractZmqDestination destination, final ZMQ.Context context,
+    public ZmqGateway newProducerGateway(final String namePrefix, final AbstractZmqDestination destination,
             final ZmqSocketType type, final boolean isBound, final boolean transacted) throws ZmqException {
 
         final String destinationName = destination.getName();
@@ -268,7 +265,7 @@ public class ZmqGatewayFactory {
                 LOGGER.info("Using gateway produce  (" + gatewayClass.getClass().getCanonicalName() + ") for destination: " + destination);
             }
 
-            final Constructor<?> producerConstructor = gatewayClass.getConstructor(String.class, ZMQ.Context.class, ZmqSocketContext.class,
+            final Constructor<?> producerConstructor = gatewayClass.getConstructor(String.class, ZmqSocketContext.class,
                     ZmqFilterPolicy.class, ZmqEventHandler.class, ZmqGatewayListener.class,
                     ZmqJournalStore.class, ZmqMessageSelector.class, ZmqRedeliveryPolicy.class,
                     boolean.class, ZmqGateway.Direction.class);
@@ -276,7 +273,7 @@ public class ZmqGatewayFactory {
             ZmqSocketContext socketContext = getSocketContext(uri, type, isBound);
 
             final String name = namePrefix + ":" + destinationName;
-            final ZmqGateway protocol = (ZmqGateway) producerConstructor.newInstance(name, context, socketContext,
+            final ZmqGateway protocol = (ZmqGateway) producerConstructor.newInstance(name, socketContext,
                     filter, handler, listener, store, selector, redelivery,
                     transacted, ZmqGateway.Direction.OUTGOING);
 

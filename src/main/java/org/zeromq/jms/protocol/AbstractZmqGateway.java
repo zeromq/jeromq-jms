@@ -65,7 +65,9 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     private final String addr;
 
     private final int flags;
-    private final ZMQ.Context context;
+
+    private ZMQ.Context context;
+    private ZMQ.Context proxyContext;
 
     private final List<ZmqSocketMetrics> metrics;
     private final Map<String, ZmqSocketSession> socketSessions;
@@ -123,7 +125,6 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     /**
      * Construct abstract gateway.
      * @param name              the name of display the gateway
-     * @param context           the Zero MQ context
      * @param socketContext     the socket context for the ZMQ socket
      * @param filter            the message filter policy
      * @param handler           the event handler functionality
@@ -136,14 +137,13 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
      * @param heartbeat         the send heart-beat indicator
      * @param direction         the direction, i.e. Incoming, Outgoing, etc..
      */
-    public AbstractZmqGateway(final String name, final ZMQ.Context context, final ZmqSocketContext socketContext,
+    public AbstractZmqGateway(final String name, final ZmqSocketContext socketContext,
         final ZmqFilterPolicy filter, final ZmqEventHandler handler, final ZmqGatewayListener listener,
         final ZmqJournalStore store, final ZmqMessageSelector selector, final ZmqRedeliveryPolicy redelivery,
         final boolean transacted, final boolean acknowledge,
         final boolean heartbeat, final Direction direction) {
 
         this.name = name;
-        this.context = context;
         this.type = socketContext.getType();
         this.socketContext = new ZmqSocketContext(socketContext);
         this.bound = socketContext.isBindFlag();
@@ -218,6 +218,8 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
         if (active.get()) {
             return;
         }
+
+        context = ZMQ.context(socketContext.getIOThreads());
 
         active.set(true);
 
@@ -295,6 +297,8 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
         //Setup the ZMQ PROXY
         if (socketContext.isProxy()) {
+            proxyContext = ZMQ.context(socketContext.getIOThreads());
+
             final String proxyName = "proxy(" + name + ")";
             final String frontSocketAddr = socketContext.getProxyAddr();
             final ZmqSocketType frontSocketType = (socketContext.getProxyType() == null) ? ZmqSocketType.ROUTER : socketContext.getProxyType();
@@ -419,6 +423,11 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     public void close(final int timeout) {
         active.set(false);
 
+        if (proxyContext != null) {
+            // need to interrupt the proxy
+            proxyContext.close();
+        }
+
         if (acknowledge) {
             // Wait for a period before warning about failed ACKS
             int totalCount = 0;
@@ -506,6 +515,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             }
         }
 
+        context.close();
         LOGGER.info("Gateway closed: " + toString());
     }
 

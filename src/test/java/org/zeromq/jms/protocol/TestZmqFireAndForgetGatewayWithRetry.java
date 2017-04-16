@@ -11,7 +11,6 @@ import javax.jms.JMSException;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.zeromq.ZMQ;
 import org.zeromq.jms.ZmqException;
 import org.zeromq.jms.ZmqTextMessage;
 import org.zeromq.jms.ZmqTextMessageBuilder;
@@ -39,17 +38,16 @@ public class TestZmqFireAndForgetGatewayWithRetry {
     @Test
     public void testSendAndReceiveMessageWithoutTransaction() {
 
-        final ZMQ.Context context = ZMQ.context(1);
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
         final ZmqRedeliveryPolicy redelivery = new ZmqRetryRedeliveryPolicy(3);
 
         final ZmqSocketContext senderContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.PUSH, false, flags);
-        final ZmqGateway sender = new ZmqFireAndForgetGateway("protocol:sender", context, senderContext,
+        final ZmqGateway sender = new ZmqFireAndForgetGateway("protocol:sender", senderContext,
                   null, handler, null, null, null, null, false, Direction.OUTGOING);
 
         final ZmqSocketContext receiverContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.PULL, true, flags);
-        final ZmqGateway receiver = new ZmqFireAndForgetGateway("protocol:receiver", context, receiverContext,
+        final ZmqGateway receiver = new ZmqFireAndForgetGateway("protocol:receiver", receiverContext,
                   null, handler, null, null, null, redelivery, true, Direction.INCOMING);
 
         try {
@@ -110,8 +108,6 @@ public class TestZmqFireAndForgetGatewayWithRetry {
             } finally {
                 sender.close(-1);
                 receiver.close(-1);
-
-                context.close();
             }
         } catch (JMSException ex) {
             ex.printStackTrace();

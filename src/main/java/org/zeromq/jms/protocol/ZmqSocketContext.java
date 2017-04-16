@@ -12,6 +12,7 @@ public class ZmqSocketContext {
     private Boolean bindFlag;
     private Long bindRetryWaitTime;
     private Integer recieveMsgFlag;
+    private int ioThreads = 1;  // ZMQ default is suggest as 1
 
     private String proxyAddr;
     private ZmqSocketType proxyType;
@@ -81,6 +82,7 @@ public class ZmqSocketContext {
         this.bindFlag = context.bindFlag;
         this.bindRetryWaitTime = context.bindRetryWaitTime;
         this.recieveMsgFlag = context.recieveMsgFlag;
+        this.ioThreads = context.ioThreads;
 
         this.proxyType = context.proxyType;
         this.proxyAddr = context.proxyAddr;
@@ -162,6 +164,22 @@ public class ZmqSocketContext {
      */
     public void setBindFlag(final Boolean bindFlag) {
         this.bindFlag = bindFlag;
+    }
+
+    /**
+     * @return  return context I/O threads
+     */
+    public int getIOThreads() {
+        return ioThreads;
+    }
+
+    /**
+     * Set the I/O threads for the ZMQ context (default is 1).
+     * @param ioThreads  the I/O threads for the contract
+     */
+    @ZmqUriParameter("context.ioThreads")
+    public void setIOThreads(final int ioThreads) {
+        this.ioThreads = ioThreads;
     }
 
     /**
