@@ -7,12 +7,13 @@ package org.zeromq.jms.spring;
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.jms.ConnectionFactory;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
+import org.springframework.jms.connection.CachingConnectionFactory;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
@@ -52,21 +55,41 @@ public class TestSpringAnnoationZmqQueue {
     static class AppConfig {
 
         /**
+         * @return return the ZMQ connection factory
+         */
+        private ConnectionFactory connectionFactory() {
+            final ConnectionFactory connectionFactory = new ZmqConnectionFactory(new String[] { QUEUE_CLIENT_URI, QUEUE_SERVER_URI });
+            final CachingConnectionFactory cacheConnectionFactory = new CachingConnectionFactory(connectionFactory);
+
+            return cacheConnectionFactory;
+        }
+        /**
          * Enable JMS listener annotated endpoints that are created under the cover by a JmsListenerContainerFactory.
          * @return  return the JMS listener
          */
         @Bean
         public DefaultJmsListenerContainerFactory myJmsListenerContainerFactory() {
-          DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
+          final DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
 
-          final ConnectionFactory conectionFactory = new ZmqConnectionFactory(new String[] { QUEUE_CLIENT_URI, QUEUE_SERVER_URI });
-          factory.setConnectionFactory(conectionFactory);
+          factory.setConnectionFactory(connectionFactory());
           //factory.setDestinationResolver(destinationResolver());
           factory.setConcurrency("5");
 
           return factory;
         }
 
+        /**
+         * @return return the JMS template to send a message
+         */
+        @Bean
+        public JmsTemplate jmsTemplate() {
+            final JmsTemplate template = new JmsTemplate();
+
+            template.setConnectionFactory(connectionFactory());
+            template.setDefaultDestinationName(QUEUE_CLIENT_NAME);
+
+            return template;
+        }
         /**
          * @return  return the service
          */
@@ -80,25 +103,49 @@ public class TestSpringAnnoationZmqQueue {
      * Simple service driven off a JMS message listener.
      */
     static class MyService {
+        private CountDownLatch countDownLatch = new CountDownLatch(3);
+
+        /**
+         * @return  return the count down latch
+         */
+        public CountDownLatch getCountDownLatch() {
+            return countDownLatch;
+        }
+
         /**
          * JMS message contains a string body.
          * @param msg  the message
          */
-        @JmsListener(containerFactory = "myJmsListenerContainerFactory", destination = "myQueue")
+        @JmsListener(containerFactory = "myJmsListenerContainerFactory", destination = "recv1")
         public void process(final String msg) {
             LOGGER.info("Recieve message: " + msg);
+            countDownLatch.countDown();
         }
     }
 
     @Autowired
     private MyService myService;
 
+    @Autowired
+    private JmsTemplate jmsTemplate;
+
     /**
      * Set initialisation of ZMQ using spring.
      */
-    @Ignore @Test
+     @Test
     public void testAnnotationSpring() {
         Assert.assertNotNull(myService);
+        Assert.assertNotNull(jmsTemplate);
 
-    }
+        jmsTemplate.convertAndSend("Hello");
+        jmsTemplate.convertAndSend("there");
+        jmsTemplate.convertAndSend("bye");
+
+        try {
+            myService.countDownLatch.await(30, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+        }
+
+        Assert.assertEquals(0L, myService.getCountDownLatch().getCount());
+     }
 }

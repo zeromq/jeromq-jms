@@ -296,10 +296,13 @@ public class ZmqSession implements QueueSession, TopicSession {
         }
 
         final ZmqURI uri = destinationSchema.get(destinationName);
-        final String addr = uri.getOptionValue("gateway.addr", null);
+        String addr = uri.getOptionValue("socket.addr", null);
+        if (addr == null) {
+            addr = uri.getOptionValue("gateway.addr", null);
+        }
 
         if (addr == null) {
-            throw new ZmqException("Unable to resolve 'gateway.addr' for topic URI: " + uri);
+            throw new ZmqException("Unable to resolve 'socket.addr' or 'gateway.addr' for queue URI: " + uri);
         }
 
         final Topic topic = new ZmqTopic(uri);
@@ -406,10 +409,13 @@ public class ZmqSession implements QueueSession, TopicSession {
         }
 
         final ZmqURI uri = destinationSchema.get(destinationName);
-        final String addr = uri.getOptionValue("gateway.addr", null);
+        String addr = uri.getOptionValue("socket.addr", null);
+        if (addr == null) {
+            addr = uri.getOptionValue("gateway.addr", null);
+        }
 
         if (addr == null) {
-            throw new ZmqException("Unable to resolve 'gateway.addr' for queue URI: " + uri);
+            throw new ZmqException("Unable to resolve 'socket.addr' or 'gateway.addr' for queue URI: " + uri);
         }
 
         final Queue queue = new ZmqQueue(queueName);
