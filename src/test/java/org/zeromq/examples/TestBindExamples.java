@@ -1,5 +1,6 @@
 package org.zeromq.examples;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.Test;
@@ -38,7 +39,7 @@ public class TestBindExamples {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException ex) {
-
+            LOGGER.log(Level.SEVERE, "Sleep was iterrupted", ex);
         }
 
         try {
@@ -56,7 +57,7 @@ public class TestBindExamples {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException ex) {
-
+            LOGGER.log(Level.SEVERE, "Sleep was iterrupted", ex);
         }
 
         try {

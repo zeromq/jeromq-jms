@@ -298,6 +298,7 @@ public class ZmqSocketSession implements Runnable {
             try {
                 Thread.sleep(SOCKET_RETRY_MILLI_SECOND);
             } catch (InterruptedException ex) {
+                LOGGER.warning("Opening of socket hibernation interrupted: " + this);
             }
         } while (status == ZmqSocketStatus.PAUSED && active.get());
 

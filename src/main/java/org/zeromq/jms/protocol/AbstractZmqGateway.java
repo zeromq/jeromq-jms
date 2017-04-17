@@ -289,6 +289,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                     try {
                         Thread.sleep(SOCKET_WAIT_MILLI_SECOND);
                     } catch (InterruptedException ex) {
+                        LOGGER.warning("Binding sleep interrupted: " + this);
                     }
                     status = socketSession.getStatus();
                }

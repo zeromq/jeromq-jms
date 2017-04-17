@@ -9,6 +9,7 @@ package org.zeromq.jms.spring;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.jms.ConnectionFactory;
@@ -144,6 +145,7 @@ public class TestSpringAnnoationZmqQueue {
         try {
             myService.countDownLatch.await(30, TimeUnit.SECONDS);
         } catch (InterruptedException ex) {
+            LOGGER.log(Level.SEVERE, "Countdown latach was iterrupted", ex);
         }
 
         Assert.assertEquals(0L, myService.getCountDownLatch().getCount());

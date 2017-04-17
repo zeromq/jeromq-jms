@@ -104,6 +104,7 @@ public class ZmqProxySession implements Runnable {
             try {
                 Thread.sleep(SOCKET_RETRY_MILLI_SECOND);
             } catch (InterruptedException ex) {
+                LOGGER.warning("Opening of back socket hibernation interrupted: " + this);
             }
         } while (status == ZmqSocketStatus.PAUSED && active.get());
 
@@ -121,6 +122,7 @@ public class ZmqProxySession implements Runnable {
                     try {
                         Thread.sleep(SOCKET_RETRY_MILLI_SECOND);
                     } catch (InterruptedException ex) {
+                        LOGGER.warning("Opening of front socket hibernation interrupted: " + this);
                     }
                 } while (status == ZmqSocketStatus.PAUSED && active.get());
 
@@ -135,6 +137,7 @@ public class ZmqProxySession implements Runnable {
                             try {
                                 Thread.sleep(SOCKET_RETRY_MILLI_SECOND);
                             } catch (InterruptedException ex) {
+                                LOGGER.warning("Proxy hibernate for failover interrupted: " + this);
                             }
                         }
                     }
@@ -172,11 +175,13 @@ public class ZmqProxySession implements Runnable {
                 try {
                     socket.setLinger(0);
                 } catch (ZError.CtxTerminatedException e) {
+                    LOGGER.finest("Terminate exception of the setting of linger: " + this);
                 }
 
                 try {
                     socket.unbind(socketAddr);
                 } catch (ZError.CtxTerminatedException e) {
+                    LOGGER.finest("Terminate exception of the unbind: " + this);
                 }
                 socket.close();
             } catch (Exception ex) {
