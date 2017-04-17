@@ -3,13 +3,8 @@ syntax = "proto3";
 option java_package = "org.zeromq.jms.protobuf";
 option java_outer_classname = "MessageProtos";
 
-message send {
+message Message {
     string messageId = 1;
     int64 sendDate = 2;
     string body = 3;
-}
-
-message ack {
-    string messageId = 1;
-    int64 sendDate = 2;
 }

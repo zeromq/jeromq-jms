@@ -177,7 +177,6 @@ public class TestZmqQueueWithMultiClients {
             new ZmqConnectionFactory(new String[] { QUEUE_CLIENT_URI, QUEUE_SERVER_URI }));
         context.bind("java:/comp/env/jms/queueSend1", new ZmqQueue(QUEUE_CLIENT_NAME));
         context.bind("java:/comp/env/jms/queueRecv1", new ZmqQueue(QUEUE_SERVER_NAME));
-
     }
 
     /**

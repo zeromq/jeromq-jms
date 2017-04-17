@@ -211,12 +211,6 @@ public class TestZmqQueue {
 
             Assert.assertEquals(QUEUE_NAME, queue.getQueueName());
 
-            // final QueueConnectionFactory factory = (QueueConnectionFactory)
-            // context.lookup("java:/comp/env/jms/queueConnectionFactory");
-            // final QueueConnection connection = factory.createQueueConnection();
-            // final QueueSession session = connection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
-            // final Queue queue = (Queue) context.lookup("java:/comp/env/jms/queueTest");
-
             QueueSender sender = null;
             QueueReceiver receiver = null;
 

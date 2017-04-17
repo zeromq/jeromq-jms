@@ -1,4 +1,4 @@
-package org.zeromq.jms;
+package org.zeromq.jms.protobuf;
 /*
  * Copyright (c) 2016 Jeremy Miller
  *
@@ -21,15 +21,17 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.zeromq.jms.ZmqConnectionFactory;
+import org.zeromq.jms.ZmqQueue;
 
 /**
- * Test the JMS 2.0 API work correctly.
+ * Test a Google Protocol Buffer as the transfer message.
  */
-public class TestSimplifiedZmqQueue {
+public class TestZmqQueueWithProtobuf {
 
     private static final String QUEUE_NAME = "queue_1";
-    private static final String QUEUE_ADDR = "tcp://*:9710";
-    private static final String QUEUE_URI = "jms:queue:" + QUEUE_NAME + "?gateway.addr=" + QUEUE_ADDR + "&redlivery.retry=0&event=stomp";
+    private static final String QUEUE_ADDR = "tcp://*:9715";
+    private static final String QUEUE_URI = "jms:queue:" + QUEUE_NAME + "?socket.addr=" + QUEUE_ADDR + "&event=protobuf";
 
     private static final String MESSAGE_1 = "this is the text message 1";
     private static final String MESSAGE_2 = "this is the text message 2";
