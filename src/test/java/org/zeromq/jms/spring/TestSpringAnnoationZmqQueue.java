@@ -64,6 +64,7 @@ public class TestSpringAnnoationZmqQueue {
 
             return cacheConnectionFactory;
         }
+
         /**
          * Enable JMS listener annotated endpoints that are created under the cover by a JmsListenerContainerFactory.
          * @return  return the JMS listener

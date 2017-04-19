@@ -23,7 +23,7 @@ import org.zeromq.jms.ZmqMessage;
 import org.zeromq.jms.ZmqTextMessage;
 import org.zeromq.jms.annotation.ZmqComponent;
 import org.zeromq.jms.annotation.ZmqUriParameter;
-import org.zeromq.jms.protobuf.MessageProtos.Message;
+import org.zeromq.jms.protobuf.TestProtoMessage.Message;
 import org.zeromq.jms.protocol.ZmqAckEvent;
 import org.zeromq.jms.protocol.ZmqEvent;
 import org.zeromq.jms.protocol.ZmqHeartbeatEvent;

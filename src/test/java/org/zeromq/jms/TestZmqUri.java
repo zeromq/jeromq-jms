@@ -36,7 +36,7 @@ public class TestZmqUri {
         Assert.assertEquals("tcp://*:9586", values[0]);
         Assert.assertEquals("tcp://*:9587", values[1]);
     }
-        
+
     /**
      * Test the parsing of the URI with old "gateway" attributes.
      */

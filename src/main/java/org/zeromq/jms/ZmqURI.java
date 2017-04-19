@@ -222,14 +222,14 @@ public class ZmqURI implements Externalizable {
 
                     final List<String> optionValues = options.get(optionName);
                     optionValues.add(optionValue);
-                    
+
                     nextOptionValue = (tokens.size() > i + 1) && tokens.get(i + 1).hasValue(",");
-                    
+
                     if (nextOptionValue) {
                         i++;
                     }
-                } 
-                 
+                }
+
                 if (tokens.size() > i + 1) {
                     parseValue("\\&", ++i, tokens);
                 }

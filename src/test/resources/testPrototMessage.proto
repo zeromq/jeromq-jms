@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_package = "org.zeromq.jms.protobuf";
+option java_outer_classname = "TestProtoMessage";
+
+message Message {
+    enum MessageType {
+        HEARTBEAT = 0;
+        SENT = 1;
+        ACK = 2;
+    }
+
+    string messageId = 1;
+    MessageType messageType = 2;
+    int64 sendDate = 3;
+    string body = 4;
+}

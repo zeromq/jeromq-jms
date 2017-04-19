@@ -47,15 +47,15 @@ public class TestZmqQueueWithMultiClients {
     private static final String QUEUE_ADDR = "tcp://*:9712";
     private static final String QUEUE_CLIENT_NAME = "send1";
     private static final String QUEUE_CLIENT_URI = "jms:queue:" + QUEUE_CLIENT_NAME
-        + "?socket.addr=" + QUEUE_ADDR + "&socket.sndHWM=100000&redlivery.retry=0&event=stomp";
+        + "?socket.addr=" + QUEUE_ADDR + "&socket.sndHWM=100000&redlivery.retry=0&event=stomp&ioThreads=3";
     private static final String QUEUE_SERVER_NAME = "recv1";
     private static final String QUEUE_SERVER_URI = "jms:queue:" + QUEUE_SERVER_NAME
-        + "?socket.addr=" + QUEUE_ADDR + "&socket.bind=true&sndHWM=10000&redlivery.retry=0&event=stomp";
+        + "?socket.addr=" + QUEUE_ADDR + "&socket.bind=true&sndHWM=10000&redlivery.retry=0&event=stomp&ioThreads=3";
 
     private static final int CLIENT_COUNT = 10;
 
     // NOTE: Need to set high-water mark, otherwise flooding queue, and blocks, i.e. socket.setSndHwm(100000)
-    private static final int CLIENT_MESSAGE_COUNT = 3000;
+    private static final int CLIENT_MESSAGE_COUNT = 30000;
     private static final int CLIENT_MESSAGE_COMMIT_COUNT = 500;
 
     private static InitialContext context;
@@ -141,7 +141,7 @@ public class TestZmqQueueWithMultiClients {
                         session.commit();
                     }
                 } finally {
-                    Thread.sleep(3000);
+                    Thread.sleep(7000);
 
                     session.close();
                 }
@@ -193,6 +193,7 @@ public class TestZmqQueueWithMultiClients {
 
     /**
      * Test a send and Listener JMS message functionality.
+     *  mvn test -Dtest=TestZmqQueueWithMultiClients#testMultiClientWithoutTransact
      */
     @Test
     public void testMultiClientWithoutTransact() {
@@ -227,7 +228,7 @@ public class TestZmqQueueWithMultiClients {
                 }
 
                 try {
-                    countDownLatch.await(30, TimeUnit.SECONDS);
+                    countDownLatch.await(60, TimeUnit.SECONDS);
                 } catch (InterruptedException ex) {
                     throw ex;
                 }
