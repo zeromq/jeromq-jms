@@ -1,5 +1,11 @@
 package org.zeromq.jms;
-
+/*
+ * Copyright (c) 2016 Jeremy Miller
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 import org.junit.Assert;
 
 /*
@@ -16,7 +22,21 @@ import org.junit.Test;
  * Test Zero MQ URI.
  */
 public class TestZmqUri {
+    /**
+     * Test the parsing of the URI with old "gateway" attributes.
+     */
+    @Test
+    public void parseMultiValueUri() {
+        final ZmqURI uri = ZmqURI.create("jms:queue:queue?socket.addr=tcp://*:9586,tcp://*:9587");
 
+        final String[] values = uri.getOptionValues("socket.addr");
+
+        Assert.assertNotNull(values);
+        Assert.assertEquals(2, values.length);
+        Assert.assertEquals("tcp://*:9586", values[0]);
+        Assert.assertEquals("tcp://*:9587", values[1]);
+    }
+        
     /**
      * Test the parsing of the URI with old "gateway" attributes.
      */

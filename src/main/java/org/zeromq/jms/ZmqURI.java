@@ -16,6 +16,7 @@ import java.io.ObjectOutput;
 import java.text.ParseException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class ZmqURI implements Externalizable {
      *  parameter: (\\w|\\.)+                        ==> gateway, gateway.retry, etc...
      *  others:    :|\\?|=|\\&                       ==> separate on ?, =, or & symbols
      */
-    private static final String TOKENISE_REGX = "(tcp://(\\*|((\\w+|\\.)+)):\\d+)|(inproc://\\w+)|(\\w|\\.)+|:|\\?|=|\\&";
+    private static final String TOKENISE_REGX = "(tcp://(\\*|((\\w+|\\.)+)):\\d+)|(inproc://\\w+)|(\\w|\\.)+|:|\\?|=|,|\\&";
 
     /* String used to construct the URI */
     private String str;
@@ -105,7 +106,7 @@ public class ZmqURI implements Externalizable {
      * @param destinationName  the destination name
      * @param options          the parameter options
      */
-    private ZmqURI(final String str, final String scheme, final String destinationType, final String destinationName,
+    protected ZmqURI(final String str, final String scheme, final String destinationType, final String destinationName,
             final Map<String, List<String>> options) {
 
         this.str = str;
@@ -204,32 +205,49 @@ public class ZmqURI implements Externalizable {
                 // final int pos = tokens.get(i).pos;
                 // default to empty and try and fill
                 String optionValue = null;
-
                 parseValue("=", ++i, tokens);
+                boolean nextOptionValue = true;
 
-                if (tokens.size() > i + 1) {
-                    if (!tokens.get(i + 1).hasValue("\\&")) {
-                        optionValue = parseValue(".*", ++i, tokens);
-                    }
-
+                while (nextOptionValue) {
                     if (tokens.size() > i + 1) {
-                        parseValue("\\&", ++i, tokens);
+                        if (!tokens.get(i + 1).hasValue("\\&")) {
+                            optionValue = parseValue(".*", ++i, tokens);
+                       }
                     }
-                }
 
-                if (!options.containsKey(optionName)) {
-                    // first value of class of the custom name
-                    options.put(optionName, new ArrayList<String>());
-                }
+                    if (!options.containsKey(optionName)) {
+                        // first value of class of the custom name
+                        options.put(optionName, new ArrayList<String>());
+                    }
 
-                final List<String> optionValues = options.get(optionName);
-                optionValues.add(optionValue);
+                    final List<String> optionValues = options.get(optionName);
+                    optionValues.add(optionValue);
+                    
+                    nextOptionValue = (tokens.size() > i + 1) && tokens.get(i + 1).hasValue(",");
+                    
+                    if (nextOptionValue) {
+                        i++;
+                    }
+                } 
+                 
+                if (tokens.size() > i + 1) {
+                    parseValue("\\&", ++i, tokens);
+                }
             }
         }
 
-        ZmqURI uri = new ZmqURI(str, scheme, destinationType, destinationName, options);
+        ZmqURI uri =
+            new ZmqURI(str, scheme, destinationType, destinationName,
+                Collections.unmodifiableMap(options));
 
         return uri;
+    }
+
+    /**
+     * @return  return the actual string used to construct URI
+     */
+    protected String getStr() {
+        return str;
     }
 
     /**
