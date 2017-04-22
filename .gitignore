@@ -1,4 +1,7 @@
 /target/
-/.DS_Store
+.checkstyle
+.DS_Store
 /.classpath
 /.project
+/logs/
+/out.txt
