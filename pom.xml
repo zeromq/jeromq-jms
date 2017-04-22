@@ -140,8 +140,28 @@
 
   <build>
     <finalName>jeromq-jms</finalName>
+<!-- 
+    <testSourceDirectory>src/test/java</testSourceDirectory>
+-->
 
     <plugins>
+ <plugin>
+    <groupId>org.codehaus.mojo</groupId>
+    <artifactId>build-helper-maven-plugin</artifactId>
+    <executions>
+        <execution>
+            <phase>generate-test-sources</phase>
+            <goals>
+                <goal>add-test-source</goal>
+            </goals>
+            <configuration>
+                <sources>
+                    <source>${project.build.directory}/generated-test-sources</source>
+                </sources>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
       <plugin>
 	    <groupId>com.github.os72</groupId>
         <artifactId>protoc-jar-maven-plugin</artifactId>
@@ -158,6 +178,18 @@
               <inputDirectories>
                 <include>src/test/resources</include>
               </inputDirectories>
+<outputTargets>
+  <outputTarget>
+    <type>java</type>
+    <addSources>none</addSources>
+    <outputDirectory>${project.build.directory}/generated-test-sources</outputDirectory>
+  </outputTarget>
+  <outputTarget>
+    <type>descriptor</type>
+    <addSources>none</addSources>
+    <outputDirectory>${project.build.directory}/generated-test-sources</outputDirectory>
+  </outputTarget>
+</outputTargets>
             </configuration>
           </execution>
         </executions>

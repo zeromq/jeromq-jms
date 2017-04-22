@@ -42,12 +42,12 @@ import org.zeromq.jms.protocol.filter.ZmqFilterPolicy;
 public class TestZmqJsonEventHandler implements ZmqEventHandler {
     private static final Logger LOGGER = Logger.getLogger(TestZmqJsonEventHandler.class.getCanonicalName());
 
-    final ObjectMapper mapper = new ObjectMapper();
-    
+    private final ObjectMapper mapper = new ObjectMapper();
+
     /**
      *  Implementation of the SEND event, the only interface supported by JMS serialisation.
      */
-    private class ProtobufEvent implements ZmqSendEvent {
+    private class JsonEvent implements ZmqSendEvent {
 
         private final Object messageId;
         private final ZmqMessage message;
@@ -56,7 +56,7 @@ public class TestZmqJsonEventHandler implements ZmqEventHandler {
          * Construct the JMS based event.
          * @param message  the message
          */
-        ProtobufEvent(final ZmqMessage message) {
+        JsonEvent(final ZmqMessage message) {
             this.messageId = null;
             this.message = message;
         }
@@ -93,7 +93,7 @@ public class TestZmqJsonEventHandler implements ZmqEventHandler {
                 return false;
             }
 
-            ProtobufEvent other = (ProtobufEvent) obj;
+            JsonEvent other = (JsonEvent) obj;
 
             if (messageId == null) {
                 if (other.messageId != null) {
@@ -119,7 +119,7 @@ public class TestZmqJsonEventHandler implements ZmqEventHandler {
 
     @Override
     public ZmqSendEvent createSendEvent(final Object messageId, final ZmqMessage message) {
-        ZmqSendEvent event = new ProtobufEvent(message);
+        ZmqSendEvent event = new JsonEvent(message);
 
         return event;
     }
@@ -153,7 +153,7 @@ public class TestZmqJsonEventHandler implements ZmqEventHandler {
                 final String messageId = UUID.randomUUID().toString();
                 final String body = message.getText();
                 final TestJsonMessage jsonMessage = new TestJsonMessage();
-                
+
                 jsonMessage.setMessageId(messageId);
                 jsonMessage.setMessageType(TestJsonMessage.MessageType.SENT);
                 jsonMessage.setSentDate(new Date());
@@ -202,7 +202,7 @@ public class TestZmqJsonEventHandler implements ZmqEventHandler {
                 message.setJMSDeliveryTime(jsonMessage.getSentDate().getTime());
                 message.setText(jsonMessage.getBody());
 
-                final ZmqEvent sendEvent = new ProtobufEvent(message);
+                final ZmqEvent sendEvent = new JsonEvent(message);
 
                 return sendEvent;
             } catch (JMSException | IOException ex) {

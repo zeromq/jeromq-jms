@@ -584,7 +584,7 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
         }
 
         LOGGER.warning("Unknown event marked for deletion with reference (messageId=" + messageId + "): " + this);
-        
+
         return false;
     }
 
@@ -745,9 +745,9 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
 
         if (candidateLastModified.toMillis() < (currentTime.toMillis() - republishAfterMsec)) {
             if (LOGGER.isLoggable(Level.FINEST)) {
-                LOGGER.info("Checkout orphaned store [orphanUniqueId=" + journalFileUniqueIds[candidateIndex] +"] : " + this);
+                LOGGER.info("Checkout orphaned store [orphanUniqueId=" + journalFileUniqueIds[candidateIndex] + "] : " + this);
             }
-            
+
             // Sweep oldest candidate file
             final List<Path> journalFiles = journalMap.get(journalFileUniqueIds[candidateIndex]);
             sweepOldestJournalFile(journalFiles, republishAfterMsec);
@@ -877,11 +877,10 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
 
                             final MessageLocation location = new MessageLocation(messageId, journalFile, position);
                             messageLocationMap.put(messageId, location);
-                            
+
                             if (LOGGER.isLoggable(Level.FINEST)) {
                                 LOGGER.finest("Republished message[messageId=" + messageId + "]: " + this);
                             }
-                            
                         }
                     }
                 } catch (ClassNotFoundException ex) {
