@@ -33,7 +33,7 @@ import org.zeromq.jms.protocol.ZmqSocketType;
 import org.zeromq.jms.protocol.filter.ZmqFilterPolicy;
 
 /**
- * Java object serialization of messages. This would assume both ends have access to the ZeroMQ JMS wrapper.
+ * Java object serialisation of messages. This would assume both ends have access to the ZeroMQ JMS wrapper.
  */
 @ZmqComponent("serialize")
 @ZmqUriParameter("event")
