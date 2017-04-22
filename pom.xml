@@ -100,7 +100,6 @@
       <version>${version.junit}</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
@@ -135,6 +134,7 @@
        <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
 	  <version>${version.jackson}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

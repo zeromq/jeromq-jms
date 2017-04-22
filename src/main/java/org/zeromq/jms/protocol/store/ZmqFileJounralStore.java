@@ -515,11 +515,15 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
             } catch (IOException ex) {
                 throw new ZmqException("Unable to reset store (dir=" + journalDir + "): " + this, ex);
             }
+
+            LOGGER.info("Sucessfully reset: " + this);
+        } else {
+            LOGGER.info("Nothing to reset: " + this);
         }
     }
 
     @Override
-    public void delete(final Object messageId) throws ZmqException {
+    public boolean delete(final Object messageId) throws ZmqException {
         final MessageLocation location = messageLocationMap.get(messageId);
 
         if (location != null) {
@@ -569,7 +573,7 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
                         messageLocationMap.remove(messageId);
 
                         // set as deleted, so return
-                        return;
+                        return true;
                     }
                 } catch (ClassNotFoundException ex) {
                     LOGGER.log(Level.SEVERE, "Unable to read message (pos=" + position + ", file=" + journalFile + "): " + this, ex);
@@ -580,6 +584,8 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
         }
 
         LOGGER.warning("Unknown event marked for deletion with reference (messageId=" + messageId + "): " + this);
+        
+        return false;
     }
 
     @Override
@@ -631,6 +637,10 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
             final MessageLocation location = new MessageLocation(messageId, currentJournalFile, position);
 
             messageLocationMap.put(messageId, location);
+
+            if (LOGGER.isLoggable(Level.FINEST)) {
+                LOGGER.finest("Message stored and tracked: " + message);
+            }
         } catch (IOException ex) {
             throw new ZmqException("Cannot create message (" + messageId + ") : " + this, ex);
         }
@@ -645,6 +655,12 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
         final Path archiveDir = getAchiveJournalDir();
         final Date currentTime = new Date();
 
+        try {
+            Files.createDirectories(archiveDir);
+        } catch (IOException ex) {
+            throw new ZmqException("Unable to purge archieve file(s): " + ex.getMessage(), ex);
+        }
+
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(archiveDir, "*" + JOURNAL_FILE_SUFFIX)) {
              for (Path journalFile : directoryStream) {
                 final FileTime journalFileLastModified = Files.getLastModifiedTime(journalFile, LinkOption.NOFOLLOW_LINKS);
@@ -654,7 +670,7 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
                    }
                }
         } catch (IOException ex) {
-            throw new ZmqException("Unable to purge archieve file(s).", ex);
+            throw new ZmqException("Unable to purge archieve file(s): " + ex.getMessage(), ex);
         }
     }
 
@@ -665,6 +681,10 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
      * @throws ZmqException     throw I/O exception on sweep failure
      */
     public void sweepFiles(final long republishAfterMsec) throws ZmqException {
+        if (LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.info("Start sweep (republishAfterMsec=" + republishAfterMsec + ") on store: " + this);
+        }
+
         final Map<String, List<Path>> journalMap = new TreeMap<String, List<Path>>();
         final Map<String, FileTime> journalLastModifiedMap = new TreeMap<String, FileTime>();
         final FileTime currentTime = FileTime.fromMillis(System.currentTimeMillis());
@@ -689,9 +709,12 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
                 }
 
                 if (uniqueId.equals(jounalFileUniqueId)) {
-                    // these are this stores journals so touch them to ensure other sweeps
-                    // know you are still active.
+                    // Touch this stores journals to ensure other sweeps know you are still active.
                     Files.setLastModifiedTime(journalFile, currentTime);
+
+                    if (LOGGER.isLoggable(Level.FINEST)) {
+                        LOGGER.info("Touch my store jounral: " + journalFile);
+                    }
                 }
             }
         } catch (IOException ex) {
@@ -720,15 +743,23 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
         int candidateIndex = (uniqueIdIndex + 1) % journalFileUniqueIds.length;
         final FileTime candidateLastModified = journalLastModifiedMap.get(journalFileUniqueIds[candidateIndex]);
 
-           if (candidateLastModified.toMillis() < (currentTime.toMillis() - republishAfterMsec)) {
-               // Sweep oldest candidate file
-               final List<Path> journalFiles = journalMap.get(journalFileUniqueIds[candidateIndex]);
-               sweepOldestJournalFile(journalFiles, republishAfterMsec);
-           }
+        if (candidateLastModified.toMillis() < (currentTime.toMillis() - republishAfterMsec)) {
+            if (LOGGER.isLoggable(Level.FINEST)) {
+                LOGGER.info("Checkout orphaned store [orphanUniqueId=" + journalFileUniqueIds[candidateIndex] +"] : " + this);
+            }
+            
+            // Sweep oldest candidate file
+            final List<Path> journalFiles = journalMap.get(journalFileUniqueIds[candidateIndex]);
+            sweepOldestJournalFile(journalFiles, republishAfterMsec);
+        }
 
         final List<Path> defaultJournalFiles = journalMap.get(uniqueId);
         if (defaultJournalFiles.size() > 1) {
             sweepOldestJournalFile(defaultJournalFiles, republishAfterMsec);
+        }
+
+        if (LOGGER.isLoggable(Level.FINEST)) {
+            LOGGER.info("Sweep finished on store: " + this);
         }
     }
 
@@ -754,6 +785,10 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
      */
     public void sweepJournalFile(final Path journalFile, final long republishAfterMsec) throws ZmqException {
         final int count = republishLostMessages(journalFile, republishAfterMsec);
+
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("Republished [count=" + count + ", journalFile=" + journalFile + "] message: " + this);
+        }
 
         // With ALL journal entries deleted the files can be archived.
         if (count == 0) {
@@ -842,6 +877,11 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
 
                             final MessageLocation location = new MessageLocation(messageId, journalFile, position);
                             messageLocationMap.put(messageId, location);
+                            
+                            if (LOGGER.isLoggable(Level.FINEST)) {
+                                LOGGER.finest("Republished message[messageId=" + messageId + "]: " + this);
+                            }
+                            
                         }
                     }
                 } catch (ClassNotFoundException ex) {

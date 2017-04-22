@@ -29,7 +29,7 @@ Each gateway has 1 or more ZMQ addresses. Each address will instantiates SocketS
 A gateway is based from the meta data of the JMS destination (queue or topic), which is defined as a URI.
 
 ```
-	jms:queue:latTestOutQueue?gateway=par&gateway.type=DEALER&gateway.bind=true&gateway.addr=inproc://lat_test2&redelivery.retry=3
+	jms:queue:latTestOutQueue?gateway=par&socket.type=DEALER&socket.bind=true&socket.addr=inproc://lat_test2&redelivery.retry=3
 ```
 
 
@@ -51,17 +51,17 @@ The package root structure is the same as Java ZeroMQ, starting with “org.zero
 
 Package Name | Description
 --- | ---
-org.zeromq.jms | Implementation of the JAVA JMS API 1.1
+org.zeromq.jms | Implementation of the JAVA JMS API 2.1
 org.zeromq.jms.annotation | Annotation functionality
-org.zeromq.jms.jconsole | Java JConsole plug-in (uses JAVA FX 2, so Java 1.6 or above)
-org.zeromq.jms.jmx | MBean functionality, which can be view by the JConsole plugin, or in raw form.
+org.zeromq.jms.jconsole | Java JConsole plug-in (uses plain old Swing)
+org.zeromq.jms.jmx | MBean functionality, which can be view by the JConsole plug-in, or in raw form.
 org.zeromq.jms.jndi | The Java naming functionality
 org.zeromq.jms.protocol | The ZMQ core functionality based around the Gateway
 org.zeromq.jms.protocol.event | Event handlers to map to/from JMS with serial and STOMP implementations
 org.zeromq.jms.protocol.filter | Allow ZMQ pub/sub filtering of messages (not JMS selectors)
-org.zeromq.jms.protocol.message | Internal message contain (a façade) to enable separation of message from protocol.
 org.zeromq.jms.protocol.redelivery | Re-delivery strategy functionality, and simple implementation
-org.zeromq.jms.selector | JMS based message selection used for TOPIC filtering (not ZMQ pub/sub filtering).
+org.zeromq.jms.protocol.store | Message store functionality for queue journal functionality
+org.zeromq.jms.selector | JMS message selector functionality
 org.zeromq.jms.stomp | STOMP message builder
 org.zeromq.jms.util | Utility class
 

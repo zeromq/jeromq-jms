@@ -8,7 +8,6 @@ import java.nio.file.Paths;
 import javax.jms.JMSException;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.zeromq.jms.ZmqMessage;
 import org.zeromq.jms.ZmqTextMessageBuilder;
@@ -28,7 +27,7 @@ public class TestZmqFileMessangeStore {
      * @throws JMSException          throw JMS exception on test failure
      * @throws InterruptedException  throw interrupt on test failure
      */
-    @Ignore("Jounraling still has issues")  @Test()
+    @Test()
     public void testStoreMessage() throws IOException, JMSException, InterruptedException {
         final String tempDir = System.getProperty("java.io.tmpdir");
         final Path location = Paths.get(tempDir).resolve("test-queue");
@@ -86,22 +85,25 @@ public class TestZmqFileMessangeStore {
      * @throws JMSException          throw JMS exception on test failure
      * @throws InterruptedException  throw interrupt on test failure
      */
-    @Ignore("Jounraling still has issues")  @Test()
+    @Test()
     public void testMultiStoreMessage() throws IOException, JMSException, InterruptedException {
         final String tempDir = System.getProperty("java.io.tmpdir");
         final Path location = Paths.get(tempDir).resolve("test-queue");
 
         final String groupId = "grouping";
         final String uniqueId1 = "zmq-1";
-        final ZmqFileJounralStore store1 = new ZmqFileJounralStore(location, groupId, uniqueId1, "yyyyMMdd", "GMT");
-
-        store1.reset();
-        store1.open();
-
         final String uniqueId2 = "zmq-2";
+        final ZmqFileJounralStore store1 = new ZmqFileJounralStore(location, groupId, uniqueId1, "yyyyMMdd", "GMT");
         final ZmqFileJounralStore store2 = new ZmqFileJounralStore(location, groupId, uniqueId2, "yyyyMMdd", "GMT");
 
+        // disable auto-sweep fir this test
+        store1.setSweepPeriod(-1);
+        store2.setSweepPeriod(-1);
+
+        store1.reset();
         store2.reset();
+
+        store1.open();
         store2.open();
 
         final ZmqMessage message1 = ZmqTextMessageBuilder.create().appendText(MESSAGE_1).toMessage();
@@ -112,8 +114,8 @@ public class TestZmqFileMessangeStore {
         store2.create("messageId-2-2", message2);
         store2.create("messageId-3-2", message3);
 
-        store1.sweepFiles(3000);
-        store2.sweepFiles(3000);
+        store1.sweepFiles(2000);
+        store2.sweepFiles(2000);
 
         ZmqJournalEntry entry1 = store1.read();
         Assert.assertNull(entry1);
@@ -121,8 +123,8 @@ public class TestZmqFileMessangeStore {
         ZmqJournalEntry entry2 = store2.read();
         Assert.assertNull(entry2);
 
-        store1.sweepFiles(3000);
-        store2.sweepFiles(3000);
+        store1.sweepFiles(2000);
+        store2.sweepFiles(2000);
 
         entry1 = store1.read();
         Assert.assertNull(entry1);
@@ -131,8 +133,7 @@ public class TestZmqFileMessangeStore {
         Assert.assertNull(entry2);
 
         Thread.sleep(3000);
-        store1.sweepFiles(3000);
-
+        store1.sweepFiles(2000);
         entry1 = store1.read();
         Assert.assertNotNull(entry1);
         Assert.assertEquals(message2, entry1.getMessage());

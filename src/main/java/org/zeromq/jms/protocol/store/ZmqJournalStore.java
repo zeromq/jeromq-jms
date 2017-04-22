@@ -26,8 +26,9 @@ public interface ZmqJournalStore {
      * Delete the specified journal entry from the store.
      * @param  messageId     the unique ZMQ message identifier
      * @throws ZmqException  throws I/O based ZMQ exception
+     * @return               return true when found and deleted 
      */
-    void delete(Object messageId) throws ZmqException;
+    boolean delete(Object messageId) throws ZmqException;
 
     /**
      * Ready a journal entry from the store.
