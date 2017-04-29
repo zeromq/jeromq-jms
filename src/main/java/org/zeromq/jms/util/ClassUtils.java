@@ -329,6 +329,10 @@ public class ClassUtils {
                         value = paramValue;
                     } else if (paramType.isEnum()) {
                         value = Enum.valueOf((Class<Enum>) paramType, paramValue);
+                    } else if (paramType.isArray()) {
+                        String[] values = new String[paramValues.size()];
+                        paramValues.toArray(values);
+                        value = values;
                     } else {
                         throw new UnsupportedOperationException("Unable to map parameter [" + paramName + "] with value ["
                             + paramValue + "] to required type: " + paramType);
