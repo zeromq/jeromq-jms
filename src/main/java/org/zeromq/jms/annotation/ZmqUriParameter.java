@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
 public @interface ZmqUriParameter {
 
     /**
-     *  Return the attribute name attached against setter,  i.e. gateway.redelivery=retry, gateway.redelivery.retry=3, etc...
+     *  Return the attribute name attached against setter,  i.e. redelivery=retry, redelivery.retry=3, etc...
      */
     String value();
 }

@@ -15,35 +15,38 @@ import org.zeromq.jms.annotation.ZmqUriParameter;
  * Simple fixed subscribe policy. ZMQ need a subscribe value and cannot be number, so set
  * to the DEFAUKT value on construction.
  */
-@ZmqComponent("fixedFilter")
+@ZmqComponent("fixedTag")
 @ZmqUriParameter("filter")
 public class ZmqFixedFilterPolicy implements ZmqFilterPolicy {
 
-    private String producerfilter;
-    private String[] consumerFilters;
+    private String publishTag;
+    private String[] subscribeTags;
 
     /**
      * Construct filter policy using default values.
      */
     public ZmqFixedFilterPolicy() {
-        this.producerfilter = ZmqFilterPolicy.DEFAULT_FILTER;
-        this.consumerFilters = new String[] { ZmqFilterPolicy.DEFAULT_FILTER };
+        this.publishTag = ZmqFilterPolicy.DEFAULT_FILTER;
+        this.subscribeTags = new String[] { ZmqFilterPolicy.DEFAULT_FILTER };
     }
 
-    @Override
-    @ZmqUriParameter("filter.value")
-    public void setFilters(final String[] filters) {
-        this.producerfilter = (filters == null || filters.length == 0) ? null : filters[0];
-        this.consumerFilters = filters;
+    @ZmqUriParameter("filter.pubTag")
+    public void setPublishTags(final String tag) {
+        this.publishTag = tag;
+    }
+
+    @ZmqUriParameter("filter.subTags")
+    public void setSubscribeTags(final String[] tags) {
+        this.subscribeTags = tags;
     }
 
     @Override
     public String resolve(final ZmqMessage message) {
-        return producerfilter;
+        return publishTag;
     }
 
     @Override
-    public String[] getConsumerFilters() {
-        return consumerFilters;
+    public String[] getSubscirbeTags() {
+        return subscribeTags;
     }
 }

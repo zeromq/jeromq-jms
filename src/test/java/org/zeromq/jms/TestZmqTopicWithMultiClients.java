@@ -44,10 +44,10 @@ public class TestZmqTopicWithMultiClients {
 
     private static final String TOPIC_ADDR = "tcp://*:9713";
     private static final String TOPIC_PUB_NAME = "topicPub";
-    private static final String TOPIC_PUB_URI = "jms:topic:" + TOPIC_PUB_NAME + "?socket.addr=" + TOPIC_ADDR + "&redlivery.retry=0&event=stomp";
+    private static final String TOPIC_PUB_URI = "jms:topic:" + TOPIC_PUB_NAME + "?socket.addr=" + TOPIC_ADDR + "&redelivery.retry=0&event=stomp";
 
     private static final String TOPIC_REC_NAME = "topicRec";
-    private static final String TOPIC_REC_URI = "jms:topic:" + TOPIC_REC_NAME + "?socket.addr=" + TOPIC_ADDR + "&redlivery.retry=0&event=stomp";
+    private static final String TOPIC_REC_URI = "jms:topic:" + TOPIC_REC_NAME + "?socket.addr=" + TOPIC_ADDR + "&redelivery.retry=0&event=stomp";
 
     private static final int CLIENT_COUNT = 5;
     private static final int CLIENT_MESSAGE_COUNT = 100;

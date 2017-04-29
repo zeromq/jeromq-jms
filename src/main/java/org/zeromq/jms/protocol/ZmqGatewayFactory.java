@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -424,14 +423,6 @@ public class ZmqGatewayFactory {
                         filter = (ZmqFilterPolicy) filterPolicyClass.newInstance();
 
                         LOGGER.info("Using filter policy  (" + filter.getClass().getCanonicalName() + ") for destination: " + destination);
-
-                        final String[] filters = uri.getOptionValues("filter.value", null);
-
-                        if (filters != null && filters.length > 0) {
-                            filter.setFilters(null);
-
-                            LOGGER.info("Using filters  (" + Arrays.toString(filters) + ") for destination: " + destination);
-                        }
                     }
                 }
             }

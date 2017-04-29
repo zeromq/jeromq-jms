@@ -47,10 +47,10 @@ public class TestZmqQueueWithMultiClients {
     private static final String QUEUE_ADDR = "tcp://*:9712";
     private static final String QUEUE_CLIENT_NAME = "send1";
     private static final String QUEUE_CLIENT_URI = "jms:queue:" + QUEUE_CLIENT_NAME
-        + "?socket.addr=" + QUEUE_ADDR + "&socket.sndHWM=100000&redlivery.retry=0&event=stomp&ioThreads=3";
+        + "?socket.addr=" + QUEUE_ADDR + "&socket.sndHWM=100000&redelivery.retry=0&event=stomp&ioThreads=3";
     private static final String QUEUE_SERVER_NAME = "recv1";
     private static final String QUEUE_SERVER_URI = "jms:queue:" + QUEUE_SERVER_NAME
-        + "?socket.addr=" + QUEUE_ADDR + "&socket.bind=true&sndHWM=10000&redlivery.retry=0&event=stomp&ioThreads=3";
+        + "?socket.addr=" + QUEUE_ADDR + "&socket.bind=true&sndHWM=10000&redelivery.retry=0&event=stomp&ioThreads=3";
 
     private static final int CLIENT_COUNT = 10;
 

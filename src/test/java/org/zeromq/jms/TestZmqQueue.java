@@ -39,7 +39,7 @@ public class TestZmqQueue {
 
     private static final String QUEUE_NAME = "queue_1";
     private static final String QUEUE_ADDR = "tcp://*:9728";
-    private static final String QUEUE_URI = "jms:queue:" + QUEUE_NAME + "?gateway.addr=" + QUEUE_ADDR + "&redlivery.retry=0&event=stomp";
+    private static final String QUEUE_URI = "jms:queue:" + QUEUE_NAME + "?socket.addr=" + QUEUE_ADDR + "&event=stomp";
 
     private static final String MESSAGE_1 = "this is the text message 1";
     private static final String MESSAGE_2 = "this is the text message 2";

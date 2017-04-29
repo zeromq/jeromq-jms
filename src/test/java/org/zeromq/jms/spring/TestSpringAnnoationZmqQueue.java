@@ -43,10 +43,10 @@ public class TestSpringAnnoationZmqQueue {
     private static final String QUEUE_ADDR = "tcp://*:9712";
     private static final String QUEUE_CLIENT_NAME = "send1";
     private static final String QUEUE_CLIENT_URI = "jms:queue:" + QUEUE_CLIENT_NAME
-        + "?socket.addr=" + QUEUE_ADDR + "&redlivery.retry=0&event=stomp";
+        + "?socket.addr=" + QUEUE_ADDR + "&redelivery.retry=0&event=stomp";
     private static final String QUEUE_SERVER_NAME = "recv1";
     private static final String QUEUE_SERVER_URI = "jms:queue:" + QUEUE_SERVER_NAME
-        + "?socket.addr=" + QUEUE_ADDR + "&socket.bind=true&redlivery.retry=0&event=stomp";
+        + "?socket.addr=" + QUEUE_ADDR + "&socket.bind=true&redelivery.retry=0&event=stomp";
 
     /**
      * Spring configuration.

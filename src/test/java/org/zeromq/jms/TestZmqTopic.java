@@ -36,9 +36,9 @@ public class TestZmqTopic {
     private static final String TOPIC_ADDR2 = "tcp://*:9721";
     private static final String TOPIC_ADDR3 = "tcp://*:9722";
 
-    private static final String TOPIC_URI1 = "jms:topic:topic_1?gateway.addr=" + TOPIC_ADDR1 + "&redlivery.retry=0&event=stomp";
-    private static final String TOPIC_URI2 = "jms:topic:topic_2?gateway.addr=" + TOPIC_ADDR2 + "&redlivery.retry=0&event=stomp";
-    private static final String TOPIC_URI3 = "jms:topic:topic_3?gateway.addr=" + TOPIC_ADDR3 + "&redlivery.retry=0&event=stomp";
+    private static final String TOPIC_URI1 = "jms:topic:topic_1?socket.addr=" + TOPIC_ADDR1 + "&event=stomp";
+    private static final String TOPIC_URI2 = "jms:topic:topic_2?socket.addr=" + TOPIC_ADDR2 + "&event=stomp";
+    private static final String TOPIC_URI3 = "jms:topic:topic_3?socket.addr=" + TOPIC_ADDR3 + "&event=stomp";
 
     private static final String MESSAGE_1 = "this is the text message 1";
     private static final String MESSAGE_2 = "this is the text message 2";

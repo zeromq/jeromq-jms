@@ -299,6 +299,7 @@ public class ClassUtils {
         for (Method method : methods) {
             final ZmqUriParameter attribute = (ZmqUriParameter) method.getAnnotation(ZmqUriParameter.class);
             final String paramName = attribute.value();
+
             final List<String> paramValues = parameters.get(paramName);
             final String paramValue = (paramValues == null || paramValues.size() == 0) ? null : paramValues.get(0);
 

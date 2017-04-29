@@ -129,7 +129,7 @@ public class ZmqSession implements QueueSession, TopicSession {
         mbeanNames.clear();
 
         if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.log(Level.FINEST, "Session closed: " + this, new Exception("Closing stack"));
+            LOGGER.log(Level.FINEST, "Session closed: " + this, new Exception("Who is call the close?"));
         } else {
             LOGGER.info("Session closed: " + this);
         }

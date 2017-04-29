@@ -27,8 +27,8 @@ public class TestZmqQueueWithJournalStore {
     private static final String QUEUE_ADDR = "tcp://*:9711";
     private static final String QUEUE_URI =
         "jms:queue:" + QUEUE_NAME
-            + "?gateway=par&gateway.acknowldge=true&gateway.addr=" + QUEUE_ADDR
-            + "&redlivery.retry=0&event=stomp" + "&journal=file";
+            + "?gateway=par&socket.addr=" + QUEUE_ADDR
+            + "&redelivery.retry=0&event=stomp" + "&journal=file";
 
     private static final String MESSAGE_1 = "this is the text message 1";
     private static final String MESSAGE_2 = "this is the text message 2";

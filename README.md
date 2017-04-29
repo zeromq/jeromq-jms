@@ -40,7 +40,41 @@ This is a major release, with allot of bug fixes and new functionality
 - adds Google Protobuf and JSON message marshaling examples in the tests
 - adds Spring annotation based test examples
 - adds journal store functionality to enable BCP and loss less messaging
- 
+
+## Examples
+
+- Simple Queue with ZMQ PUSH/PULL
+
+```
+jms:queue:queue_1?socket.addr=tcp://*:9728&event=stomp
+```
+
+- Simple Topic with ZMQ PUB/SUB
+
+```
+jms:topic:topic_1?socket.addr=tcp://*:9711&event=stomp
+```
+
+- Proxied N-1-N example 
+
+By specifying a proxy on the receiver queue defintion to enable multiple sender connecting to multiple receivers to enable fan in and out. Only one proxy can bind to the sockets, so any others will staying an PEDING state until the bound proxy drops out.
+
+``` 
+jms:queue:sender?socket.addr=tcp://*:9728&event=stomp
+jms:queue:receiver?proxy.proxyAddr=tcp://*:9728&socket.addr=tcp://*:9729&socket.bind=false&event=stomp
+```
+
+- Enable JOURNALING on a queue
+
+```
+jms:queue:queueWithJournal?gateway=par&gateway.socket=tcp://*:9711&event=stomp&journal=file
+```
+
+- Queue showing ZMQ socket property setting
+
+```jms:queue:socketTest?socket.addr=tcp://*:9999&socket.type=DEALER&socket.bind=false&redelivery=retry&redelivery.retry=0&socket.bindRetryWaitTime=1000&socket.recieveMsgFlag=10&socket.linger=10000&socket.reconnectIVL=10002&socket.backlog=10003&socket.reconnectIVLMax=10004&socket.maxMsgSize=10004&socket.sndHWM=10005&socket.rcvHWM=10006&socket.affinity=10007&socket.identity=identify&socket.rate=10010&socket.recoveryInterval=10011&socket.reqCorrelate=true&socket.reqRelaxed=true&socket.multicastHops=10010&socket.receiveTimeOut=10011&socket.sendTimeOut=10012&socket.tcpKeepAlive=10020&socket.tcpKeepAliveCount=10021&socket.tcpKeepAliveInterval=10022&socket.tcpKeepAliveIdle=10023&socket.sendBufferSize=10030&socket.receiveBufferSize=10031&socket.routerMandatory=true&socket.xpubVerbose=true&socket.ipv4Only=true&socket.delayAttachOnConnect=true");
+```
+
 ## Contribution Process
 
 This project uses the [C4 process](http://rfc.zeromq.org/spec:16) for all code changes.

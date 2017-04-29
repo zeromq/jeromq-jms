@@ -17,21 +17,15 @@ public interface ZmqFilterPolicy {
     String DEFAULT_FILTER = "none";
 
     /**
-     * Return the filter to be used, given the specified message.
+     * Return the publishing tag to be used, given the specified message.
      * @param message   the message used to determine the filter
      * @return          return the ZMQ filter
      */
     String resolve(ZmqMessage message);
 
     /**
-     * Return the consumer filters string used in subscription.
-     * @return          return the filters used in the subscription
+     * Return the subscriber tags string used in subscription.
+     * @return          return the tags used in the subscription
      */
-    String[] getConsumerFilters();
-
-    /**
-     * Optional ZMQ filter values setter.
-     * @param filters  the list of filter strings, or null
-     */
-    void setFilters(String[] filters);
+    String[] getSubscirbeTags();
 }
