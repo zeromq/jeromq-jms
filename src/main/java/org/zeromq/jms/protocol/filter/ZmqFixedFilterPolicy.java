@@ -30,11 +30,19 @@ public class ZmqFixedFilterPolicy implements ZmqFilterPolicy {
         this.subscribeTags = new String[] { ZmqFilterPolicy.DEFAULT_FILTER };
     }
 
+    /**
+     * set the ZMQ publish TAG for the ZMQ message.
+     * @param tag  the tag
+     */
     @ZmqUriParameter("filter.pubTag")
     public void setPublishTags(final String tag) {
         this.publishTag = tag;
     }
 
+    /**
+     * set the ZMQ subscription TAGs for the ZMQ socket message filter.
+     * @param tags  the tag list
+     */
     @ZmqUriParameter("filter.subTags")
     public void setSubscribeTags(final String[] tags) {
         this.subscribeTags = tags;

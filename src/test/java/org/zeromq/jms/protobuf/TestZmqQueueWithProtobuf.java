@@ -30,7 +30,7 @@ import org.zeromq.jms.ZmqQueue;
 public class TestZmqQueueWithProtobuf {
 
     private static final String QUEUE_NAME = "queue_1";
-    private static final String QUEUE_ADDR = "tcp://*:9715";
+    private static final String QUEUE_ADDR = "tcp://*:9716";
     private static final String QUEUE_URI = "jms:queue:" + QUEUE_NAME + "?socket.addr=" + QUEUE_ADDR + "&event=protobuf";
 
     private static final String MESSAGE_1 = "this is the text message 1";

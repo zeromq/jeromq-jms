@@ -103,15 +103,18 @@ public class TestZmqQueueWithMultiClients {
     private static class Client implements Runnable {
         private final String clientId;
         private final boolean transacted;
+        private final CountDownLatch countDownLatch;
 
         /**
          * Construct the test client.
-         * @param clientId    the unique client identifier
-         * @param transacted  the transaction indicator
+         * @param clientId        the unique client identifier
+         * @param transacted      the transaction indicator
+         * @param countDownLatch  the counter down latch
          */
-        private Client(final String clientId, final boolean transacted) {
+        private Client(final String clientId, final boolean transacted, final CountDownLatch countDownLatch) {
             this.clientId = clientId;
             this.transacted = transacted;
+            this.countDownLatch = countDownLatch;
         }
 
         @Override
@@ -141,7 +144,7 @@ public class TestZmqQueueWithMultiClients {
                         session.commit();
                     }
                 } finally {
-                    Thread.sleep(7000);
+                    countDownLatch.await(60, TimeUnit.SECONDS);
 
                     session.close();
                 }
@@ -222,8 +225,8 @@ public class TestZmqQueueWithMultiClients {
 
                 final List<Client> clients = new ArrayList<Client>();
                 for (int i = 0; i < CLIENT_COUNT; i++) {
-                    final Client client = new Client("CLIENT_" + i, false);
-                    executor.execute(new Client("CLIENT_" + i, false));
+                    final Client client = new Client("CLIENT_" + i, false, countDownLatch);
+                    executor.execute(client);
                     clients.add(client);
                 }
 
@@ -277,7 +280,7 @@ public class TestZmqQueueWithMultiClients {
 
                 final List<Client> clients = new ArrayList<Client>();
                 for (int i = 0; i < CLIENT_COUNT; i++) {
-                    final Client client = new Client("CLIENT_" + i, true);
+                    final Client client = new Client("CLIENT_" + i, true, countDownLatch);
                     new Thread(client).start();
                     clients.add(client);
                 }

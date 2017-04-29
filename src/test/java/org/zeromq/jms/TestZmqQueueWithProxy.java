@@ -146,7 +146,7 @@ public class TestZmqQueueWithProxy {
     private Message recieveMessage(final QueueReceiver[] receivers, final int waitTime) throws JMSException {
         for (QueueReceiver receiver : receivers) {
             Message message = receiver.receive(waitTime);
-            
+
             if (message != null) {
                 return message;
             }

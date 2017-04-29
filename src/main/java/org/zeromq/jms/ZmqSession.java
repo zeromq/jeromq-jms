@@ -145,17 +145,17 @@ public class ZmqSession implements QueueSession, TopicSession {
                     }
                 }
             } catch (ZmqException ex) {
-                throw new ZmqException("Unable to commit messages.", ex);
+                throw new ZmqException("Unable to commit messages: " + this, ex);
             }
 
             if (LOGGER.isLoggable(Level.FINEST)) {
-                LOGGER.finest("Commited messages");
+                LOGGER.finest("Commited messages:" + this);
             }
         } else {
             throw new ZmqException("Session was not enabled for transactions.");
         }
 
-        LOGGER.info("Session committed");
+        LOGGER.info("Session committed: " + this);
     }
 
     @Override
