@@ -359,7 +359,7 @@ public class ZmqURI implements Externalizable {
      * Converts a possible list of values for an option to a sing;e value with a specified
      * separator.
      * @param paramName  the parameter name
-     * @param seperator  the separator
+     * @param separator  the separator
      * @return           return a single value (or values in a list)
      */
     public String getOptionValue(final String paramName, final char separator) {
@@ -370,14 +370,14 @@ public class ZmqURI implements Externalizable {
         }
 
         StringBuilder builder = new StringBuilder();
-        
+
         for (String value : values) {
             if (builder.length() > 0) {
                 builder.append(separator);
             }
             builder.append(value);
         }
-        
+
         return builder.toString();
     }
 

@@ -26,7 +26,7 @@ public class TestZmqTopicWithMultiProducers {
 
     private static final String TOPIC_ADDR1 = "tcp://*:9735";
     private static final String TOPIC_ADDR2 = "tcp://*:9736";
- 
+
     private static final String TOPIC_URI = "jms:topic:topic_2?socket.addr=" + TOPIC_ADDR1 + "," + TOPIC_ADDR2
         + "&filter=propertyTag&filter.subTags=NASA,APAC&filter.pubPropertyName=Region&event=stomp";
 
@@ -35,10 +35,10 @@ public class TestZmqTopicWithMultiProducers {
 
     private static final String TOPIC_PUB = "jms:topic:publish?socket.addr=" + TOPIC_ADDR3 + "&socket.bind=false"
             + "&filter=propertyTag&filter.pubPropertyName=Region&event=stomp";
-    private static final String TOPIC_SUB1 = "jms:topic:subscribe1?proxy.proxyAddr=" + TOPIC_ADDR3 + "&proxy.proxyType=XSUB&proxy.proxyOutType=XPUB" 
+    private static final String TOPIC_SUB1 = "jms:topic:subscribe1?proxy.proxyAddr=" + TOPIC_ADDR3 + "&proxy.proxyType=XSUB&proxy.proxyOutType=XPUB"
             + "&socket.addr=" + TOPIC_ADDR4 + "&socket.bind=false"
             + "&filter=propertyTag&filter.subTags=NASA,APAC&event=stomp";
-    private static final String TOPIC_SUB2 = "jms:topic:subscribe2?proxy.proxyAddr=" + TOPIC_ADDR3 + "&proxy.proxyType=XSUB&proxy.proxyOutType=XPUB" 
+    private static final String TOPIC_SUB2 = "jms:topic:subscribe2?proxy.proxyAddr=" + TOPIC_ADDR3 + "&proxy.proxyType=XSUB&proxy.proxyOutType=XPUB"
             + "&socket.addr=" + TOPIC_ADDR4 + "&socket.bind=false"
             + "&filter=propertyTag&filter.subTags=EMEA&event=stomp";
 
