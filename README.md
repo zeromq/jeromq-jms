@@ -24,7 +24,7 @@ jms:queue:queue_out?gateway=par&socket.type=DEALER&socket.bind=true&socket.addr=
 
 ## WIKI
 
-Refer to the WIKI for more details
+Refer to the WIKI for more details (https://github.com/zeromq/jeromq-jms/wiki)
 
 ## Release 2.0
 
