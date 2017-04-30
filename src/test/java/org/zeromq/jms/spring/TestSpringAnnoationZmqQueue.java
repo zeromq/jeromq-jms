@@ -28,7 +28,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
-import org.zeromq.jms.TestZmqQueueWithMultiClients;
+import org.zeromq.jms.TestZmqQueueWithMultiSenders;
 import org.zeromq.jms.ZmqConnectionFactory;
 
 /**
@@ -38,7 +38,7 @@ import org.zeromq.jms.ZmqConnectionFactory;
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
 public class TestSpringAnnoationZmqQueue {
 
-    private static final Logger LOGGER = Logger.getLogger(TestZmqQueueWithMultiClients.class.getCanonicalName());
+    private static final Logger LOGGER = Logger.getLogger(TestZmqQueueWithMultiSenders.class.getCanonicalName());
 
     private static final String QUEUE_ADDR = "tcp://*:9712";
     private static final String QUEUE_CLIENT_NAME = "send1";

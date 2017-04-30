@@ -40,9 +40,9 @@ import org.junit.Test;
 /**
  * Test Zero-JMS multi-clients.
  */
-public class TestZmqQueueWithMultiClients {
+public class TestZmqQueueWithMultiSenders {
 
-    private static final Logger LOGGER = Logger.getLogger(TestZmqQueueWithMultiClients.class.getCanonicalName());
+    private static final Logger LOGGER = Logger.getLogger(TestZmqQueueWithMultiSenders.class.getCanonicalName());
 
     private static final String QUEUE_ADDR = "tcp://*:9712";
     private static final String QUEUE_CLIENT_NAME = "send1";

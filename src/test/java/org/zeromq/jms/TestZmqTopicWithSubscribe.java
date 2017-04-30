@@ -27,9 +27,9 @@ public class TestZmqTopicWithSubscribe {
     private static final String TOPIC_ADDR1 = "tcp://*:9725";
     private static final String TOPIC_ADDR2 = "tcp://*:9726";
 
-    private static final String TOPIC_URI1 = "jms:topic:topic_1?gateway.addr=" + TOPIC_ADDR1
+    private static final String TOPIC_URI1 = "jms:topic:topic_1?socket.addr=" + TOPIC_ADDR1
         + "&redelivery.retry=0&event=stomp";
-    private static final String TOPIC_URI2 = "jms:topic:topic_2?gateway.addr=" + TOPIC_ADDR2
+    private static final String TOPIC_URI2 = "jms:topic:topic_2?socket.addr=" + TOPIC_ADDR2
         + "&filter=propertyTag&filter.subTags=NASA,APAC&filter.pubPropertyName=Region&event=stomp";
 
     private static final String MESSAGE_1 = "this is the text message 1";

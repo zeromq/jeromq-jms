@@ -261,7 +261,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
                 }
             }
 
-            ZmqSocketSession socketSession = socketSessions.get(addr);
+            ZmqSocketSession socketSession = socketSessions.get(socketAddr);
             // re-use socket metrics on a closed socket
             ZmqSocketMetrics socketMetrics = (socketSession != null) ? socketSession.getMetrics() : null;
 
@@ -306,7 +306,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             final boolean frontSocketBound = true;
             final ZMQ.Socket frontSocket = context.socket(frontSocketType.getType());
             final String backSocketAddr = addr;
-            final ZmqSocketType backSocketType = (socketContext.getOutProxyType() == null) ? ZmqSocketType.DEALER : socketContext.getOutProxyType();
+            final ZmqSocketType backSocketType = (socketContext.getProxyOutType() == null) ? ZmqSocketType.DEALER : socketContext.getProxyOutType();
             final boolean backSocketBound = true;
             final ZMQ.Socket backSocket =  context.socket(backSocketType.getType());
 

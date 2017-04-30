@@ -73,7 +73,13 @@ public class ZmqConnectionFactory implements QueueConnectionFactory, TopicConnec
     public void setDestinations(final String[] destinations) {
         for (int i = 0; i < destinations.length; i++) {
             final ZmqURI uri = ZmqURI.create(destinations[i]);
-            destinationSchema.put(uri.getDestinationName(), uri);
+            final String uriDesintationName = uri.getDestinationName();
+
+            if (destinationSchema.containsKey(uriDesintationName)) {
+                throw new JMSRuntimeException("Existing URI within the schema have been allocated the destrinaiton name: " + uri);
+            }
+
+            destinationSchema.put(uriDesintationName, uri);
         }
     }
 

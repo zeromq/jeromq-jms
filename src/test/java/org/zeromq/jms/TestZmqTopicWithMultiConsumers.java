@@ -38,9 +38,9 @@ import org.junit.Test;
 /**
  * Test Zero-JMS multi-clients TOPIC.
  */
-public class TestZmqTopicWithMultiClients {
+public class TestZmqTopicWithMultiConsumers {
 
-    private static final Logger LOGGER = Logger.getLogger(TestZmqTopicWithMultiClients.class.getCanonicalName());
+    private static final Logger LOGGER = Logger.getLogger(TestZmqTopicWithMultiConsumers.class.getCanonicalName());
 
     private static final String TOPIC_ADDR = "tcp://*:9713";
     private static final String TOPIC_PUB_NAME = "topicPub";

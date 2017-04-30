@@ -85,6 +85,7 @@ public class ZmqSocketContext {
         this.ioThreads = context.ioThreads;
 
         this.proxyType = context.proxyType;
+        this.proxyOutType = context.proxyOutType;
         this.proxyAddr = context.proxyAddr;
 
         this.linger = context.linger;
@@ -224,7 +225,7 @@ public class ZmqSocketContext {
     /**
      * @return  return the proxy outgoing socket type.
      */
-    public ZmqSocketType getOutProxyType() {
+    public ZmqSocketType getProxyOutType() {
         return proxyOutType;
     }
 

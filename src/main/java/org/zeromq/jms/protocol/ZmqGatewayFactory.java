@@ -126,11 +126,11 @@ public class ZmqGatewayFactory {
         if (uri.isOption("gateway.addr")) {
             context.setBindFlag(uri.getOptionValue("gateway.bind", defaultBindFlag));
             context.setType(ZmqSocketType.valueOf(uri.getOptionValue("gateway.type", defaultType.toString())));
-            context.setAddr(uri.getOptionValue("gateway.addr"));
+            context.setAddr(uri.getOptionValue("gateway.addr", ','));
         } else if (uri.isOption("socket.addr")) {
             context.setBindFlag(uri.getOptionValue("socket.bind", defaultBindFlag));
             context.setType(ZmqSocketType.valueOf(uri.getOptionValue("socket.type", defaultType.toString())));
-            context.setAddr(uri.getOptionValue("socket.addr"));
+            context.setAddr(uri.getOptionValue("socket.addr", ','));
 
             final Map<String, List<String>> socketOptions = uri.getOptions("socket");
             final Map<String, List<String>> proxyOptions = uri.getOptions("proxy");

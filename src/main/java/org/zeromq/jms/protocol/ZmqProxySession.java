@@ -228,7 +228,7 @@ public class ZmqProxySession implements Runnable {
             } catch (ZMQException ex) {
                 if (ex.getErrorCode() == 48) {
                     setStatus(ZmqSocketStatus.PAUSED);
-                    LOGGER.info("Proxy [" + socketAddr + "] socket UNSUCCESSFUL (Already Bound): " + this);
+                    LOGGER.fine("Proxy [" + socketAddr + "] socket UNSUCCESSFUL (Already Bound): " + this);
 
                     return getStatus();
                 }

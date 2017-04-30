@@ -356,6 +356,32 @@ public class ZmqURI implements Externalizable {
     }
 
     /**
+     * Converts a possible list of values for an option to a sing;e value with a specified
+     * separator.
+     * @param paramName  the parameter name
+     * @param seperator  the separator
+     * @return           return a single value (or values in a list)
+     */
+    public String getOptionValue(final String paramName, final char separator) {
+        String[] values = getOptionValues(paramName);
+
+        if (values == null || values.length == 0) {
+            return null;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        
+        for (String value : values) {
+            if (builder.length() > 0) {
+                builder.append(separator);
+            }
+            builder.append(value);
+        }
+        
+        return builder.toString();
+    }
+
+    /**
      * Return the first option value found for the specified parameter within
      * the URI. When non can be found the default value are returned.
      * @param paramName     the parameter name
