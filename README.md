@@ -57,7 +57,7 @@ jms:topic:topic_1?socket.addr=tcp://*:9711&event=stomp
 
 - Proxied N-1-N example 
 
-By specifying a proxy on the receiver queue defintion to enable multiple sender connecting to multiple receivers to enable fan in and out. Only one proxy can bind to the sockets, so any others will staying an PEDING state until the bound proxy drops out.
+By specifying a proxy on the receiver queue defintion to enable multiple sender connecting to multiple receivers to enable fan in and out. Only one proxy can bind to the sockets, so any others will staying an PENDING state until the bound proxy drops out.
 
 ``` 
 jms:queue:sender?socket.addr=tcp://*:9728&event=stomp
