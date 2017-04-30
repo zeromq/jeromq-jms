@@ -42,7 +42,7 @@ import org.zeromq.jms.ZmqTextMessageBuilder;
  */
 public class TestMBean {
     private static final String QUEUE_NAME = "queue_1";
-    private static final String QUEUE_ADDR = "tcp://*:9728";
+    private static final String QUEUE_ADDR = "tcp://*:9828";
     private static final String QUEUE_URI = "jms:queue:" + QUEUE_NAME + "?gateway.addr=" + QUEUE_ADDR
             + "&redelivery.retry=0&event=ZmqStompEventHandler";
 
