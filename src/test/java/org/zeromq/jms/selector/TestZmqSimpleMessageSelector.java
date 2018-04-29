@@ -26,7 +26,7 @@ public class TestZmqSimpleMessageSelector {
     @Test
     public void testMathExpresion() {
         try {
-            final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("5.0 = 2.0 + 3.0");
+            final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("6 = 2.0 + 3.0 + 1");
             final Map<String, Object> variables = new HashMap<String, Object>();
 
             final boolean result = selector.evaluate(variables);
@@ -48,6 +48,7 @@ public class TestZmqSimpleMessageSelector {
             variables.put("var1", 1.0);
 
             final boolean result = selector.evaluate(variables);
+            //((ZmqSimpleMessageSelector) selector).dump();
 
             Assert.assertTrue(result);
         } catch (Exception ex) {
@@ -55,6 +56,30 @@ public class TestZmqSimpleMessageSelector {
         }
     }
 
+    /**
+     * Test variables functionality within the selector expression.
+     */
+    @Test
+    public void testVariableNumberTypes() {
+        try {
+            final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("21 = var1 + var2 + var3 + var4 + var5 + var6");
+            final Map<String, Object> variables = new HashMap<String, Object>();
+            variables.put("var1", (byte) 1);
+            variables.put("var2", (short) 2);
+            variables.put("var3", 3);
+            variables.put("var4", 4L);
+            variables.put("var5", (float) 5.0);
+            variables.put("var6", (float) 6.0);
+
+            final boolean result = selector.evaluate(variables);
+            //((ZmqSimpleMessageSelector) selector).dump();
+
+            Assert.assertTrue(result);
+        } catch (Exception ex) {
+            Assert.fail(ex.getMessage());
+        }
+    }
+    
     /**
      * Test SQL IN functionality within the selector expression.
      */
@@ -66,8 +91,6 @@ public class TestZmqSimpleMessageSelector {
             variables.put("var1", 1.0);
 
             final boolean result = selector.evaluate(variables);
-
-            ((ZmqSimpleMessageSelector) selector).dump();
 
             Assert.assertTrue(result);
         } catch (Exception ex) {
@@ -123,7 +146,7 @@ public class TestZmqSimpleMessageSelector {
     @Test
     public void testBetween() {
         try {
-            final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("var1 between 1 and 5");
+            final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("var1 between 1.0 and 5.0");
             final Map<String, Object> variables = new HashMap<String, Object>();
 
             variables.put("var1", 3.0);
@@ -138,6 +161,9 @@ public class TestZmqSimpleMessageSelector {
             result = selector.evaluate(variables);
             Assert.assertFalse(result);
 
+            variables.put("var1", 1);
+            result = selector.evaluate(variables);
+            Assert.assertTrue(result);
         } catch (Exception ex) {
             Assert.fail(ex.getMessage());
         }

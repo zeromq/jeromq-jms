@@ -591,6 +591,27 @@ public class ZmqSimpleMessageSelector implements ZmqMessageSelector {
     }
 
     /**
+     * Attempt to retrieve the "valid" value from the variables. All numbers are converted to double to ensure
+     * simple comparators work.
+     * @param variables  the map of variable values
+     * @param name       the name of the variable
+     * @return           return the variable value in the correct type
+     */
+    private Object getValue(final Map<String, Object> variables, final String name) {
+        final Object value = variables.get(name);
+
+        if (value == null || value instanceof String || value instanceof Date) {
+            return value;
+        }
+
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        }
+
+        throw new ArithmeticException("Unsupported type (" + value.getClass() + ") for variable: " + name);
+    }
+
+    /**
      * Evaluate the specified term return the result generated from the expression. This can be True/False, a Number, a String, anything.
      * @param variables  the map of variable values
      * @param term       the term to be evaluated
@@ -602,7 +623,7 @@ public class ZmqSimpleMessageSelector implements ZmqMessageSelector {
             return ((LiteralTerm) term).literal;
         } else if (term instanceof VariableTerm) {
             final String name = ((VariableTerm) term).name;
-            final Object value = variables.get(name);
+            final Object value = getValue(variables, name);
 
             return value;
         } else if (term instanceof ListTerm) {

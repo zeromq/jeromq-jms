@@ -50,6 +50,7 @@ public class TestZmqSimpleMessageSelector {
             variables.put("var1", 1.0);
 
             final boolean result = selector.evaluate(variables);
+            //((ZmqSimpleMessageSelector) selector).dump();
 
             Assert.assertTrue(result);
         } catch (Exception ex) {
@@ -68,8 +69,7 @@ public class TestZmqSimpleMessageSelector {
             variables.put("var1", 1.0);
 
             final boolean result = selector.evaluate(variables);
-
-            ((ZmqSimpleMessageSelector) selector).dump();
+            //((ZmqSimpleMessageSelector) selector).dump();
 
             Assert.assertTrue(result);
         } catch (Exception ex) {
@@ -113,7 +113,7 @@ public class TestZmqSimpleMessageSelector {
     @Test
     public void testBetween() {
         try {
-            final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("var1 between 1 and 5");
+            final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("var1 between 1.0 and 5.0");
             final Map<String, Object> variables = new HashMap<String, Object>();
 
             variables.put("var1", 3.0);

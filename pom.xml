@@ -4,7 +4,7 @@
 
 	<groupId>org.zeromq</groupId>
 	<artifactId>jeromq-jms</artifactId>
-	<version>2.0.2-RELEASE</version>
+	<version>2.0.3-RELEASE</version>
 	<packaging>jar</packaging>
 
 	<name>jeromq-jms</name>
@@ -49,13 +49,13 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<version.java>1.7</version.java>
-		<version.jeromq>0.4.0</version.jeromq>
+		<version.jeromq>0.4.3</version.jeromq>
 		<version.jms>2.0.1</version.jms>
 		<version.junit>4.12</version.junit>
-		<version.spring>4.2.5.RELEASE</version.spring>
-		<version.tomcat-catalina>8.5.13</version.tomcat-catalina>
-		<version.protobuf-java>3.2.0</version.protobuf-java>
-		<version.jackson>2.8.8</version.jackson>
+		<version.spring>4.3.16.RELEASE</version.spring>
+		<version.tomcat-catalina>8.5.30</version.tomcat-catalina>
+		<version.protobuf-java>3.5.1</version.protobuf-java>
+		<version.jackson>2.9.3</version.jackson>
 
 		<checkstyle.config.location>src/checkstyle.xml</checkstyle.config.location>
 		<!-- export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home 
