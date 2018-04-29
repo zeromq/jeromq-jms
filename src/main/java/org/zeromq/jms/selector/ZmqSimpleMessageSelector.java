@@ -473,8 +473,12 @@ public class ZmqSimpleMessageSelector implements ZmqMessageSelector {
      * @return       the resulting term
      */
     private static ExpressionTerm buildTerm(final Token token) {
-        if (Pattern.matches("[-+]?\\d*\\.?\\d*", token.value)) {
+        if (Pattern.matches("[-+]?\\d*\\.\\d+", token.value)) {
             return new LiteralTerm(Double.parseDouble(token.value));
+        }
+
+        if (Pattern.matches("[-+]?\\d+", token.value)) {
+            return new LiteralTerm(Integer.parseInt(token.value));
         }
 
         if (Pattern.matches("true|false", token.value)) {
@@ -681,11 +685,11 @@ public class ZmqSimpleMessageSelector implements ZmqMessageSelector {
 
             case ROUND:
                 final double roundValue = ((Number) results[0]).doubleValue();
-                return new Double(Math.round(roundValue));
+                return new Integer(new Long(Math.round(roundValue)).intValue());
 
             case LEN:
                 final String lenValue = ((String) results[0]);
-                return new Double(lenValue.length());
+                return new Integer(lenValue.length());
 
             case FORMAT:
                 final Object[] formatParams = (Object[]) results[0];
@@ -718,14 +722,14 @@ public class ZmqSimpleMessageSelector implements ZmqMessageSelector {
 
                 if (midParams.length < 3) {
                     final String midValue = ((String) midParams[1]);
-                    final int midStart = (int) ((Double) midParams[0]).longValue() - 1;
+                    final int midStart = ((Integer) midParams[0]) - 1;
 
                     return midValue.substring(midStart);
                 }
 
                 final String midValue = ((String) midParams[2]);
-                final int midStart = (int) ((Double) midParams[1]).longValue() - 1;
-                final int midLen = (int) ((Double) midParams[0]).longValue();
+                final int midStart = ((Integer) midParams[1]) - 1;
+                final int midLen = (Integer) midParams[0];
 
                 return midValue.substring(midStart, midStart + midLen);
 
