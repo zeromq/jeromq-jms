@@ -5,7 +5,7 @@
 	<groupId>org.zeromq</groupId>
 	<artifactId>jeromq-jms</artifactId>
 	<version>2.0.3-RELEASE</version>
-	<packaging>jar</packaging>
+	<packaging>bundle</packaging>
 
 	<name>jeromq-jms</name>
 	<description>ZeroMQ implementation of the JMS API</description>
@@ -283,6 +283,19 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>4.0.0</version>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Export-Package>org.zeromq.jms</Export-Package>
+						<Export-Package>org.zeromq.jms.*</Export-Package>
+					</instructions>
+				</configuration>
 			</plugin>
 		</plugins>
 
