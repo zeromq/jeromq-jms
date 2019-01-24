@@ -151,8 +151,8 @@ public class TestZmqFireAndForgetGateway {
         final ZmqEventHandler handler = new ZmqStompEventHandler();
         final ZmqFixedFilterPolicy filter = new ZmqFixedFilterPolicy();
 
-        filter.setPublishTags(ZmqFilterPolicy.DEFAULT_FILTER);
-        filter.setSubscribeTags(new String[] { ZmqFilterPolicy.DEFAULT_FILTER });
+        filter.setPublishTags("tag1");
+        filter.setSubscribeTags(new String[] { "tag1", "tag2" });
 
         final ZmqSocketContext publisherContext = new ZmqSocketContext(SOCKET_ADDR, ZmqSocketType.PUB, true, flags);
         final ZmqGateway publisher = new ZmqFireAndForgetGateway("protocol:publisher", publisherContext,

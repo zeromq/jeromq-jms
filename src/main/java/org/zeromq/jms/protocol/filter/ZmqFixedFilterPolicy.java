@@ -13,11 +13,13 @@ import org.zeromq.jms.annotation.ZmqUriParameter;
 
 /**
  * Simple fixed subscribe policy. ZMQ need a subscribe value and cannot be number, so set
- * to the DEFAUKT value on construction.
+ * to the DEFAULT value on construction.
  */
 @ZmqComponent("fixedTag")
 @ZmqUriParameter("filter")
 public class ZmqFixedFilterPolicy implements ZmqFilterPolicy {
+
+    public static final String DEFAULT_FILTER = "";
 
     private String publishTag;
     private String[] subscribeTags;
@@ -26,8 +28,8 @@ public class ZmqFixedFilterPolicy implements ZmqFilterPolicy {
      * Construct filter policy using default values.
      */
     public ZmqFixedFilterPolicy() {
-        this.publishTag = ZmqFilterPolicy.DEFAULT_FILTER;
-        this.subscribeTags = new String[] { ZmqFilterPolicy.DEFAULT_FILTER };
+        this.publishTag = DEFAULT_FILTER;
+        this.subscribeTags = new String[] { DEFAULT_FILTER };
     }
 
     /**

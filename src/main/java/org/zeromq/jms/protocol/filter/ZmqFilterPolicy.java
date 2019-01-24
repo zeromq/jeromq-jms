@@ -14,8 +14,6 @@ import org.zeromq.jms.ZmqMessage;
  */
 public interface ZmqFilterPolicy {
 
-    String DEFAULT_FILTER = "none";
-
     /**
      * Return the publishing tag to be used, given the specified message.
      * @param message   the message used to determine the filter
