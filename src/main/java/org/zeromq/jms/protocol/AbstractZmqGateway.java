@@ -251,12 +251,16 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             final ZMQ.Socket socket = getSocket(context, socketContext);
 
             // Set the filters when they exist
-            if (type == ZmqSocketType.SUB && filterPolicy != null) {
-                String[] filters = filterPolicy.getSubscirbeTags();
-                if (filters != null) {
-                    for (String filter : filters) {
-                        byte[] filterAsBytes = filter.getBytes();
-                        socket.subscribe(filterAsBytes);
+            if (type == ZmqSocketType.SUB) {
+                if (filterPolicy == null) {
+                    socket.subscribe(ZMQ.SUBSCRIPTION_ALL);
+                } else {
+                    String[] filters = filterPolicy.getSubscirbeTags();
+                    if (filters != null) {
+                        for (String filter : filters) {
+                            byte[] filterAsBytes = filter.getBytes();
+                            socket.subscribe(filterAsBytes);
+                        }
                     }
                 }
             }

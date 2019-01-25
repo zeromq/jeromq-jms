@@ -27,7 +27,6 @@ import org.zeromq.jms.annotation.ZmqComponent;
 import org.zeromq.jms.protocol.event.ZmqEventHandler;
 import org.zeromq.jms.protocol.event.ZmqStompEventHandler;
 import org.zeromq.jms.protocol.filter.ZmqFilterPolicy;
-import org.zeromq.jms.protocol.filter.ZmqFixedFilterPolicy;
 import org.zeromq.jms.protocol.redelivery.ZmqRedeliveryPolicy;
 import org.zeromq.jms.protocol.redelivery.ZmqRetryRedeliveryPolicy;
 import org.zeromq.jms.protocol.store.ZmqJournalStore;
@@ -44,7 +43,7 @@ public class ZmqGatewayFactory {
     private final Class<?> defaultGateway = ZmqFireAndForgetGateway.class;
     private final ZmqMessageSelectorFactory defaultSelectorFactory = new ZmqMessageSelectorFactory();
     private final ZmqEventHandler defaultEventHandler = new ZmqStompEventHandler();
-    private final ZmqFilterPolicy defaultFilterPolicy = new ZmqFixedFilterPolicy();
+    private final ZmqFilterPolicy defaultFilterPolicy = null;
     private final ZmqRedeliveryPolicy defaultRedeliveryPolicy = new ZmqRetryRedeliveryPolicy(3);
 
     private final Map<String, ZmqURI> destinationSchema;

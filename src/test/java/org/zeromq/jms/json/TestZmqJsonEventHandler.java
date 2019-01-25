@@ -108,7 +108,7 @@ public class TestZmqJsonEventHandler implements ZmqEventHandler {
 
         @Override
         public String toString() {
-            return "SerialozeEvent [messageId=" + messageId + ", message=" + message + "]";
+            return "JsonEvent [messageId=" + messageId + ", message=" + message + "]";
         }
     }
 

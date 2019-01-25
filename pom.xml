@@ -4,8 +4,8 @@
 
 	<groupId>org.zeromq</groupId>
 	<artifactId>jeromq-jms</artifactId>
-	<version>2.0.3-RELEASE</version>
-	<packaging>bundle</packaging>
+	<version>2.0.4-RELEASE</version>
+	<packaging>jar</packaging>
 
 	<name>jeromq-jms</name>
 	<description>ZeroMQ implementation of the JMS API</description>

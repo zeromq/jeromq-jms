@@ -58,6 +58,8 @@ public class ZmqConnection implements QueueConnection, TopicConnection {
     private Map<String, ZmqURI> destinationSchema;
     private ZmqExceptionHandler exceptionHandler = new ZmqExceptionHandler();
 
+    private String clientID = null;
+
     /**
      * Construct the Zero MQ connection for the given destination UTI.
      * @param gatewayFactory     the gateway factory
@@ -97,7 +99,7 @@ public class ZmqConnection implements QueueConnection, TopicConnection {
     @Override
     public String getClientID() throws JMSException {
 
-        throw new UnsupportedOperationException();
+        return clientID;
     }
 
     @Override
@@ -113,7 +115,7 @@ public class ZmqConnection implements QueueConnection, TopicConnection {
 
     @Override
     public void setClientID(final String clientID) throws JMSException {
-        throw new UnsupportedOperationException();
+        this.clientID = clientID;
     }
 
     @Override
@@ -123,7 +125,7 @@ public class ZmqConnection implements QueueConnection, TopicConnection {
 
     @Override
     public void start() throws JMSException {
-        throw new UnsupportedOperationException();
+        //throw new UnsupportedOperationException();
     }
 
     @Override

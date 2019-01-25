@@ -79,7 +79,7 @@ public class TestZmqSimpleMessageSelector {
             Assert.fail(ex.getMessage());
         }
     }
-    
+
     /**
      * Test SQL IN functionality within the selector expression.
      */

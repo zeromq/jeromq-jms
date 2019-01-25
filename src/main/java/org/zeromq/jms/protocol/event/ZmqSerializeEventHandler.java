@@ -104,7 +104,7 @@ public class ZmqSerializeEventHandler implements ZmqEventHandler {
 
         @Override
         public String toString() {
-            return "SerialozeEvent [messageId=" + messageId + ", message=" + message + "]";
+            return "SerializeEvent [messageId=" + messageId + ", message=" + message + "]";
         }
     }
 
