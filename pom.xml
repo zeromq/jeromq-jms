@@ -284,6 +284,19 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>4.0.0</version>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Export-Package>org.zeromq.jms</Export-Package>
+						<Export-Package>org.zeromq.jms.*</Export-Package>
+					</instructions>
+				</configuration>
+			</plugin>
 		</plugins>
 
 		<pluginManagement>
