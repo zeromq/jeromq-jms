@@ -47,6 +47,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     private static final int HEARTBEAT_RATE_MILLI_SECOND = 1000;
     private static final int AUTO_PAUSE_IDLE_MILLI_SECOND = 3000;
 
+    @SuppressWarnings("unused")
     private static final int SOCKET_STATUS_TIMEOUT_MILLI_SECOND = 5000;
     private static final int SOCKET_WAIT_MILLI_SECOND = 500;
     private static final int SOCKET_METRIC_BUCKET_COUNT = 360;
@@ -179,17 +180,15 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
      * @param  onStatus  the set of status you are waiting for
      * @return           return true when the status have been met
      */
-    protected boolean waitOnStatus(long millis, final EnumSet<ZmqSocketStatus> onStatus) {
+    protected boolean waitOnStatus(final long millis, final EnumSet<ZmqSocketStatus> onStatus) {
         final Stopwatch stopwatch = new Stopwatch();
 
         long waitTime = SOCKET_WAIT_MILLI_SECOND;
+        long timeout =  (millis < 0) ? SOCKET_WAIT_MILLI_SECOND : millis;
+        //long timeout = millis;
 
-        if (millis < 0) {
-            millis = SOCKET_STATUS_TIMEOUT_MILLI_SECOND;
-        }
-
-        if (millis < waitTime) {
-            waitTime = millis / 2;
+        if (timeout < waitTime) {
+            waitTime = timeout / 2;
         }
         boolean success = false;
 
@@ -210,7 +209,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             }
 
             stopwatch.sleep(waitTime);
-        } while (stopwatch.before(millis));
+        } while (stopwatch.before(timeout));
 
         return success;
     }

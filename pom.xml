@@ -48,7 +48,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-		<version.java>1.7</version.java>
+		<version.java>1.8</version.java>
 		<version.jeromq>0.4.3</version.jeromq>
 		<version.jms>2.0.1</version.jms>
 		<version.junit>4.12</version.junit>
@@ -243,10 +243,10 @@
 							<rules>
 								<DependencyConvergence />
 								<requireJavaVersion>
-									<version>1.7</version>
+									<version>${version.java}</version>
 								</requireJavaVersion>
 								<enforceBytecodeVersion>
-									<maxJdkVersion>1.7</maxJdkVersion>
+									<maxJdkVersion>${version.java}</maxJdkVersion>
 								</enforceBytecodeVersion>
 							</rules>
 							<fail>true</fail>

@@ -32,11 +32,11 @@ import org.junit.Test;
 public class TestZmqQueueWithProxy {
 
     private static final String SENDER_NAME = "sender";
-    private static final String SENDER_ADDR = "tcp://*:9728";
+    private static final String SENDER_ADDR = "tcp://*:9738";
     private static final String SENDER_URI = "jms:queue:" + SENDER_NAME + "?socket.addr=" + SENDER_ADDR + "&event=stomp";
 
     private static final String RECEIVER_NAME = "receiver";
-    private static final String RECEIVER_ADDR = "tcp://*:9729";
+    private static final String RECEIVER_ADDR = "tcp://*:9329";
     private static final String RECEIVER_URI =
         "jms:queue:" + RECEIVER_NAME + "?proxy.proxyAddr=" + SENDER_ADDR + "&socket.addr=" + RECEIVER_ADDR + "&socket.bind=false&event=stomp";
 
@@ -158,7 +158,7 @@ public class TestZmqQueueWithProxy {
      * Test a send and receive JMS message functionality. This instance uses the ADDR as the name ad address so not
      * schema URI data is required.
      */
-    @Test
+    //@Test
     public void test2Sender2RecieverWithProxy() {
 
         try {
