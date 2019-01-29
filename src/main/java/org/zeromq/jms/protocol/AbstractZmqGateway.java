@@ -179,14 +179,16 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
      * @param  onStatus  the set of status you are waiting for
      * @return           return true when the status have been met
      */
-    protected boolean waitOnStatus(final long millis, final EnumSet<ZmqSocketStatus> onStatus) {
+    protected boolean waitOnStatus(long millis, final EnumSet<ZmqSocketStatus> onStatus) {
         final Stopwatch stopwatch = new Stopwatch();
 
         long waitTime = SOCKET_WAIT_MILLI_SECOND;
 
         if (millis < 0) {
-            waitTime = SOCKET_STATUS_TIMEOUT_MILLI_SECOND;
-        } else if (millis < waitTime) {
+            millis = SOCKET_STATUS_TIMEOUT_MILLI_SECOND;
+        }
+
+        if (millis < waitTime) {
             waitTime = millis / 2;
         }
         boolean success = false;
