@@ -3,6 +3,7 @@ package org.zeromq.examples;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
@@ -28,7 +29,7 @@ public class TestBindExamples {
         final ZMQ.Context context1 = ZMQ.context(1);
         final ZMQ.Context context2 = ZMQ.context(1);
 
-        LOGGER.info("Sicekt1: Bind to addr: " + addr);
+        LOGGER.info("Socket1: Bind to addr: " + addr);
         final ZMQ.Socket socket1 = context1.socket(ZMQ.ROUTER);
         final ZMQ.Socket socket2 = context2.socket(ZMQ.ROUTER);
 
@@ -76,4 +77,44 @@ public class TestBindExamples {
         LOGGER.info("Test finished!");
     }
 
+    /**
+     * Set the setup of a proxy.
+     */
+    @Test
+    public void testProxy() {
+        final ZMQ.Context context = ZMQ.context(1);
+        
+        final ZMQ.Socket frontend = context.socket(ZMQ.ROUTER);
+        final boolean rc = frontend.bind("tcp://*:9999");
+        
+        Assert.assertTrue(rc);
+        
+        //frontend.subscribe(ZMQ.SUBSCRIPTION_ALL);
+        final ZMQ.Socket backend = context.socket(ZMQ.DEALER);
+        backend.bind("tcp://*:8888");
+ 
+        final Runnable proxyTask = new Runnable() {
+            public void run() {
+                LOGGER.info("Proxy started.");
+
+                ZMQ.proxy(frontend, backend, null); // Create Proxy or Forwarder
+
+                LOGGER.info("Proxy finished...");
+            }
+        };
+
+        final Thread proxyThread = new Thread(proxyTask);
+
+        proxyThread.start();
+
+        backend.send("This is message 1");
+        
+        final String message = frontend.recvStr(-1);
+
+        LOGGER.info("Message recieve: " + message);
+        
+        frontend.close();
+        backend.close();
+        context.term();
+    }
 }
