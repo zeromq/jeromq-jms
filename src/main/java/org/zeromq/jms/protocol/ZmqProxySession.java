@@ -79,8 +79,8 @@ public class ZmqProxySession implements Runnable {
         if (this.status != status) {
             this.status = status;
 
-            LOGGER.log(Level.INFO, "Proxy [" + name + "@" + frontSocketAddr + "|"
-                + frontSocketAddr + "] changed status: " + status);
+            LOGGER.log(Level.INFO, "Proxy [" + name + "@" + frontSocketAddr + ">"
+                + backSocketAddr + "] changed status: " + status);
         }
     }
 

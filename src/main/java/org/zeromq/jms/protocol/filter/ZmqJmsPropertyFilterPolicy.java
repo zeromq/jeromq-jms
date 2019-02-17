@@ -7,6 +7,7 @@ package org.zeromq.jms.protocol.filter;
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,4 +68,10 @@ public class ZmqJmsPropertyFilterPolicy implements ZmqFilterPolicy {
     public String[] getSubscirbeTags() {
         return consumerTags;
     }
+
+	@Override
+	public String toString() {
+		return "ZmqJmsPropertyFilterPolicy [consumerTags=" + Arrays.toString(consumerTags) + ", propertyName="
+				+ propertyName + "]";
+	}
 }

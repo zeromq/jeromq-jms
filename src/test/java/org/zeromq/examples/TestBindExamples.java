@@ -78,26 +78,94 @@ public class TestBindExamples {
     }
 
     /**
-     * Set the setup of a proxy.
+     * Set the setup of a Pub/Sub with Proxy.
+     *
+     * NOTE: SUBSCRIPTION on SUB, and not required XSUB as behaviour is different.
+     * @throws InterruptedException 
      */
     @Test
-    public void testProxy() {
+    public void testPubSubWithProxy() throws InterruptedException {
         final ZMQ.Context context = ZMQ.context(1);
-        
-        final ZMQ.Socket frontend = context.socket(ZMQ.ROUTER);
-        final boolean rc = frontend.bind("tcp://*:9999");
-        
+
+        final ZMQ.Socket sender = context.socket(ZMQ.PUB);
+        final boolean rc = sender.connect("tcp://*:9999");
+
         Assert.assertTrue(rc);
-        
-        //frontend.subscribe(ZMQ.SUBSCRIPTION_ALL);
-        final ZMQ.Socket backend = context.socket(ZMQ.DEALER);
-        backend.bind("tcp://*:8888");
- 
+
+        final ZMQ.Socket reciever = context.socket(ZMQ.SUB);
+        reciever.subscribe(ZMQ.SUBSCRIPTION_ALL);
+        reciever.connect("tcp://*:8888");
+
         final Runnable proxyTask = new Runnable() {
             public void run() {
-                LOGGER.info("Proxy started.");
+                LOGGER.info("Proxy (XSUB/XPUB) starting.");
 
-                ZMQ.proxy(frontend, backend, null); // Create Proxy or Forwarder
+                final ZMQ.Socket proxyReciever = context.socket(ZMQ.XSUB);
+                proxyReciever.bind("tcp://*:9999");
+
+                final ZMQ.Socket proxyPublisher = context.socket(ZMQ.XPUB);
+                proxyPublisher.bind("tcp://*:8888");
+
+                ZMQ.proxy(proxyReciever, proxyPublisher, null); // Create Proxy or Forwarder
+
+                proxyReciever.close();
+                proxyPublisher.close();
+                	
+                LOGGER.info("Proxy finished...");
+            }
+        };
+
+        final Thread proxyThread = new Thread(proxyTask);
+
+        proxyThread.start();
+
+        Thread.sleep(1000);
+
+        sender.send("This is message 1", 0);
+
+        final String message = reciever.recvStr();
+
+        LOGGER.info("Message recieve: " + message);
+
+        sender.close();
+        reciever.close();
+
+        LOGGER.info("Pub/Sub with Proxy test complete.");
+    }
+
+    /**
+     * Set the setup of a Request/Reply with Proxy.
+     *
+     * NOTE: SUBSCRIPTION on SUB, and not required XSUB as behaviour is different.
+     * NOTE: String as receiver here as there is and address in the first frame, being directional
+     * @throws InterruptedException 
+     */
+    @Test
+    public void testReqRepWithProxy() throws InterruptedException {
+        final ZMQ.Context context = ZMQ.context(1);
+
+        final ZMQ.Socket sender = context.socket(ZMQ.REQ);
+        final boolean rc = sender.connect("tcp://*:9995");
+
+        Assert.assertTrue(rc);
+
+        final ZMQ.Socket reciever = context.socket(ZMQ.REP);
+        reciever.connect("tcp://*:8885");
+
+        final Runnable proxyTask = new Runnable() {
+            public void run() {
+                LOGGER.info("Proxy (ROUTER/DEALER) starting.");
+
+                final ZMQ.Socket proxyReciever = context.socket(ZMQ.ROUTER);
+                proxyReciever.bind("tcp://*:9995");
+
+                final ZMQ.Socket proxyPublisher = context.socket(ZMQ.DEALER);
+                proxyPublisher.bind("tcp://*:8885");
+
+                ZMQ.proxy(proxyReciever, proxyPublisher, null); // Create Proxy or Forwarder
+
+                sender.close();
+                reciever.close();
 
                 LOGGER.info("Proxy finished...");
             }
@@ -107,14 +175,71 @@ public class TestBindExamples {
 
         proxyThread.start();
 
-        backend.send("This is message 1");
-        
-        final String message = frontend.recvStr(-1);
+        Thread.sleep(1000);
+
+        sender.send("This is message 1", 0);
+
+        final String message = reciever.recvStr(-1);
 
         LOGGER.info("Message recieve: " + message);
-        
-        frontend.close();
-        backend.close();
-        context.term();
+
+        final String message2 = reciever.recvStr();
+
+        LOGGER.info("Message recieve2: " + message2);
+
+        sender.close();
+        reciever.close();
+    }
+
+    /**
+     * Set the setup of a Pub/Sub with Proxy.
+     */
+    @Test
+    public void testPushPullWithProxy() throws InterruptedException {
+        final ZMQ.Context context = ZMQ.context(1);
+
+        final ZMQ.Socket sender = context.socket(ZMQ.PUSH);
+        final boolean rc = sender.connect("tcp://*:9998");
+
+        Assert.assertTrue(rc);
+
+        final ZMQ.Socket reciever = context.socket(ZMQ.PULL);
+        reciever.connect("tcp://*:8887");
+
+        final Runnable proxyTask = new Runnable() {
+            public void run() {
+                LOGGER.info("Proxy (PULL/PUSH) starting.");
+
+                final ZMQ.Socket proxyReciever = context.socket(ZMQ.PULL);
+                proxyReciever.bind("tcp://*:9998");
+
+                final ZMQ.Socket proxyPublisher = context.socket(ZMQ.PUSH);
+                proxyPublisher.bind("tcp://*:8887");
+
+                ZMQ.proxy(proxyReciever, proxyPublisher, null); // Create Proxy or Forwarder
+
+                proxyReciever.close();
+                proxyPublisher.close();
+                	
+                LOGGER.info("Proxy finished...");
+            }
+        };
+
+        final Thread proxyThread = new Thread(proxyTask);
+
+        proxyThread.start();
+
+        Thread.sleep(1000);
+
+        sender.send("This is message 1", 0);
+
+        final String message = reciever.recvStr();
+
+        LOGGER.info("Message recieve: " + message);
+
+        sender.close();
+        reciever.close();
+
+        LOGGER.info("Pub/Sub with Proxy test complete.");
     }
 }

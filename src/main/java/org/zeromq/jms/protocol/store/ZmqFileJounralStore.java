@@ -802,7 +802,9 @@ public class ZmqFileJounralStore implements ZmqJournalStore {
                     Files.createDirectories(archiveDir);
                     Files.move(journalFile, archiveFile, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 
-                    pathCache.remove(journalFile.getFileName());
+                    final String fileName = journalFile.getFileName().getFileName().toString();
+
+                    pathCache.remove(fileName);
                 } catch (IOException ex) {
                     throw new ZmqException("Cannot archieve journal (file=" + journalFile + "): " + this, ex);
                 }

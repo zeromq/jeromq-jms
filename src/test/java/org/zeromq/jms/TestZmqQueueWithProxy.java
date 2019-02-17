@@ -38,7 +38,7 @@ public class TestZmqQueueWithProxy {
     private static final String RECEIVER_NAME = "receiver";
     private static final String RECEIVER_ADDR = "tcp://*:9329";
     private static final String RECEIVER_URI =
-        "jms:queue:" + RECEIVER_NAME + "?proxy.proxyAddr=" + SENDER_ADDR + "&socket.addr=" + RECEIVER_ADDR + "&socket.bind=false&event=stomp";
+        "jms:queue:" + RECEIVER_NAME + "?proxy.proxyAddr=" + SENDER_ADDR + "&proxy.proxyType=PULL&proxy.proxyOutType=PUSH&socket.addr=" + RECEIVER_ADDR + "&socket.bind=false&event=stomp";
 
     private static final String MESSAGE_1 = "this is the text message 1";
     private static final String MESSAGE_2 = "this is the text message 2";
@@ -158,7 +158,7 @@ public class TestZmqQueueWithProxy {
      * Test a send and receive JMS message functionality. This instance uses the ADDR as the name ad address so not
      * schema URI data is required.
      */
-    //@Test
+    @Test
     public void test2Sender2RecieverWithProxy() {
 
         try {

@@ -29,13 +29,13 @@ import java.util.regex.Pattern;
  *     jms:[queue:|topic:]destinationName[?options]
  * where
  *     "desinationName" is a JMS queue or topic name
- *     "options"        is the query options as name/value pairs in the i.e. ...?option=value&option=value&...
+ *     "options"        is the query options as name/value pairs in the i.e. ...?option=value&amp;option=value&amp;...
  *
  * Each option is prefixed with the type of attribute, i.e. zmq, jms, etc...
  *
  * It is possible to add custom attributes, to initialise custom classes.
  *
- * ...&redelivery.retry=3
+ * ...&amp;redelivery.retry=3
  */
 public class ZmqURI implements Externalizable {
 

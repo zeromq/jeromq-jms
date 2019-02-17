@@ -1,9 +1,8 @@
 package org.zeromq.examples;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
-
+/**
+ * Text PROXY
+ */
 import java.io.IOException;
 import java.nio.channels.Selector;
 import java.util.ArrayList;
@@ -26,6 +25,10 @@ import zmq.ZMQ;
 import zmq.poll.PollItem;
 import zmq.util.Utils;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
 // Asynchronous client-to-server (DEALER to ROUTER) - pure libzmq
 //
 // While this example runs in a single process, that is to make
@@ -34,14 +37,18 @@ import zmq.util.Utils;
 // behaviour, it is necessary to replace the inproc transport of the
 // control socket by a tcp transport.
 
-// This is our client task
-// It connects to the server, and then sends a request once per second
-// It collects responses as they arrive, and it prints them out. We will
-// run several client tasks in parallel, each with a different random ID.
-public class TextProxy
-{
-    private final class Client implements Runnable
-    {
+/**
+ *  This is our client task
+ * It connects to the server, and then sends a request once per second
+ * It collects responses as they arrive, and it prints them out. We will
+ * run several client tasks in parallel, each with a different random ID.
+ */
+public class TextProxy {
+
+    /**
+     * Client class definition.
+     */
+    private final class Client implements Runnable {
         private final int     idx;
         private final String  host;
         private final String  control;
@@ -49,8 +56,14 @@ public class TextProxy
 
         private final AtomicBoolean done = new AtomicBoolean();
 
-        Client(int idx, String host, String control, boolean verbose)
-        {
+        /**
+         * Construct the client.
+         * @param idx      the index
+         * @param host     the host
+         * @param control  the control
+         * @param verbose  the verbose indicator
+         */
+        Client(final int idx, final String host, final String control, final boolean verbose) {
             this.idx = idx;
             this.host = host;
             this.control = control;
@@ -58,8 +71,7 @@ public class TextProxy
         }
 
         @Override
-        public void run()
-        {
+        public void run() {
             Ctx ctx = ZMQ.createContext();
             SocketBase client = ZMQ.socket(ctx, ZMQ.ZMQ_DEALER);
             assertThat(client, notNullValue());
@@ -140,24 +152,30 @@ public class TextProxy
 
     private static final String BACKEND = "inproc://backend";
 
-    private final class Server implements Runnable
-    {
+    /**
+     * Server class definition.
+     */
+    private final class Server implements Runnable {
         private final String  host;
         private final String  control;
         private final boolean verbose;
 
         private final AtomicBoolean done = new AtomicBoolean();
 
-        Server(String host, String control, boolean verbose)
-        {
+        /**
+         * Construct the server.
+         * @param host     the host
+         * @param control  the control
+         * @param verbose  the verbose idicator
+         */
+        Server(final String host, final String control, final boolean verbose) {
             this.host = host;
             this.control = control;
             this.verbose = verbose;
         }
 
         @Override
-        public void run()
-        {
+        public void run() {
             Ctx ctx = ZMQ.createContext();
             // Frontend socket talks to clients over TCP
             SocketBase frontend = ZMQ.socket(ctx, ZMQ.ZMQ_ROUTER);
@@ -206,18 +224,26 @@ public class TextProxy
         }
     }
 
-    // Each worker task works on one request at a time and sends a random number
-    // of replies back, with random delays between replies:
-    // The comments in the first column, if suppressed, makes it a poller version
-    private final class Worker implements Runnable
-    {
+    /**
+     * Each worker task works on one request at a time and sends a random number
+     * of replies back, with random delays between replies:
+     *
+     * The comments in the first column, if suppressed, makes it a poller version.
+     */
+    private final class Worker implements Runnable {
         private final boolean verbose;
         private final int     idx;
         private final String  control;
         private final Ctx     ctx;
 
-        public Worker(Ctx ctx, int idx, String control, boolean verbose)
-        {
+        /**
+         * Contact worker thread.
+         * @param ctx     the ZMQ context
+         * @param idx     the index
+         * @param control the control
+         * @param verbose the verbose indicator
+         */
+        public Worker(final Ctx ctx, final int idx, final String control, final boolean verbose) {
             this.ctx = ctx;
             this.idx = idx;
             this.control = control;
@@ -225,8 +251,7 @@ public class TextProxy
         }
 
         @Override
-        public void run()
-        {
+        public void run() {
             SocketBase worker = ZMQ.socket(ctx, ZMQ.ZMQ_DEALER);
             assertThat(worker, notNullValue());
 
@@ -290,9 +315,13 @@ public class TextProxy
         }
     }
 
+    /**
+     * Test Proxy.
+     * @throws IOException           throws I/O on failure
+     * @throws InterruptedException  throws interrupt on failure
+     */
     @Test
-    public void testProxy() throws IOException, InterruptedException
-    {
+    public void testProxy() throws IOException, InterruptedException {
         // The main thread simply starts several clients and a server, and then
         // waits for the server to finish.
         Ctx ctx = ZMQ.createContext();
@@ -338,8 +367,11 @@ public class TextProxy
         }
     }
 
-    public void testRepeated() throws Exception
-    {
+    /**
+     * Text Repeat.
+     * @throws Exception throws exception on failure
+     */
+    public void testRepeated() throws Exception {
         for (int idx = 0; idx < 470; ++idx) {
             System.out.println("---------- " + idx);
             testProxy();

@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
 public @interface ZmqComponent {
 
     /**
-     * return "optional" name the filter wishes to be called within a URI, i.e. "retry".
+     *  Return "optional" name the filter wishes to be called within a URI, i.e. "retry".
      */
     String value();
 }

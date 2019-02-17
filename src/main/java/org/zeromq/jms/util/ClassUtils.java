@@ -341,8 +341,9 @@ public class ClassUtils {
 
                 if (value != null) {
                     try {
-                        LOGGER.info("Setting configuration parameter " + paramName + "=" + paramValue + " on: " + config);
                         method.invoke(config, value);
+
+                        LOGGER.info("Setting configuration parameter " + paramName + "=" + paramValues + " on: " + config);
                     } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                         LOGGER.log(Level.SEVERE, "Unable to invoke setter method: " + method.getName() + "(" + value + ")", ex);
 

@@ -1,5 +1,7 @@
 package org.zeromq.jms.protocol.filter;
 
+import java.util.Arrays;
+
 /*
  * Copyright (c) 2015 Jeremy Miller
  *
@@ -59,4 +61,10 @@ public class ZmqFixedFilterPolicy implements ZmqFilterPolicy {
     public String[] getSubscirbeTags() {
         return subscribeTags;
     }
+
+	@Override
+	public String toString() {
+		return "ZmqFixedFilterPolicy [publishTag=" + publishTag + ", subscribeTags=" + Arrays.toString(subscribeTags)
+				+ "]";
+	}
 }

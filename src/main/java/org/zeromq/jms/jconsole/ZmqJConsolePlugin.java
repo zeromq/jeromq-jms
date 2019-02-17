@@ -41,7 +41,7 @@ import javax.swing.SwingWorker;
  *    http://stackoverflow.com/questions/8693342/drawing-a-simple-line-graph-in-java
  */
 //@SuppressWarnings("restriction")
-public class ZmqJConsolePluglin extends JConsolePlugin implements PropertyChangeListener {
+public class ZmqJConsolePlugin extends JConsolePlugin implements PropertyChangeListener {
 
     private ZmqMonitorTable customPanel = null;
     private Map<String, JPanel> customTabs = null;

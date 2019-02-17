@@ -55,8 +55,8 @@ public class TestZmqQueueWithMultiSenders {
     private static final int CLIENT_COUNT = 10;
 
     // NOTE: Need to set high-water mark, otherwise flooding queue, and blocks, i.e. socket.setSndHwm(100000)
-    private static final int CLIENT_MESSAGE_COUNT = 30000;
-    private static final int CLIENT_MESSAGE_COMMIT_COUNT = 500;
+    private static final int CLIENT_MESSAGE_COUNT = 300;
+    private static final int CLIENT_MESSAGE_COMMIT_COUNT = 50;
 
     private static InitialContext context;
 
