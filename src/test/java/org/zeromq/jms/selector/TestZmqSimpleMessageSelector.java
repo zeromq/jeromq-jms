@@ -24,17 +24,13 @@ public class TestZmqSimpleMessageSelector {
      * Test math functionality within the selector expression.
      */
     @Test
-    public void testMathExpresion() {
-        try {
-            final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("6 = 2.0 + 3.0 + 1");
-            final Map<String, Object> variables = new HashMap<String, Object>();
+    public void testMathExpresion() throws Exception{
+        final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("6 = 2.0 + 3.0 + 1");
+        final Map<String, Object> variables = new HashMap<String, Object>();
 
-            final boolean result = selector.evaluate(variables);
+        final boolean result = selector.evaluate(variables);
 
-            Assert.assertTrue(result);
-        } catch (Exception ex) {
-            Assert.fail(ex.getMessage());
-        }
+        Assert.assertTrue(result);
     }
 
     /**

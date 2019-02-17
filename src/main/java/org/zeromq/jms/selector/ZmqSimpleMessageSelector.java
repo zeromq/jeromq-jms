@@ -531,6 +531,27 @@ public class ZmqSimpleMessageSelector implements ZmqMessageSelector {
         case LESS:
         case LESS_EQUAL:
         case NOT_EQUAL:
+            if (leftValue instanceof Number || rightValue instanceof Number) {
+                final double value1 = ((Number) leftValue).doubleValue();
+                final double value2 = ((Number) rightValue).doubleValue();
+
+                switch (operator) {
+                case EQUAL:
+                    return (value1 == value2);
+                case GREATER:
+                    return (value1 > value2);
+                case GREATER_EQUAL:
+                    return (value1 >= value2);
+                case LESS:
+                    return (value1 < value2);
+                case LESS_EQUAL:
+                    return (value1 <= value2);
+                case NOT_EQUAL:
+                    return (value1 != value2);
+                default:
+                    throw new ArithmeticException("Unsupported compound operator: " + operator);
+                }
+            }
             @SuppressWarnings("unchecked")
             final Comparable<Object> value = (Comparable<Object>) leftValue;
             final int result = value.compareTo(rightValue);
