@@ -69,9 +69,9 @@ public class ZmqJmsPropertyFilterPolicy implements ZmqFilterPolicy {
         return consumerTags;
     }
 
-	@Override
-	public String toString() {
-		return "ZmqJmsPropertyFilterPolicy [consumerTags=" + Arrays.toString(consumerTags) + ", propertyName="
-				+ propertyName + "]";
-	}
+    @Override
+    public String toString() {
+        return "ZmqJmsPropertyFilterPolicy [consumerTags=" + Arrays.toString(consumerTags) + ", propertyName="
+            + propertyName + "]";
+    }
 }

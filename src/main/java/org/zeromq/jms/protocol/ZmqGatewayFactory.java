@@ -21,6 +21,7 @@ import javax.jms.Queue;
 
 import org.zeromq.jms.AbstractZmqDestination;
 import org.zeromq.jms.ZmqException;
+import org.zeromq.jms.ZmqExtendedURI;
 import org.zeromq.jms.ZmqSession;
 import org.zeromq.jms.ZmqURI;
 import org.zeromq.jms.annotation.ZmqComponent;
@@ -105,6 +106,27 @@ public class ZmqGatewayFactory {
         }
 
         return annotatedClasses;
+    }
+
+    /**
+     * Return the URI for the specified name. when the URI contains 'extends' option
+     * then we need to build a extended URI that can take options for the parents.
+     * @param name           the URI schema name
+     * @return               returns the URI or extended URI
+     * @throws ZmqException  throws exception when URI is no found
+     */
+    protected ZmqURI getUril(final String name) throws ZmqException {
+        if (destinationSchema.containsKey(name)) {
+            final ZmqURI uri = destinationSchema.get(name);
+
+            if (ZmqExtendedURI.isExtened(uri)) {
+                return new ZmqExtendedURI(uri, destinationSchema);
+            }
+
+            return uri;
+        }
+
+        throw new ZmqException("Unable to find name ' + name + ' with schema of URIs");
     }
 
     /**

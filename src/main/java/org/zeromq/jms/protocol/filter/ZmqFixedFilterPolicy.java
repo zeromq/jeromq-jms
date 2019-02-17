@@ -62,9 +62,9 @@ public class ZmqFixedFilterPolicy implements ZmqFilterPolicy {
         return subscribeTags;
     }
 
-	@Override
-	public String toString() {
-		return "ZmqFixedFilterPolicy [publishTag=" + publishTag + ", subscribeTags=" + Arrays.toString(subscribeTags)
-				+ "]";
-	}
+    @Override
+    public String toString() {
+        return "ZmqFixedFilterPolicy [publishTag=" + publishTag + ", subscribeTags=" + Arrays.toString(subscribeTags)
+            + "]";
+    }
 }

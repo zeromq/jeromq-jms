@@ -278,32 +278,7 @@ public class ZmqSession implements QueueSession, TopicSession {
     @Override
     public Topic createTopic(final String topicName) throws JMSException {
 
-        String destinationName = topicName;
-
-        if (topicName.startsWith("jms:topic")) {
-            final ZmqURI uri = ZmqURI.create(topicName);
-            destinationName = uri.getDestinationName();
-
-            if (destinationSchema.containsKey(destinationName)) {
-                LOGGER.warning("Creating topic with URI already exists in scheam: " + uri);
-            } else {
-                destinationSchema.put(destinationName, uri);
-            }
-        }
-
-        if (!destinationSchema.containsKey(destinationName)) {
-            throw new ZmqException("Unable to resolve topic within schema store for name: " + destinationName);
-        }
-
-        final ZmqURI uri = destinationSchema.get(destinationName);
-        String addr = uri.getOptionValue("socket.addr", null);
-        if (addr == null) {
-            addr = uri.getOptionValue("gateway.addr", null);
-        }
-
-        if (addr == null) {
-            throw new ZmqException("Unable to resolve 'socket.addr' or 'gateway.addr' for queue URI: " + uri);
-        }
+        ZmqURI uri = getOrPutUri(topicName);
 
         final Topic topic = new ZmqTopic(uri);
 
@@ -387,18 +362,22 @@ public class ZmqSession implements QueueSession, TopicSession {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Queue createQueue(final String queueName) throws JMSException {
+    /**
+     * Return the standard URIl, or the extended URI using a lookup of the schemas, or based on the value
+     * passed in.
+     * @param name           the URI name, or an actual URI starting with 'jms:....'.
+     * @return               the basic URI or the extended URI
+     * @throws ZmqException  throws the ZMQ exception when name or schema invalid
+     */
+    private ZmqURI getOrPutUri(final String name) throws ZmqException {
+        String destinationName = name;
 
-        String destinationName = queueName;
-
-        if (queueName.startsWith("jms:queue")) {
-            final ZmqURI uri = ZmqURI.create(queueName);
+        if (name.startsWith("jms:queue") || name.startsWith("jms:topic")) {
+            final ZmqURI uri = ZmqURI.create(name);
             destinationName = uri.getDestinationName();
 
             if (destinationSchema.containsKey(destinationName)) {
                 LOGGER.warning("Creating queue with URI already exists in scheam: " + uri);
-
             } else {
                 destinationSchema.put(destinationName, uri);
             }
@@ -408,7 +387,12 @@ public class ZmqSession implements QueueSession, TopicSession {
             throw new ZmqException("Unable to resolve queue within schema store for name: " + destinationName);
         }
 
-        final ZmqURI uri = destinationSchema.get(destinationName);
+        ZmqURI uri = destinationSchema.get(name);
+
+        if (ZmqExtendedURI.isExtened(uri)) {
+            uri = new ZmqExtendedURI(uri, destinationSchema);
+        }
+
         String addr = uri.getOptionValue("socket.addr", null);
         if (addr == null) {
             addr = uri.getOptionValue("gateway.addr", null);
@@ -417,6 +401,14 @@ public class ZmqSession implements QueueSession, TopicSession {
         if (addr == null) {
             throw new ZmqException("Unable to resolve 'socket.addr' or 'gateway.addr' for queue URI: " + uri);
         }
+
+        return uri;
+    }
+
+    @Override
+    public Queue createQueue(final String queueName) throws JMSException {
+
+        getOrPutUri(queueName);
 
         final Queue queue = new ZmqQueue(queueName);
 

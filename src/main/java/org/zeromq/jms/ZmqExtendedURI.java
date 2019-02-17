@@ -61,6 +61,15 @@ public class ZmqExtendedURI extends ZmqURI {
     }
 
     /**
+     * Return "true" when the specified URIL has extensions.
+     * @param uri  the URI to check
+     * @return     return true when it has an "extend"
+     */
+    public static boolean isExtened(final ZmqURI uri) {
+        return uri.isOption("extend");
+    }
+
+    /**
      * Return true if the URI contains the specified option.
      * @param paramName      the parameter name
      * @return               return true when the option has been found

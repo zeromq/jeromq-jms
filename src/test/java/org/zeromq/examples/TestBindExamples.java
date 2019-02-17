@@ -81,7 +81,8 @@ public class TestBindExamples {
      * Set the setup of a Pub/Sub with Proxy.
      *
      * NOTE: SUBSCRIPTION on SUB, and not required XSUB as behaviour is different.
-     * @throws InterruptedException 
+     *
+     * @throws InterruptedException  throws exception on failure
      */
     @Test
     public void testPubSubWithProxy() throws InterruptedException {
@@ -110,7 +111,7 @@ public class TestBindExamples {
 
                 proxyReciever.close();
                 proxyPublisher.close();
-                	
+
                 LOGGER.info("Proxy finished...");
             }
         };
@@ -137,8 +138,10 @@ public class TestBindExamples {
      * Set the setup of a Request/Reply with Proxy.
      *
      * NOTE: SUBSCRIPTION on SUB, and not required XSUB as behaviour is different.
-     * NOTE: String as receiver here as there is and address in the first frame, being directional
-     * @throws InterruptedException 
+     *
+     * NOTE: String as receiver here as there is and address in the first frame, being directional.
+     *
+     * @throws InterruptedException  throws exception on failure
      */
     @Test
     public void testReqRepWithProxy() throws InterruptedException {
@@ -193,6 +196,7 @@ public class TestBindExamples {
 
     /**
      * Set the setup of a Pub/Sub with Proxy.
+     * @throws InterruptedException  throws exception on failure
      */
     @Test
     public void testPushPullWithProxy() throws InterruptedException {
@@ -220,7 +224,7 @@ public class TestBindExamples {
 
                 proxyReciever.close();
                 proxyPublisher.close();
-                	
+
                 LOGGER.info("Proxy finished...");
             }
         };
