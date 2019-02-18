@@ -19,6 +19,7 @@ import java.util.Set;
  */
 public class ZmqExtendedURI extends ZmqURI {
 
+	private static final String LABEL_EXTENDS = "extends"; 
     private final List<ZmqURI> extendURIs;
 
     /**
@@ -43,8 +44,8 @@ public class ZmqExtendedURI extends ZmqURI {
     private Set<ZmqURI> getExtends(final ZmqURI uri, final Map<String, ZmqURI> destinationSchema) {
         final Set<ZmqURI> newExtendURIs = new LinkedHashSet<ZmqURI>();
 
-        if (uri.isOption("extends")) {
-            final String[] names = uri.getOptionValues("extends");
+        if (uri.isOption(LABEL_EXTENDS)) {
+            final String[] names = uri.getOptionValues(LABEL_EXTENDS);
             // ensure the last extend has the lowest priority
             Collections.reverse(Arrays.asList(names));
             for (String name : names) {
@@ -66,7 +67,7 @@ public class ZmqExtendedURI extends ZmqURI {
      * @return     return true when it has an "extend"
      */
     public static boolean isExtened(final ZmqURI uri) {
-        return uri.isOption("extend");
+        return uri.isOption(LABEL_EXTENDS);
     }
 
     /**

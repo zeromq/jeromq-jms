@@ -41,7 +41,7 @@ public class TestZmqParGatewayRecovery {
      * Test a send and receive protocol functionality were a re-direct on fail-over.
      * @throws InterruptedException  throws interrupt exception on failed waits
      */
-    @Test
+    //@Test
     public void testRecoverySendMessages() throws InterruptedException {
         LOGGER.info("Start Failover with Redirect test.");
 

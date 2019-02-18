@@ -33,7 +33,8 @@ public class TestZmqTopicWithText {
    @Test
    public void testRawPubAndSubscribeMessage() throws JMSException {
        final String subscriberUri = "jms:topic:all?socket.addr=tcp://*:9714&event=text";
-
+       final String[] destinations = new String[] { subscriberUri };
+       
        try {
            Context context = ZMQ.context(1);
 
@@ -46,14 +47,14 @@ public class TestZmqTopicWithText {
            subscriberSocket.connect("tcp://*:9714");
            subscriberSocket.subscribe(ZMQ.SUBSCRIPTION_ALL);
 
-           final TopicConnectionFactory factory = new ZmqConnectionFactory();
+           final TopicConnectionFactory factory = new ZmqConnectionFactory(destinations);
            final TopicConnection connection = factory.createTopicConnection();
            final TopicSession session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
 
            final CachingConnectionFactory sharedFactory = new CachingConnectionFactory();
 
            try {
-               final Topic topic = session.createTopic(subscriberUri);
+               final Topic topic = session.createTopic("all");
 
                TopicSubscriber subscriber = session.createSubscriber(topic);
 

@@ -278,8 +278,7 @@ public class ZmqSession implements QueueSession, TopicSession {
     @Override
     public Topic createTopic(final String topicName) throws JMSException {
 
-        ZmqURI uri = getOrPutUri(topicName);
-
+        final ZmqURI uri = getOrPutUri(topicName);
         final Topic topic = new ZmqTopic(uri);
 
         return topic;
@@ -387,7 +386,7 @@ public class ZmqSession implements QueueSession, TopicSession {
             throw new ZmqException("Unable to resolve queue within schema store for name: " + destinationName);
         }
 
-        ZmqURI uri = destinationSchema.get(name);
+        ZmqURI uri = destinationSchema.get(destinationName);
 
         if (ZmqExtendedURI.isExtened(uri)) {
             uri = new ZmqExtendedURI(uri, destinationSchema);
@@ -408,9 +407,8 @@ public class ZmqSession implements QueueSession, TopicSession {
     @Override
     public Queue createQueue(final String queueName) throws JMSException {
 
-        getOrPutUri(queueName);
-
-        final Queue queue = new ZmqQueue(queueName);
+    	final ZmqURI uri = getOrPutUri(queueName);
+        final Queue queue = new ZmqQueue(uri);
 
         return queue;
     }

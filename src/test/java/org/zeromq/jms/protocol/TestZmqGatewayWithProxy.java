@@ -34,7 +34,7 @@ public class TestZmqGatewayWithProxy {
      * Test a n-1-n scenario were both "n"s are connecting and the proxy is bound.
      */
     @Test
-    public void test() {
+    public void testPullPushWithProxy() {
         final int flags = 0;
         final ZmqEventHandler handler = new ZmqStompEventHandler();
 
@@ -46,6 +46,8 @@ public class TestZmqGatewayWithProxy {
 
         final ZmqSocketContext receiverContext = new ZmqSocketContext(SOCKET_SERVER_ADDR, ZmqSocketType.PULL, false, flags);
         receiverContext.setProxyAddr(SOCKET_PROXY_ADDR);
+        receiverContext.setProxyType(ZmqSocketType.PULL);
+        receiverContext.setProxyOutType(ZmqSocketType.PUSH);
 
         final ZmqGateway receiver1 = new ZmqFireAndForgetGateway("rcv1", receiverContext,
                  null, handler, null, null, null, null, false, Direction.INCOMING);
@@ -66,7 +68,7 @@ public class TestZmqGatewayWithProxy {
             try {
                 sender1.send(outMessage1);
 
-                ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(5000);
+                ZmqTextMessage inMessage1 = (ZmqTextMessage) receiver1.receive(3000);
 
                 if (inMessage1 == null) {
                     inMessage1 = (ZmqTextMessage) receiver2.receive(1000);
@@ -77,7 +79,7 @@ public class TestZmqGatewayWithProxy {
 
                 sender1.send(outMessage2);
 
-                ZmqTextMessage inMessage2 = (ZmqTextMessage) receiver1.receive(5000);
+                ZmqTextMessage inMessage2 = (ZmqTextMessage) receiver1.receive(1000);
 
                 if (inMessage2 == null) {
                     inMessage2 = (ZmqTextMessage) receiver2.receive(1000);

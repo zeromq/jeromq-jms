@@ -196,7 +196,7 @@ public class ZmqGatewayFactory {
         final ZmqJournalStore store = getZmqJournalStore(destination, ZmqGateway.Direction.INCOMING);
 
         try {
-            final ZmqURI uri = (destinationUri == null) ? destinationSchema.get(destinationName) : destinationUri;
+            final ZmqURI uri = (destinationUri == null) ? getUril(destinationName) : destinationUri;
 
             if (uri == null) {
                 throw new ZmqException("Missing URI to construct gateway consumer: " + destination);
@@ -267,7 +267,7 @@ public class ZmqGatewayFactory {
         final ZmqJournalStore store = getZmqJournalStore(destination, ZmqGateway.Direction.OUTGOING);
 
         try {
-            final ZmqURI uri = (destinationUri == null) ? destinationSchema.get(destinationName) : destinationUri;
+            final ZmqURI uri = (destinationUri == null) ? getUril(destinationName) : destinationUri;
 
             if (uri == null) {
                 throw new ZmqException("Missing URI to construct gateway consumer: " + destination);
@@ -328,7 +328,7 @@ public class ZmqGatewayFactory {
             ZmqMessageSelector selector = null;
 
             if (destinationSchema.containsKey(name)) {
-                final ZmqURI uri = destinationSchema.get(name);
+                final ZmqURI uri = getUril(name);
                 final String value = uri.getOptionValue("selector", null);
 
                 if (value != null) {
@@ -351,7 +351,7 @@ public class ZmqGatewayFactory {
             }
 
             if (destinationSchema.containsKey(name) && (selector != null)) {
-                final ZmqURI uri = destinationSchema.get(name);
+                final ZmqURI uri = getUril(name);
                 final Map<String, List<String>> parameters = uri.getOptions();
 
                 ClassUtils.setMethods(parameters, selector);
@@ -377,7 +377,7 @@ public class ZmqGatewayFactory {
             ZmqEventHandler eventHandler = null;
 
             if (destinationSchema.containsKey(name)) {
-                final ZmqURI uri = destinationSchema.get(name);
+                final ZmqURI uri = getUril(name);
                 final String value = uri.getOptionValue("event");
 
                 if (value != null) {
@@ -398,7 +398,7 @@ public class ZmqGatewayFactory {
             }
 
             if (destinationSchema.containsKey(name) && (eventHandler != null)) {
-                final ZmqURI uri = destinationSchema.get(name);
+                final ZmqURI uri = getUril(name);
                 final Map<String, List<String>> parameters = uri.getOptions();
 
                 ClassUtils.setMethods(parameters, eventHandler);
@@ -432,7 +432,7 @@ public class ZmqGatewayFactory {
             ZmqFilterPolicy filter = null;
 
             if (destinationSchema.containsKey(name)) {
-                final ZmqURI uri = destinationSchema.get(name);
+                final ZmqURI uri = getUril(name);
                 final String value = uri.getOptionValue("filter");
 
                 if (value != null) {
@@ -460,7 +460,7 @@ public class ZmqGatewayFactory {
             }
 
             if (destinationSchema.containsKey(name) && (filter != null)) {
-                final ZmqURI uri = destinationSchema.get(name);
+                final ZmqURI uri = getUril(name);
                 final Map<String, List<String>> parameters = uri.getOptions();
 
                 ClassUtils.setMethods(parameters, filter);
@@ -488,7 +488,7 @@ public class ZmqGatewayFactory {
             ZmqJournalStore store = null;
 
             if (destinationSchema.containsKey(name)) {
-                final ZmqURI uri = destinationSchema.get(name);
+                final ZmqURI uri = getUril(name);
                 final String value = uri.getOptionValue("journal");
 
                 if (value != null) {
@@ -517,7 +517,7 @@ public class ZmqGatewayFactory {
             }
 
             if (destinationSchema.containsKey(name) && (store != null)) {
-                final ZmqURI uri = destinationSchema.get(name);
+                final ZmqURI uri = getUril(name);
                 final Map<String, List<String>> parameters = uri.getOptions();
 
                 ClassUtils.setMethods(parameters, store);
@@ -544,7 +544,7 @@ public class ZmqGatewayFactory {
             ZmqRedeliveryPolicy redeliveryPolicy = null;
 
             if (destinationSchema.containsKey(name)) {
-                final ZmqURI uri = destinationSchema.get(name);
+                final ZmqURI uri = getUril(name);
                 final String value = uri.getOptionValue("redelivery");
 
                 if (value != null) {
@@ -569,7 +569,7 @@ public class ZmqGatewayFactory {
             }
 
             if (destinationSchema.containsKey(name) && (redeliveryPolicy != null)) {
-                final ZmqURI uri = destinationSchema.get(name);
+                final ZmqURI uri = getUril(name);
                 final Map<String, List<String>> parameters = uri.getOptions();
 
                 ClassUtils.setMethods(parameters, redeliveryPolicy);
