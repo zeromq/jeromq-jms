@@ -19,7 +19,7 @@ import java.util.Set;
  */
 public class ZmqExtendedURI extends ZmqURI {
 
-	private static final String LABEL_EXTENDS = "extends"; 
+    private static final String LABEL_EXTENDS = "extends";
     private final List<ZmqURI> extendURIs;
 
     /**

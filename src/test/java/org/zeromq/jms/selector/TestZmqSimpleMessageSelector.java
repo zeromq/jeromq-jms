@@ -22,9 +22,10 @@ public class TestZmqSimpleMessageSelector {
 
     /**
      * Test math functionality within the selector expression.
+     * @throws Exception  throws exception on test failure
      */
     @Test
-    public void testMathExpresion() throws Exception{
+    public void testMathExpresion() throws Exception {
         final ZmqMessageSelector selector = ZmqSimpleMessageSelector.parse("6 = 2.0 + 3.0 + 1");
         final Map<String, Object> variables = new HashMap<String, Object>();
 

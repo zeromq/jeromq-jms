@@ -34,7 +34,7 @@ public class TestZmqTopicWithText {
    public void testRawPubAndSubscribeMessage() throws JMSException {
        final String subscriberUri = "jms:topic:all?socket.addr=tcp://*:9714&event=text";
        final String[] destinations = new String[] { subscriberUri };
-       
+
        try {
            Context context = ZMQ.context(1);
 

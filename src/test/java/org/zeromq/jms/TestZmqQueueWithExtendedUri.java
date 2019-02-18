@@ -1,6 +1,5 @@
 package org.zeromq.jms;
 
-import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
@@ -12,8 +11,6 @@ import javax.jms.TextMessage;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.zeromq.jms.ZmqConnectionFactory;
 
 /**
  *  Test the Zero MQ Test Topic subscriber from RAW JEROMQ publisher. The real world.
@@ -32,7 +29,7 @@ public class TestZmqQueueWithExtendedUri {
            "jms:queue:base?socket.addr=tcp://*:9715",
            "jms:queue:consumer?extends=base&socket.bind=false"
        };
-       
+
        final QueueConnectionFactory factory = new ZmqConnectionFactory(destinations);
        final QueueConnection connection = factory.createQueueConnection();
        final QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);

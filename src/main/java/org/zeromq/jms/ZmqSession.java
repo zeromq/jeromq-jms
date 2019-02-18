@@ -407,7 +407,7 @@ public class ZmqSession implements QueueSession, TopicSession {
     @Override
     public Queue createQueue(final String queueName) throws JMSException {
 
-    	final ZmqURI uri = getOrPutUri(queueName);
+        final ZmqURI uri = getOrPutUri(queueName);
         final Queue queue = new ZmqQueue(uri);
 
         return queue;
