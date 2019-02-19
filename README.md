@@ -26,6 +26,14 @@ jms:queue:queue_out?gateway=par&socket.type=DEALER&socket.bind=true&socket.addr=
 
 Refer to the WIKI for more details (https://github.com/zeromq/jeromq-jms/wiki)
 
+## Release 3.0
+
+Majore release to upgrade to Jave 8.0. Othewrwise, bug Fixes
+- Extended is not working #7
+- Creating a subscriber (almost) always takes exactly 5seconds #9
+- `ZmqConnection.close` should be a no-op #12
+- Connect jeromq-jms subscriber to zeroMQ Publisher #14
+
 ## Release 2.0
 
 This is a major release, with allot of bug fixes and new functionality
