@@ -28,7 +28,7 @@ Refer to the WIKI for more details (https://github.com/zeromq/jeromq-jms/wiki)
 
 ## Release 3.0
 
-Majore release to upgrade to Jave 8.0. Othewrwise, bug Fixes
+Major release to upgrade to Java 8.0. Othewrwise, bug fixes
 - Extended is not working #7
 - Creating a subscriber (almost) always takes exactly 5seconds #9
 - `ZmqConnection.close` should be a no-op #12
