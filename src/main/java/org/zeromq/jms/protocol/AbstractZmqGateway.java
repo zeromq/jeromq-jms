@@ -68,7 +68,6 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     private final int flags;
 
     private ZMQ.Context context;
-    private ZMQ.Context proxyContext;
 
     private final List<ZmqSocketMetrics> metrics;
     private final Map<String, ZmqSocketSession> socketSessions;
@@ -220,7 +219,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             return;
         }
 
-        context = ZMQ.context(socketContext.getIOThreads());
+        context = ZmqContextPool.getContext(socketContext.getAddr(), socketContext.getIOThreads());
 
         active.set(true);
 
@@ -303,8 +302,6 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
 
         //Setup the ZMQ PROXY
         if (socketContext.isProxy()) {
-            proxyContext = ZMQ.context(socketContext.getIOThreads());
-
             final String proxyName = "proxy(" + name + ")";
             final String frontSocketAddr = socketContext.getProxyAddr();
             final ZmqSocketType frontSocketType = (socketContext.getProxyType() == null) ? ZmqSocketType.ROUTER : socketContext.getProxyType();
@@ -429,11 +426,6 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
     public void close(final int timeout) {
         active.set(false);
 
-        if (proxyContext != null) {
-            // need to interrupt the proxy
-            proxyContext.close();
-        }
-
         if (acknowledge) {
             // Wait for a period before warning about failed ACKS
             int totalCount = 0;
@@ -521,8 +513,9 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             }
         }
 
-        context.close();
-        LOGGER.info("Gateway closed: " + toString());
+        ZmqContextPool.releaseContext(socketContext.getAddr());
+
+        LOGGER.info("Gateway closed (" + context.isClosed() + "): " + toString());
     }
 
     /**
