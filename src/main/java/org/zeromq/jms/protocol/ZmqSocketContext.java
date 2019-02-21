@@ -12,7 +12,8 @@ public class ZmqSocketContext {
     private Boolean bindFlag;
     private Long bindRetryWaitTime;
     private Integer recieveMsgFlag;
-    private int ioThreads = 1;  // ZMQ default is suggest as 1
+    private String contextName;        // Set to 'addr' when empty
+    private int contextIOThreads = 1;  // ZMQ default is suggest as 1
 
     private String proxyAddr;
     private ZmqSocketType proxyType;
@@ -82,7 +83,9 @@ public class ZmqSocketContext {
         this.bindFlag = context.bindFlag;
         this.bindRetryWaitTime = context.bindRetryWaitTime;
         this.recieveMsgFlag = context.recieveMsgFlag;
-        this.ioThreads = context.ioThreads;
+
+        this.contextName = context.contextName;
+        this.contextIOThreads = context.contextIOThreads;
 
         this.proxyType = context.proxyType;
         this.proxyOutType = context.proxyOutType;
@@ -168,19 +171,39 @@ public class ZmqSocketContext {
     }
 
     /**
+     * @return  return unique context name when one exists, otherwise the socket address
+     */
+    public String getContextName() {
+        if (contextName != null && contextName.trim().length() > 0) {
+            return contextName;
+        }
+
+        return addr;
+    }
+
+    /**
+     * Set the unique name for the ZMQ context.
+     * @param contextName  the unique name for the contract
+     */
+    @ZmqUriParameter("context.name")
+    public void setContextName(final String contextName) {
+        this.contextName = contextName;
+    }
+
+    /**
      * @return  return context I/O threads
      */
-    public int getIOThreads() {
-        return ioThreads;
+    public int getContextIOThreads() {
+        return contextIOThreads;
     }
 
     /**
      * Set the I/O threads for the ZMQ context (default is 1).
-     * @param ioThreads  the I/O threads for the contract
+     * @param contextIOThreads  the I/O threads for the contract
      */
     @ZmqUriParameter("context.ioThreads")
-    public void setIOThreads(final int ioThreads) {
-        this.ioThreads = ioThreads;
+    public void setContextIOThreads(final int contextIOThreads) {
+        this.contextIOThreads = contextIOThreads;
     }
 
     /**

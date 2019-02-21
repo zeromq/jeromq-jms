@@ -38,8 +38,8 @@ public class TestZmqGatewayFactory {
         final ZmqURI uri =
             ZmqURI.create("jms:queue:queue?socket.addr=tcp://*:9596&socket.type=DEALER&socket.bind=false&redelivery=retry&redelivery.retry=0");
         final ZmqURI oldUri =
-            ZmqURI.create("jms:queue:queue_old?gateway.addr=tcp://*:9596&gateway.bind=false&gateway.type=DEALER&redelivery=retry&redelivery.retry=0");
-        final ZmqURI badUri = ZmqURI.create("jms:queue:bad_uri?gateway.addr=tcp://*:9597&redelivery=retry&redelivery.retry=0&event=wrong");
+            ZmqURI.create("jms:queue:queue_old?socket.addr=tcp://*:9596&gateway.bind=false&gateway.type=DEALER&redelivery=retry&redelivery.retry=0");
+        final ZmqURI badUri = ZmqURI.create("jms:queue:bad_uri?socket.addr=tcp://*:9597&redelivery=retry&redelivery.retry=0&event=wrong");
         final ZmqURI socketUri =
                 ZmqURI.create(
                      "jms:queue:socketTest?socket.addr=tcp://*:9999&socket.type=DEALER&socket.bind=true&redelivery=retry&redelivery.retry=0"

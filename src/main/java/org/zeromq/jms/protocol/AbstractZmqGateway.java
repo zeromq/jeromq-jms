@@ -219,7 +219,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             return;
         }
 
-        context = ZmqContextPool.getContext(socketContext.getAddr(), socketContext.getIOThreads());
+        context = ZmqContextPool.getContext(socketContext.getContextName(), socketContext.getContextIOThreads());
 
         active.set(true);
 
@@ -513,7 +513,7 @@ public abstract class AbstractZmqGateway implements ZmqGateway {
             }
         }
 
-        ZmqContextPool.releaseContext(socketContext.getAddr());
+        ZmqContextPool.releaseContext(socketContext.getContextName());
 
         LOGGER.info("Gateway closed (" + context.isClosed() + "): " + toString());
     }

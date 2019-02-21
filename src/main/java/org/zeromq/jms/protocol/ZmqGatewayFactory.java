@@ -145,9 +145,7 @@ public class ZmqGatewayFactory {
         context.setRecieveMsgFlag(0);
 
         if (uri.isOption("gateway.addr")) {
-            context.setBindFlag(uri.getOptionValue("gateway.bind", defaultBindFlag));
-            context.setType(ZmqSocketType.valueOf(uri.getOptionValue("gateway.type", defaultType.toString())));
-            context.setAddr(uri.getOptionValue("gateway.addr", ','));
+            throw new ZmqException("Ther 'gateway' prefix has been replace with 'socket'. Please update your URI: " + uri);
         } else if (uri.isOption("socket.addr")) {
             context.setBindFlag(uri.getOptionValue("socket.bind", defaultBindFlag));
             context.setType(ZmqSocketType.valueOf(uri.getOptionValue("socket.type", defaultType.toString())));
@@ -166,7 +164,7 @@ public class ZmqGatewayFactory {
 
         // Validate the details
         if (context.getAddr() == null) {
-            throw new ZmqException("Missing URI '{socket|gateway}.addr' construct gateway consumer: " + uri);
+            throw new ZmqException("Missing URI 'socket.addr' construct gateway consumer: " + uri);
         }
 
         return context;
