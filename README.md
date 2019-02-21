@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This is JMS 2.0.1 wrapper around ZERO MQ to enable JEE applications to use the ZMQ protocol. The current version uses the JERO MQ 0.4.0 ZMQ, but it should also work with JNI instances.
+This is JMS 2.0.1 wrapper around ZERO MQ to enable JEE applications to use the ZMQ protocol. The current version uses the JERO MQ 0.4.3 ZMQ, but it should also work with JNI instances.
 
 Core to the wrapper is the Gateway classes that act a publisher or subscriber within JMS to/from ZMQ. A gateway contains the protocol for the interaction with the external communicating instances. It also contains 1 or more ZMQ Sockets, to enable failover, and/or parallel through put.
 
@@ -26,8 +26,13 @@ jms:queue:queue_out?gateway=par&socket.type=DEALER&socket.bind=true&socket.addr=
 
 Refer to the WIKI for more details (https://github.com/zeromq/jeromq-jms/wiki)
 
-## Release 3.0
+## Release 3.1
+Minor release to fix 'inproc' socket addresses
+- `inproc` pub/sub appears to hang #13
+- removal of 'gateway' as a alternative prefix within the URI
+- Add 'context.name' within the URI to pool ZMQ context instances
 
+## Release 3.0
 Major release to upgrade to Java 8.0. Othewrwise, bug fixes
 - Extended is not working #7
 - Creating a subscriber (almost) always takes exactly 5seconds #9
