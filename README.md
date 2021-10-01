@@ -4,7 +4,7 @@
 
 This is JMS 2.0.1 wrapper around ZERO MQ to enable JEE applications to use the ZMQ protocol. The current version uses the JERO MQ 0.4.3 ZMQ, but it should also work with JNI instances.
 
-Core to the wrapper is the Gateway classes that act a publisher or subscriber within JMS to/from ZMQ. A gateway contains the protocol for the interaction with the external communicating instances. It also contains 1 or more ZMQ Sockets, to enable failover, and/or parallel through put.
+Core to the wrapper is the Gateway classes that acts as a publisher or subscriber within JMS to/from ZMQ. A gateway contains the protocol for the interaction with the external communicating instances. It also contains 1 or more ZMQ Sockets, to enable failover, and/or parallel through put.
 
 Each gateway has a primary direction, either outgoing, or incoming. All the examples and test use both directions to test the ZERO MQ functionality.
 
